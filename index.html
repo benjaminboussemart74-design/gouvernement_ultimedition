@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<!--
+    =============================
+    Gouvernement Lecornu II – One Page Interactive
+    Architecture du fichier index.html
+    =============================
+    - Header : Branding, navigation, hero
+    - Main : Sections (Présentation, Ministres, Programme, Contact)
+    - Footer : Mentions légales, navigation secondaire
+    - Modale : Fiche ministre
+    - Script : Interactions JS
+-->
+<head>
+    <!-- Métadonnées et ressources -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gouvernement Lecornu II – Vue interactive</title>
+    <!-- Font & CSS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <!-- ================= HEADER ================= -->
+    <header class="site-header" id="top">
+        <!-- Branding & Navigation -->
+        <div class="brand-block">
+            <div class="brand-title">
+                <span class="brand-eyebrow">RumeurLAB</span>
+                <h1>Gouvernement Lecornu II</h1>
+                <p class="brand-baseline">Interface interactive pour explorer la composition du gouvernement</p>
+            </div>
+            <nav class="site-nav" aria-label="Navigation principale">
+                <ul>
+                    <li><a href="#presentation">Présentation</a></li>
+                    <li><a href="#ministres">Ministres</a></li>
+                    <li><a href="#programme">Programme</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+        <!-- Hero Section -->
+        <div class="hero">
+            <p class="hero-kicker">Organigramme interactif</p>
+            <h2>Une vision claire et accessible de l'équipe gouvernementale</h2>
+            <p class="hero-copy">Parcourez les ministres, découvrez leurs missions et visualisez les liens qui structurent le gouvernement Lecornu II. Cette page s'appuie sur l'identité graphique de Rumeur Publique.</p>
+            <div class="hero-actions">
+                <a class="btn btn-primary" href="#ministres">Explorer les ministres</a>
+                <a class="btn btn-ghost" href="#presentation">En savoir plus</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= MAIN ================= -->
+    <main>
+        <!-- Présentation du projet -->
+        <section id="presentation" class="section presentation">
+            <div class="section-header">
+                <h2 class="section-title">Présentation</h2>
+                <p class="section-subtitle">Des données structurées, un récit lisible</p>
+            </div>
+            <div class="presentation-grid">
+                <article class="info-card">
+                    <h3>Vision stratégique</h3>
+                    <p>Mettre à disposition des acteurs publics une cartographie précise des décideurs. Chaque fiche ministre met en avant les responsabilités, les priorités et les contacts clés.</p>
+                </article>
+                <article class="info-card">
+                    <h3>Approche éditoriale</h3>
+                    <p>Une hiérarchie claire, des textes courts, et des visuels percutants encapsulés dans des rectangles arrondis, signature graphique de Rumeur Publique.</p>
+                </article>
+                <article class="info-card">
+                    <h3>Expérience interactive</h3>
+                    <p>Filtrez, recherchez, ouvrez des fiches détaillées : l'expérience a été pensée pour fonctionner aussi bien sur desktop que sur mobile.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- Section ministres -->
+        <section id="ministres" class="section ministers">
+            <div class="section-header">
+                <h2 class="section-title">Les ministres</h2>
+                <p class="section-subtitle">Cliquez sur une carte pour afficher la fiche détaillée.</p>
+            </div>
+            <!-- Filtres et recherche -->
+            <div class="toolbar" role="region" aria-label="Filtres ministres">
+                <label class="search" for="minister-search">
+                    <span class="search-label">Recherche</span>
+                    <input type="search" id="minister-search" placeholder="Rechercher un nom, un portefeuille…" autocomplete="off" />
+                </label>
+                <div class="filters" role="group" aria-label="Filtres par catégorie">
+                    <button class="filter-btn is-active" data-role="all" type="button">Tous</button>
+                    <button class="filter-btn" data-role="leader" type="button">Premier ministre</button>
+                    <button class="filter-btn" data-role="minister-state" type="button">Ministres d'État</button>
+                    <button class="filter-btn" data-role="minister" type="button">Ministres</button>
+                    <button class="filter-btn" data-role="secretary" type="button">Secrétaires d'État</button>
+                </div>
+            </div>
+            <!-- Grille des ministres -->
+            <div id="ministers-grid" class="ministers-grid" role="list" aria-live="polite"></div>
+            <p id="ministers-empty" class="empty-state" hidden>Ajoutez vos données dans <code>data/ministers.json</code> pour alimenter cette section.</p>
+        </section>
+
+        <!-- Section programme -->
+        <section id="programme" class="section programme">
+            <div class="section-header">
+                <h2 class="section-title">Programme &amp; calendrier</h2>
+                <p class="section-subtitle">Des repères clairs pour suivre l'action gouvernementale.</p>
+            </div>
+            <div class="timeline">
+                <article class="timeline-item">
+                    <h3>100 premiers jours</h3>
+                    <p>Définir les chantiers prioritaires, coordonner les équipes et poser les jalons législatifs majeurs.</p>
+                </article>
+                <article class="timeline-item">
+                    <h3>1 an</h3>
+                    <p>Évaluer les réformes engagées, ajuster les portefeuilles et renforcer la coordination interministérielle.</p>
+                </article>
+                <article class="timeline-item">
+                    <h3>À plus long terme</h3>
+                    <p>Assurer la cohérence stratégique, maintenir le dialogue avec les parties prenantes et préparer les bilans publics.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- Section contact -->
+        <section id="contact" class="section contact">
+            <div class="section-header">
+                <h2 class="section-title">Contact</h2>
+                <p class="section-subtitle">Collaborer avec Rumeur Publique</p>
+            </div>
+            <div class="contact-grid">
+                <div class="contact-card">
+                    <h3>Nous écrire</h3>
+                    <p>Envoyez vos demandes d'actualisation de l'organigramme ou vos propositions de contenu éditorial.</p>
+                    <a class="btn btn-primary" href="mailto:contact@rumeurpublique.com">contact@rumeurpublique.com</a>
+                </div>
+                <div class="contact-card">
+                    <h3>En savoir plus</h3>
+                    <p>Découvrez l'univers créatif et stratégique de Rumeur Publique à travers nos projets.</p>
+                    <a class="btn btn-ghost" href="https://www.rumeurpublique.fr" target="_blank" rel="noopener">rumeurpublique.fr</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <p>© 2025 Rumeur Publique — Direction de la communication politique.</p>
+            <a class="btn btn-ghost" href="#top">Remonter en haut</a>
+        </div>
+    </footer>
+
+    <!-- ================= MODALE MINISTRE ================= -->
+    <div class="modal" id="minister-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+        <div class="modal-backdrop" data-dismiss></div>
+        <div class="modal-content" role="document">
+            <button class="modal-close" type="button" aria-label="Fermer" data-dismiss>&times;</button>
+            <div class="modal-body">
+                <div class="modal-header">
+                    <img class="modal-photo" id="modal-photo" src="" alt="" />
+                    <div>
+                        <p class="modal-role" id="modal-role"></p>
+                        <h3 id="modal-title"></h3>
+                        <p class="modal-portfolio" id="modal-portfolio"></p>
+                    </div>
+                </div>
+                <p class="modal-description" id="modal-description"></p>
+                <dl class="modal-meta">
+                    <div>
+                        <dt>Mission principale</dt>
+                        <dd id="modal-mission"></dd>
+                    </div>
+                    <div>
+                        <dt>Contact</dt>
+                        <dd id="modal-contact"></dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SCRIPTS ================= -->
+    <script src="script.js" type="module"></script>
+</body>
+</html>
