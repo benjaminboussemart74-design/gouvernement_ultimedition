@@ -578,6 +578,14 @@ main {
 
 .mc-meta { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
 
+.mc-mission {
+    font-size: 0.95rem;
+    color: var(--color-poivre);
+    margin-top: 0.1rem;
+    margin-bottom: 0;
+    line-height: 1.4;
+}
+
 /* Bio courte affichée dans la carte du Premier ministre */
 .mc-bio {
     margin-top: 0.5rem;
