@@ -1073,6 +1073,31 @@ const handleExportMinisterClick = async () => {
         exportButton.disabled = false;
         exportButton.removeAttribute("aria-busy");
     }
+
+    const assignedIds = new Set();
+    const lanesWrapper = document.createElement("div");
+    lanesWrapper.className = "cabinet-lanes";
+
+    CABINET_LANES.forEach((laneDefinition) => {
+        const laneMembers = members.filter((member) => laneDefinition.grades.includes(member.gradeKey));
+        laneMembers.forEach((member) => assignedIds.add(member.id));
+
+        const lane = renderCabinetLane(laneDefinition, laneMembers);
+        if (lane) {
+            lanesWrapper.appendChild(lane);
+        }
+    });
+
+    const remainingMembers = members.filter((member) => !assignedIds.has(member.id));
+    if (remainingMembers.length) {
+        const fallbackLane = renderCabinetLane(CABINET_FALLBACK_LANE, remainingMembers);
+        if (fallbackLane) {
+            lanesWrapper.appendChild(fallbackLane);
+        }
+    }
+
+    panel.appendChild(lanesWrapper);
+    return section;
 };
 
 if (exportButton) {
