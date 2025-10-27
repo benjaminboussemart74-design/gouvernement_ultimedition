@@ -80,9 +80,28 @@
       transition:transform .15s ease, box-shadow .15s ease;
       cursor:default;
     }
+    .person img{
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      object-fit:cover;
+      display:block;
+      margin:0 auto 0.5rem;
+      background:#e6eefb;
+    }
+    .person .meta{font-size:0.82rem; color:#64748b; margin-top:0.35rem}
     .person:hover{transform:translateY(-4px); box-shadow:0 10px 22px rgba(2,6,23,0.08);}
     .person strong{display:block; margin-bottom:0.25rem;}
     .grade{font-size:0.82rem; color:#475569}
+
+    /* Large minister card shown at top when a minister is selected */
+    .minister-big{
+      display:flex; gap:1rem; align-items:center; background:var(--card); padding:1rem; border-radius:12px; box-shadow:0 8px 24px rgba(2,6,23,0.06); border:1px solid #e6eef8; margin-top:0.6rem; width:100%;
+    }
+    .minister-big img{width:96px;height:96px;border-radius:12px;object-fit:cover}
+    .minister-big .info{display:flex;flex-direction:column;gap:0.25rem}
+    .minister-big .info h2{margin:0;font-size:1.15rem}
+    .minister-big .info p{margin:0;color:var(--muted)}
 
     .line{width:2px; height:18px; background:var(--muted); margin:0.25rem auto 0; border-radius:2px}
 
@@ -99,6 +118,7 @@
 <body>
   <div class="header">
     <div class="minister" id="ministerTitle">Ministre</div>
+    <div id="ministerCardContainer" style="width:100%; max-width:1100px; margin:1rem auto 0;"></div>
     <div class="controls">
       <div class="small">Exemple dynamique — données en mémoire (modifie le tableau JS pour tester)</div>
       <label for="ministerSelect" style="margin-left:1rem; font-size:0.95rem; color:#334155">Ministre :</label>
@@ -135,6 +155,7 @@
 
     const treeContainer = document.getElementById('treeContainer');
     const ministerTitle = document.getElementById('ministerTitle');
+  const ministerCardContainer = document.getElementById('ministerCardContainer');
     const jsonDump = document.getElementById('jsonDump');
 
     // Affiche les données JSON (formatées)
@@ -291,6 +312,7 @@
       container.style.gap = '0.75rem';
       container.style.width = '100%';
 
+      let anyShown = false;
       functions.forEach(f => {
         const row = document.createElement('div');
         row.style.display = 'flex';
@@ -315,14 +337,49 @@
         list.style.flexWrap = 'wrap';
         list.style.gap = '0.75rem';
         list.style.alignItems = 'flex-start';
+        // Center conseillers row
+        if (f.code === 'conseiller') {
+          list.style.justifyContent = 'center';
+        } else {
+          list.style.justifyContent = 'flex-start';
+        }
 
         const items = buckets.get(f.rank) || [];
+        if (!items || items.length === 0) {
+          // ne rien afficher si pas de collaborateurs pour cette fonction
+          return;
+        }
+        anyShown = true;
         items.sort((a,b) => String(a.name).localeCompare(String(b.name)));
         items.forEach(p => {
           const card = document.createElement('div');
           card.className = 'person';
           card.style.margin = '0';
-          card.innerHTML = `<strong>${escapeHtml(p.name)}</strong><div class="grade">${escapeHtml(p.collab_grade || '')}</div>`;
+          const photoSrc = p.photo || 'assets/placeholder-minister.svg';
+          const alt = p.photoAlt || `${p.name}`;
+          const job = p.job_title || '';
+          const cab = p.cabinet_role || '';
+          // For certain functions (directeurs / chefs), show only cabinet_role
+          const onlyCabinetFor = new Set(['dircab','diradj','chefcab','chefadj']);
+          let metaText = '';
+          if (onlyCabinetFor.has(f.code)) {
+            metaText = cab || '';
+          } else if (f.code === 'conseiller') {
+            // For conseillers: show the grade/role first, then the job title
+            const gradeLabel = p.collab_grade || '';
+            if (gradeLabel && job) metaText = gradeLabel + ' — ' + job;
+            else metaText = gradeLabel || job || cab || '';
+          } else {
+            // default: show job_title and cabinet_role if both present
+            if (job && cab) metaText = job + ' — ' + cab;
+            else metaText = job || cab || '';
+          }
+
+          card.innerHTML = `
+            <img src="${escapeHtml(photoSrc)}" alt="${escapeHtml(alt)}" />
+            <strong>${escapeHtml(p.name)}</strong>
+            <div class="meta">${escapeHtml(metaText)}</div>
+          `;
           list.appendChild(card);
         });
 
@@ -331,7 +388,11 @@
         container.appendChild(row);
       });
 
-      treeContainer.appendChild(container);
+      if (!anyShown) {
+        treeContainer.textContent = 'Aucun collaborateur à afficher pour ce ministre.';
+      } else {
+        treeContainer.appendChild(container);
+      }
     }
 
     // Petite fonction d'échappement pour éviter XSS si tu colles des données externes
@@ -340,6 +401,25 @@
       return str.replace(/[&<>"']/g, function(ch){
         return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[ch];
       });
+    }
+
+    // Render a large minister card into the header area
+    function renderMinisterBigCard(minister){
+      if (!ministerCardContainer) return;
+      ministerCardContainer.innerHTML = '';
+      if (!minister) return;
+      const photo = minister.photo || minister.image || minister.avatar || 'assets/placeholder-minister.svg';
+      const name = minister.name || minister.full_name || minister.nom || ('#' + String(minister.id));
+      const portfolio = minister.portfolio || minister.job_title || minister.title || minister.role || '';
+      const html = `
+        <div class="minister-big">
+          <img src="${escapeHtml(photo)}" alt="${escapeHtml(name)}" />
+          <div class="info">
+            <h2>${escapeHtml(name)}</h2>
+            <p>${escapeHtml(portfolio)}</p>
+          </div>
+        </div>`;
+      ministerCardContainer.innerHTML = html;
     }
 
     // Populate minister <select>
@@ -379,15 +459,20 @@
             .map(r => {
               const code = r.collab_grade || r.grade || null;
               const codeStr = code === null ? null : String(code);
-              return {
-                id: r.id,
-                name: r.name || r.full_name || r.nom || r.label || ('#' + String(r.id)),
-                role: 'collaborator',
-                superior_id: r.superior_id !== undefined ? r.superior_id : (r.superior || null),
-                collab_code: codeStr,
-                collab_grade: codeStr && gradeLabel.has(codeStr) ? gradeLabel.get(codeStr) : (codeStr || ''),
-                collab_rank: codeStr && gradeRank.has(codeStr) ? gradeRank.get(codeStr) : 99
-              };
+                  return {
+                    id: r.id,
+                    name: r.name || r.full_name || r.nom || r.label || ('#' + String(r.id)),
+                    role: 'collaborator',
+                    superior_id: r.superior_id !== undefined ? r.superior_id : (r.superior || null),
+                    collab_code: codeStr,
+                    collab_grade: codeStr && gradeLabel.has(codeStr) ? gradeLabel.get(codeStr) : (codeStr || ''),
+                    collab_rank: codeStr && gradeRank.has(codeStr) ? gradeRank.get(codeStr) : 99,
+                    // photos and titles (try common field names)
+                    photo: r.photo || r.photo_url || r.avatar || r.image || null,
+                    photoAlt: r.photoAlt || r.photo_alt || r.photo_alt_text || '',
+                    job_title: r.job_title || r.job || r.title || '',
+                    cabinet_role: r.cabinet_role || r.cabinetRole || r.cabinet || ''
+                  };
             });
 
           // Construire une map d'id -> node pour remonter la hiérarchie
@@ -447,7 +532,10 @@
             const selectedText = sel.selectedOptions[0]?.textContent || '';
             ministerTitle.textContent = selectedText ? `Hiérarchie des collaborateurs — ${selectedText}` : 'Hiérarchie des collaborateurs';
             jsonDump.textContent = JSON.stringify({ from: sup.collaborators.table, minister: val, rows: rowsToRender, grades: sup.grades || [] }, null, 2);
-            renderHierarchy(rowsToRender);
+        // Render the big minister card (if any)
+        const ministerObj = idMap.get(val) || null;
+        renderMinisterBigCard(ministerObj);
+        renderHierarchy(rowsToRender);
           }
 
           sel.addEventListener('change', renderForSelected);
@@ -467,9 +555,13 @@
           name: p.name || p.nom || ('#' + String(p.id)),
           role: 'collaborator',
           superior_id: p.superior_id !== undefined ? p.superior_id : (p.superior || null),
-          collab_code: null,
-          collab_grade: p.collab_grade || p.grade || '',
-          collab_rank: 99
+            collab_code: null,
+            collab_grade: p.collab_grade || p.grade || '',
+            collab_rank: 99,
+            photo: p.photo || p.photo_url || null,
+            photoAlt: p.photoAlt || p.photoAlt || '',
+            job_title: p.job_title || p.role || '',
+            cabinet_role: p.portfolio || p.cabinet_role || ''
         }));
 
       // Fallback: pas de ministres locaux dans cet exemple => afficher tous les collaborateurs
