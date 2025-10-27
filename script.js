@@ -132,6 +132,7 @@ const grid = document.getElementById("ministers-grid");
 const emptyState = document.getElementById("ministers-empty");
 const searchInput = document.getElementById("minister-search");
 const filterButtons = Array.from(document.querySelectorAll(".filter-btn"));
+const exportPageButton = document.getElementById("export-page-pdf");
 const modal = document.getElementById("minister-modal");
 const modalBackdrop = modal?.querySelector("[data-dismiss]");
 const modalClose = modal?.querySelector(".modal-close");
@@ -673,6 +674,38 @@ const closeModal = () => {
     document.body.style.overflow = "";
 };
 
+const refreshGridForPrint = () => {
+    if (!grid) return;
+
+    if (currentRole === "all" && !currentQuery) {
+        renderGrid(coreMinisters);
+    } else {
+        applyFilters();
+    }
+};
+
+const printAllMinisters = () => {
+    if (!document?.body) return;
+
+    refreshGridForPrint();
+
+    if (modal && !modal.hidden) {
+        closeModal();
+    }
+
+    const cleanup = () => {
+        document.body.classList.remove("print-all");
+        window.removeEventListener("afterprint", cleanup);
+    };
+
+    document.body.classList.add("print-all");
+    window.addEventListener("afterprint", cleanup, { once: true });
+
+    window.requestAnimationFrame(() => {
+        window.print();
+    });
+};
+
 const highlightFilter = (role) => {
     filterButtons.forEach((btn) => {
         btn.classList.toggle("is-active", btn.dataset.role === role);
@@ -958,6 +991,7 @@ const initApp = () => {
 
     modalBackdrop?.addEventListener("click", closeModal);
     modalClose?.addEventListener("click", closeModal);
+    exportPageButton?.addEventListener("click", printAllMinisters);
     window.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && !modal.hidden) {
             closeModal();
