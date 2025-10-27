@@ -15,7 +15,7 @@
     <!-- Métadonnées et ressources -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gouvernement Lecornu II – Vue interactive</title>
+    <title>Gouvernement Lecornu II</title>
     <!-- Font & CSS -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -24,38 +24,24 @@
 </head>
 <body>
     <!-- ================= HEADER ================= -->
-    <header class="site-header" id="top">
+     <header class="site-header" id="top">
         <!-- Branding & Navigation -->
         <div class="brand-block">
             <div class="brand-title">
                 <span class="brand-eyebrow">RumeurLAB</span>
                 <h1>Gouvernement Lecornu II</h1>
-                <p class="brand-baseline">Une marque sans prise de position est une marque sans influence</p>
+                
             </div>
             <nav class="site-nav" aria-label="Navigation principale">
                 <ul>
-                    <li><a href="#presentation">Présentation</a></li>
-                    <li><a href="#ministres">Ministres</a></li>
-                    <li><a href="#contact">Contact</a></li>
+         
                 </ul>
             </nav>
-            <!-- Quick header search (discrete) -->
-            <form id="header-search" class="header-search" role="search" aria-label="Recherche rapide">
-                <button id="header-search-toggle" class="header-search-toggle" type="button" aria-expanded="false" aria-label="Ouvrir la recherche">
-                    <!-- simple magnifier svg -->
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" />
-                    </svg>
-                </button>
-                <div class="header-search-field">
-                    <input id="header-search-input" class="header-search-input" type="search" placeholder="Aller à un ministre ou ministère…" aria-label="Recherche rapide" autocomplete="off" />
-                    <div id="header-search-suggestions" class="header-suggestions" role="listbox" aria-label="Suggestions de recherche" hidden></div>
-                </div>
-            </form>
-        </div>
+
         <!-- Hero Section -->
         <div class="hero">
+            <!-- Large decorative logo backdrop (bleu) : déplacé dans le main/hero pour rester derrière le contenu -->
+            <div class="hero-bg-logo" aria-hidden="true"></div>
             <p class="hero-kicker">Organigramme interactif</p>
             <h2>Une vision claire et accessible de l'équipe gouvernementale</h2>
             <p class="hero-copy">Parcourez les ministres, découvrez leurs missions et visualisez les liens qui structurent le gouvernement Lecornu II. Cette page s'appuie sur l'identité graphique de Rumeur Publique.</p>
@@ -74,17 +60,65 @@
                 <h2 class="section-title">Les ministres</h2>
                 <p class="section-subtitle">Cliquez sur une carte pour afficher la fiche détaillée.</p>
             </div>
-            <div class="toolbar" role="region" aria-label="Filtres ministres">
-                <label class="search" for="minister-search">
-                    <span class="search-label">Recherche</span>
-                    <input type="search" id="minister-search" placeholder="Rechercher un nom, un portefeuille…" autocomplete="off" />
-                </label>
-                <div class="filters" role="group" aria-label="Filtres par catégorie">
-                    <button class="filter-btn is-active" data-role="all" type="button">Tous</button>
-                    <button class="filter-btn" data-role="leader" type="button">Premier ministre</button>
-                    <button class="filter-btn" data-role="minister-state" type="button">Ministres d'État</button>
-                    <button class="filter-btn" data-role="minister" type="button">Ministres</button>
-                    <button class="filter-btn" data-role="secretary" type="button">Secrétaires d'État</button>
+            <div class="toolbar" role="region" aria-label="Outils de filtrage des ministres">
+                <div class="toolbar-primary">
+                    <div class="toolbar-search-group">
+                        <label class="search" for="minister-search">
+                            <span class="search-label">Recherche</span>
+                            <div class="search-field">
+                                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" fill="none" />
+                                </svg>
+                                <input type="search" id="minister-search" placeholder="Rechercher un nom, un portefeuille…" autocomplete="off" />
+                            </div>
+                        </label>
+                        <button id="export-page-pdf" class="btn btn-ghost" type="button">Exporter la page</button>
+                    </div>
+                    <div class="toolbar-meta" aria-live="polite">
+                        <p class="results-count">
+                            <span id="results-count-current">0</span>
+                            <span id="results-count-label">résultat</span>
+                            <span class="results-total">sur <span id="results-count-total">0</span></span>
+                        </p>
+                        <p class="filters-hint" id="active-filters-hint">Tous les profils sont affichés.</p>
+                    </div>
+                </div>
+                <div class="toolbar-filters" role="group" aria-label="Filtres par catégorie">
+                    <div class="filter-pills" role="group" aria-label="Catégories de rôle">
+                        <button class="filter-btn is-active" data-role="all" type="button">Tous</button>
+                        <button class="filter-btn" data-role="leader" type="button">Premier ministre</button>
+                        <button class="filter-btn" data-role="minister-state" type="button">Ministres d'État</button>
+                        <button class="filter-btn" data-role="minister" type="button">Ministres</button>
+                        <button class="filter-btn" data-role="secretary" type="button">Secrétaires d'État</button>
+                    </div>
+                    <label class="party-filter" for="party-filter">
+                        <span class="party-filter-label">Parti</span>
+                        <select id="party-filter" name="party">
+                            <option value="">Tous partis</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="toolbar-actions">
+                    <label class="sort-control" for="sort-order">
+                        <span class="sort-label">Trier</span>
+                        <select id="sort-order" name="sort-order">
+                            <option value="role">Importance ministérielle</option>
+                            <option value="alpha">Ordre alphabétique</option>
+                            <option value="portfolio">Nom du portefeuille</option>
+                        </select>
+                    </label>
+                    <label class="toggle-control" for="filter-delegates">
+                        <input type="checkbox" id="filter-delegates" name="filter-delegates" />
+                        <span class="toggle-shape" aria-hidden="true"></span>
+                        <span class="toggle-text">Cabinet renseigné</span>
+                    </label>
+                    <label class="toggle-control" for="filter-bio">
+                        <input type="checkbox" id="filter-bio" name="filter-bio" />
+                        <span class="toggle-shape" aria-hidden="true"></span>
+                        <span class="toggle-text">Bio disponible</span>
+                    </label>
+                    <button class="toolbar-reset" id="filters-reset" type="button">Réinitialiser</button>
                 </div>
             </div>
             <!-- Grille des ministres -->
@@ -140,7 +174,7 @@
                 <p class="modal-description" id="modal-description"></p>
                 <dl class="modal-meta">
                     <div>
-                        <dt>Mission principale</dt>
+                        <dt>Mission</dt>
                         <dd id="modal-mission"></dd>
                     </div>
                     <div>
@@ -148,6 +182,7 @@
                         <dd id="modal-contact"></dd>
                     </div>
                 </dl>
+                <button id="export-minister-pdf" class="modal-export" type="button">Exporter cette fiche</button>
             </div>
         </div>
     </div>
