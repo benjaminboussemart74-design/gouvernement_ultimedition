@@ -318,12 +318,15 @@ const debounce = (fn, wait = 220) => {
 
 const formatRole = (role) => ROLE_LABELS[role] ?? role ?? "";
 
-const normalise = (value) =>
-    value
-        ?.normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim() ?? "";
+function normalise(value) {
+    return (
+        value
+            ?.normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .trim() ?? ""
+    );
+}
 
 const ensureSupabaseClient = () => {
     try {
