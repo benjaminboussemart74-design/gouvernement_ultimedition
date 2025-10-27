@@ -431,28 +431,533 @@ const fetchCollaboratorsForMinister = async (ministerId) => {
     const client = ensureSupabaseClient();
     if (!client || !ministerId) return [];
 
-    try {
-        const { data, error } = await client
-            .from("persons")
-            .select("id, full_name, photo_url, cabinet_role, collab_grade, email, cabinet_order")
-            .eq("role", "collaborator")
-            .eq("superior_id", ministerId)
-            .order("cabinet_order", { ascending: true });
+    const collected = [];
+    const seen = new Set();
+    const queue = [ministerId];
+    let encounteredError = false;
 
-        if (error) {
-            console.warn("[onepage] Impossible de récupérer les collaborateurs :", error);
-            return [];
+    while (queue.length) {
+        const parentId = queue.shift();
+        try {
+            const { data, error } = await client
+                .from("persons")
+                .select(
+                    "id, superior_id, full_name, photo_url, cabinet_role, collab_grade, job_title, email, cabinet_order"
+                )
+                .eq("role", "collaborator")
+                .eq("superior_id", parentId)
+                .order("cabinet_order", { ascending: true });
+
+            if (error) {
+                console.warn("[onepage] Impossible de récupérer les collaborateurs :", error);
+                encounteredError = true;
+                break;
+            }
+
+            for (const person of data || []) {
+                if (!person || person.id == null || seen.has(person.id)) continue;
+                collected.push(person);
+                seen.add(person.id);
+                queue.push(person.id);
+            }
+        } catch (e) {
+            console.warn("[onepage] Erreur lors de la récupération des collaborateurs :", e);
+            encounteredError = true;
+            break;
+        }
+    }
+
+    return encounteredError ? null : collected;
+};
+
+const collaboratorsCache = new Map();
+
+const toAlphaKey = (value) => normalise(value).replace(/[^a-z]/g, "");
+
+const CABINET_GRADE_ALIASES = new Map([
+    ["direcab", "direcab"],
+    ["directeurdecabinet", "direcab"],
+    ["directricedecabinet", "direcab"],
+    ["dircab", "direcab"],
+    ["dircabadj", "direcab-adj"],
+    ["dircabadjoint", "direcab-adj"],
+    ["dircabadjointe", "direcab-adj"],
+    ["direcadj", "direcab-adj"],
+    ["direcadjoint", "direcab-adj"],
+    ["directeuradjointdecabinet", "direcab-adj"],
+    ["directeurdecabinetadjoint", "direcab-adj"],
+    ["directriceadjointe", "direcab-adj"],
+    ["directricedecabinetadjointe", "direcab-adj"],
+    ["chefcab", "chefcab"],
+    ["chefcabinet", "chefcab"],
+    ["chefdecabinet", "chefcab"],
+    ["chefcabadj", "chefcabadj"],
+    ["chefcabadjoint", "chefcabadj"],
+    ["chefcabinetadjoint", "chefcabadj"],
+    ["chefdecabinetadjoint", "chefcabadj"],
+    ["chefdecabinetadjointe", "chefcabadj"],
+    ["chefcabinetadjointe", "chefcabadj"],
+    ["chefdepole", "chefpole"],
+    ["chefpole", "chefpole"],
+    ["chefdepôle", "chefpole"],
+    ["chefdepoleadjoint", "chefpole"],
+    ["chefdepoleadjointe", "chefpole"],
+    ["conseiller", "conseiller"],
+    ["conseillere", "conseiller"],
+    ["conseillere", "conseiller"],
+    ["conseillereprincipal", "conseiller"],
+    ["conseillerprincipal", "conseiller"],
+    ["conseillertechnique", "conseiller"],
+    ["conseillerespecial", "conseiller"],
+    ["chargemission", "conseiller"],
+    ["chargedemission", "conseiller"],
+    ["chargedeprojet", "conseiller"],
+    ["directeurdeprojet", "conseiller"],
+    ["directricedeprojet", "conseiller"]
+]);
+
+const FALLBACK_COLLAB_GRADES = [
+    { key: "direcab", code: "direcab", label: "Directeur·rice de cabinet", rank: 1 },
+    { key: "direcab-adj", code: "direcab-adj", label: "Directeur·rice adjoint·e de cabinet", rank: 2 },
+    { key: "chefcab", code: "chefcab", label: "Chef·fe de cabinet", rank: 3 },
+    { key: "chefcabadj", code: "chefcabadj", label: "Chef·fe de cabinet adjoint·e", rank: 4 },
+    { key: "chefpole", code: "chefpole", label: "Chef·fe de pôle", rank: 5 },
+    { key: "conseiller", code: "conseiller", label: "Conseiller·ère", rank: 6 },
+    { key: "autres", code: "autres", label: "Autres collaborateurs", rank: 99 }
+];
+
+let collaboratorGradesLookup = null;
+let collaboratorGradesPromise = null;
+
+const canonicaliseCabinetGrade = (grade, gradeLookup = null) => {
+    if (!grade) return null;
+    const alphaKey = toAlphaKey(grade);
+    if (!alphaKey) return null;
+
+    if (gradeLookup?.alias?.has(alphaKey)) {
+        return gradeLookup.alias.get(alphaKey);
+    }
+
+    if (CABINET_GRADE_ALIASES.has(alphaKey)) {
+        return CABINET_GRADE_ALIASES.get(alphaKey);
+    }
+
+    if (alphaKey.startsWith("conseiller") || alphaKey.startsWith("chargemission")) {
+        return "conseiller";
+    }
+
+    if (alphaKey.startsWith("chefdepole") || alphaKey.startsWith("chefpole")) {
+        return "chefpole";
+    }
+
+    if (alphaKey.startsWith("directeuradjoint") || alphaKey.startsWith("directriceadjointe")) {
+        return "direcab-adj";
+    }
+
+    return alphaKey;
+};
+
+const createGradeLookup = (grades) => {
+    const byKey = new Map();
+    const alias = new Map(CABINET_GRADE_ALIASES);
+
+    const register = (key, meta, sources = []) => {
+        if (!key) return;
+        const safeMeta = {
+            key,
+            code: meta?.code ?? key,
+            label: meta?.label ?? key,
+            rank: typeof meta?.rank === "number" ? meta.rank : Number.POSITIVE_INFINITY
+        };
+        byKey.set(key, safeMeta);
+        alias.set(key, key);
+        sources.forEach((source) => {
+            const aliasKey = toAlphaKey(source);
+            if (aliasKey) {
+                alias.set(aliasKey, key);
+            }
+        });
+    };
+
+    FALLBACK_COLLAB_GRADES.forEach((fallbackGrade) => {
+        register(fallbackGrade.key, fallbackGrade, [fallbackGrade.code, fallbackGrade.label]);
+    });
+
+    (grades || []).forEach((grade) => {
+        if (!grade) return;
+        const sources = [grade.code, grade.label];
+        const preferredKey = sources
+            .map((value) => {
+                const key = toAlphaKey(value);
+                if (key && byKey.has(key)) {
+                    return key;
+                }
+                return null;
+            })
+            .find(Boolean);
+
+        const key = preferredKey || toAlphaKey(grade.code) || toAlphaKey(grade.label);
+        if (!key) return;
+
+        const existing = byKey.get(key);
+        register(key, {
+            key,
+            code: grade.code || existing?.code || key,
+            label: grade.label || existing?.label || grade.code || key,
+            rank:
+                typeof grade.rank === "number"
+                    ? grade.rank
+                    : typeof existing?.rank === "number"
+                    ? existing.rank
+                    : Number.POSITIVE_INFINITY
+        }, sources);
+    });
+
+    const ordered = Array.from(byKey.values()).sort((a, b) => {
+        if (a.rank !== b.rank) return a.rank - b.rank;
+        return (a.label || "").localeCompare(b.label || "");
+    });
+
+    return { byKey, alias, ordered };
+};
+
+const getCollaboratorGradeLookup = async () => {
+    if (collaboratorGradesLookup) {
+        return collaboratorGradesLookup;
+    }
+
+    if (!collaboratorGradesPromise) {
+        collaboratorGradesPromise = (async () => {
+            const client = ensureSupabaseClient();
+            if (!client) {
+                collaboratorGradesLookup = createGradeLookup(null);
+                return collaboratorGradesLookup;
+            }
+
+            try {
+                const { data, error } = await client
+                    .from("collab_grades")
+                    .select("code, label, rank")
+                    .order("rank", { ascending: true });
+
+                if (error) {
+                    console.warn("[onepage] Impossible de récupérer collab_grades :", error);
+                    collaboratorGradesLookup = createGradeLookup(null);
+                    return collaboratorGradesLookup;
+                }
+
+                collaboratorGradesLookup = createGradeLookup(Array.isArray(data) ? data : null);
+                return collaboratorGradesLookup;
+            } catch (err) {
+                console.warn("[onepage] Erreur collab_grades :", err);
+                collaboratorGradesLookup = createGradeLookup(null);
+                return collaboratorGradesLookup;
+            }
+        })().finally(() => {
+            collaboratorGradesPromise = null;
+        });
+    }
+
+    if (collaboratorGradesPromise) {
+        return collaboratorGradesPromise;
+    }
+
+    collaboratorGradesLookup = createGradeLookup(null);
+    return collaboratorGradesLookup;
+};
+
+const DISPLAY_JOB_TITLE_ONLY_GRADES = new Set(["direcab", "direcab-adj", "chefcab", "chefcabadj"]);
+
+const resolveGradeMeta = (gradeLookup, grade) => {
+    const key = canonicaliseCabinetGrade(grade, gradeLookup);
+    if (!key) {
+        return {
+            key: null,
+            code: grade || null,
+            label: grade || null,
+            rank: Number.POSITIVE_INFINITY
+        };
+    }
+
+    const meta = gradeLookup?.byKey?.get(key);
+    if (meta) return meta;
+
+    return {
+        key,
+        code: grade || key,
+        label: grade || key,
+        rank: Number.POSITIVE_INFINITY
+    };
+};
+
+const toCabinetNode = (person, gradeLookup) => {
+    const gradeMeta = resolveGradeMeta(gradeLookup, person?.collab_grade);
+
+    return {
+        id: person?.id != null ? String(person.id) : null,
+        superiorId: person?.superior_id != null ? String(person.superior_id) : null,
+        name: person?.full_name?.trim() || "Collaborateur·rice",
+        cabinetRole: person?.cabinet_role?.trim() || null,
+        jobTitle: person?.job_title?.trim() || null,
+        gradeLabel: gradeMeta?.label || person?.collab_grade?.trim() || null,
+        gradeKey: gradeMeta?.key || null,
+        gradeRank: typeof gradeMeta?.rank === "number" ? gradeMeta.rank : Number.POSITIVE_INFINITY,
+        email: person?.email?.trim() || null,
+        order: typeof person?.cabinet_order === "number" ? person.cabinet_order : null,
+        photo: person?.photo_url || null
+    };
+};
+
+const compareCabinetMembers = (a, b) => {
+    const rankDiff = (a.gradeRank ?? Number.POSITIVE_INFINITY) - (b.gradeRank ?? Number.POSITIVE_INFINITY);
+    if (rankDiff !== 0) return rankDiff;
+
+    const orderA = a.order ?? Number.POSITIVE_INFINITY;
+    const orderB = b.order ?? Number.POSITIVE_INFINITY;
+    if (orderA !== orderB) return orderA - orderB;
+
+    return (a.name || "").localeCompare(b.name || "");
+};
+
+const normaliseCabinetMembers = (collaborators, gradeLookup) => {
+    if (!Array.isArray(collaborators)) return [];
+    return collaborators
+        .map((person) => toCabinetNode(person, gradeLookup))
+        .filter((node) => node?.id)
+        .sort(compareCabinetMembers);
+};
+
+const createCabinetNodeCard = (member) => {
+    const card = document.createElement("article");
+    card.className = "cabinet-node";
+    if (member?.gradeKey) {
+        card.dataset.grade = member.gradeKey;
+    }
+
+    const avatar = document.createElement("div");
+    avatar.className = "cabinet-node-avatar";
+    const avatarImg = document.createElement("img");
+    avatarImg.src = member?.photo || "assets/placeholder-minister.svg";
+    avatarImg.alt = member?.name ? `Portrait de ${member.name}` : "Portrait";
+    avatar.appendChild(avatarImg);
+    card.appendChild(avatar);
+
+    const info = document.createElement("div");
+    info.className = "cabinet-node-info";
+
+    if (member?.gradeLabel) {
+        const badge = document.createElement("span");
+        badge.className = "cabinet-node-grade";
+        badge.textContent = member.gradeLabel;
+        info.appendChild(badge);
+    }
+
+    const name = document.createElement("strong");
+    name.className = "cabinet-node-name";
+    name.textContent = member?.name || "Collaborateur·rice";
+    info.appendChild(name);
+
+    const normalizedRole = member?.cabinetRole?.trim() || null;
+    const normalizedJob = member?.jobTitle?.trim() || null;
+    const normalizedGrade = member?.gradeLabel?.trim() || null;
+
+    const shouldShowJobTitleOnly = DISPLAY_JOB_TITLE_ONLY_GRADES.has(member?.gradeKey);
+
+    if (shouldShowJobTitleOnly) {
+        const titleLine = normalizedJob || normalizedRole || normalizedGrade;
+        if (titleLine) {
+            const title = document.createElement("p");
+            title.className = "cabinet-node-title";
+            title.textContent = titleLine;
+            info.appendChild(title);
+        }
+    } else {
+        if (normalizedRole) {
+            const roleLine = document.createElement("p");
+            roleLine.className = "cabinet-node-role";
+            roleLine.textContent = normalizedRole;
+            info.appendChild(roleLine);
         }
 
-        return data || [];
-    } catch (e) {
-        console.warn("[onepage] Erreur lors de la récupération des collaborateurs :", e);
-        return [];
+        if (normalizedJob && normalizedJob !== normalizedRole) {
+            const jobLine = document.createElement("p");
+            jobLine.className = "cabinet-node-title";
+            jobLine.textContent = normalizedJob;
+            info.appendChild(jobLine);
+        }
     }
+
+    if (member?.email) {
+        const email = document.createElement("a");
+        email.href = `mailto:${member.email}`;
+        email.textContent = member.email;
+        email.className = "cabinet-node-email";
+        email.rel = "noopener";
+        info.appendChild(email);
+    }
+
+    card.appendChild(info);
+    return card;
 };
+
+const buildCabinetTree = (members) => {
+    const map = new Map();
+    members.forEach((member) => {
+        map.set(member.id, { ...member, children: [] });
+    });
+
+    const roots = [];
+
+    map.forEach((node) => {
+        const parentId = node.superiorId;
+        if (parentId && map.has(parentId)) {
+            map.get(parentId).children.push(node);
+        } else {
+            roots.push(node);
+        }
+    });
+
+    const sortBranch = (list) => {
+        list.sort(compareCabinetMembers);
+        list.forEach((child) => {
+            if (Array.isArray(child.children) && child.children.length) {
+                sortBranch(child.children);
+            }
+        });
+    };
+
+    sortBranch(roots);
+    return roots;
+};
+
+const groupCabinetByDepth = (roots) => {
+    const levels = [];
+    const queue = [];
+
+    roots.forEach((root) => {
+        queue.push({ node: root, depth: 0 });
+    });
+
+    while (queue.length) {
+        const { node, depth } = queue.shift();
+        if (!levels[depth]) {
+            levels[depth] = [];
+        }
+        levels[depth].push(node);
+        node.children.forEach((child) => queue.push({ node: child, depth: depth + 1 }));
+    }
+
+    return levels;
+};
+
+const createCabinetTreeHero = (minister, totalMembers) => {
+    const hero = document.createElement("div");
+    hero.className = "cabinet-tree-hero";
+
+    const portrait = document.createElement("img");
+    portrait.className = "cabinet-tree-hero-avatar";
+    portrait.src = minister?.photo ?? "assets/placeholder-minister.svg";
+    portrait.alt = minister?.name ? `Portrait de ${minister.name}` : "Portrait du ministre";
+
+    const info = document.createElement("div");
+    info.className = "cabinet-tree-hero-info";
+
+    const title = document.createElement("strong");
+    title.className = "cabinet-tree-hero-name";
+    title.textContent = minister?.name || "Ministre";
+
+    const subtitle = document.createElement("p");
+    subtitle.className = "cabinet-tree-hero-role";
+    subtitle.textContent = minister?.mission || minister?.portfolio || formatRole(minister?.role) || "Cabinet ministériel";
+
+    const count = document.createElement("span");
+    count.className = "cabinet-tree-hero-count";
+    count.textContent = totalMembers
+        ? `${totalMembers} membre${totalMembers > 1 ? "s" : ""}`
+        : "Aucun collaborateur renseigné";
+
+    info.appendChild(title);
+    info.appendChild(subtitle);
+    info.appendChild(count);
+
+    hero.appendChild(portrait);
+    hero.appendChild(info);
+
+    return hero;
+};
+
+const renderCabinetSection = (minister, collaborators, gradeLookup) => {
+    const lookup = gradeLookup || collaboratorGradesLookup || createGradeLookup(null);
+    const members = normaliseCabinetMembers(collaborators, lookup);
+    const section = document.createElement("section");
+    section.className = "modal-collaborators is-hidden";
+    section.setAttribute("role", "region");
+    section.setAttribute("aria-label", "Cabinet du ministre");
+    section.setAttribute("aria-live", "polite");
+
+    const panel = document.createElement("div");
+    panel.className = "cabinet-panel";
+    section.appendChild(panel);
+
+    const header = document.createElement("header");
+    header.className = "cabinet-panel-header";
+
+    const title = document.createElement("h2");
+    title.className = "cabinet-panel-title";
+    title.textContent = "Collaborateurs";
+    header.appendChild(title);
+
+    const context = document.createElement("p");
+    context.className = "cabinet-panel-context";
+    context.textContent = minister?.name ? `Cabinet de ${minister.name}` : "Organisation du cabinet";
+    header.appendChild(context);
+
+    panel.appendChild(header);
+
+    if (!members.length) {
+        const empty = document.createElement("p");
+        empty.className = "cabinet-empty";
+        empty.textContent = "Les collaborateurs de ce cabinet seront bientôt disponibles.";
+        panel.appendChild(empty);
+        return section;
+    }
+
+    panel.appendChild(createCabinetTreeHero(minister, members.length));
+
+    const treeWrapper = document.createElement("div");
+    treeWrapper.className = "cabinet-tree";
+
+    const roots = buildCabinetTree(members);
+    const levels = groupCabinetByDepth(roots);
+
+    levels.forEach((levelMembers, index) => {
+        const level = document.createElement("section");
+        level.className = "cabinet-tree-level";
+        level.dataset.depth = String(index);
+
+        levelMembers.forEach((member) => {
+            level.appendChild(createCabinetNodeCard(member));
+        });
+
+        treeWrapper.appendChild(level);
+
+        if (index < levels.length - 1) {
+            const connector = document.createElement("div");
+            connector.className = "cabinet-tree-connector";
+            connector.setAttribute("aria-hidden", "true");
+            treeWrapper.appendChild(connector);
+        }
+    });
+
+    panel.appendChild(treeWrapper);
+    return section;
+};
+
 
 const openModal = (minister) => {
     if (!modal) return;
+    const modalBody = modal.querySelector(".modal-body");
+    modal.classList.remove("modal--cabinet-active");
     modalElements.photo.src = minister.photo ?? "assets/placeholder-minister.svg";
     modalElements.photo.alt = minister.photoAlt ?? `Portrait de ${minister.name ?? "ministre"}`;
     modalElements.role.textContent = formatRole(minister.role);
@@ -470,42 +975,116 @@ const openModal = (minister) => {
     modalElements.mission.textContent = minister.mission ?? "Mission principale à renseigner.";
     modalElements.contact.textContent = minister.contact ?? "Contact prochainement disponible.";
 
-    // Nettoie la section collaborateurs si elle existe
-    try {
-        const oldCollabSection = modal.querySelector(".modal-collaborators");
+    if (modalBody) {
+        const oldCollabSection = modalBody.querySelector(".modal-collaborators");
         if (oldCollabSection) oldCollabSection.remove();
-    } catch (e) {
-        /* noop */
+        const oldToggle = modalBody.querySelector(".modal-collaborators-toggle");
+        if (oldToggle) oldToggle.remove();
     }
 
-    // Récupère et affiche les collaborateurs (si Supabase présent)
-    if (minister.id) {
-        fetchCollaboratorsForMinister(minister.id).then((collabs) => {
-            if (!Array.isArray(collabs) || collabs.length === 0) return;
-            const section = document.createElement("div");
-            section.className = "modal-collaborators";
-            section.innerHTML = `
-      <h4>Collaborateurs</h4>
-      <div class="collaborators-list">
-        ${collabs
-            .map(
-                (c) => `
-          <div class="collaborator-card">
-            <img src="${c.photo_url || 'assets/placeholder-minister.svg'}" class="collaborator-photo" alt="">
-            <div>
-              <p class="collab-name">${c.full_name}</p>
-              <p class="collab-role">${c.cabinet_role || 'Collaborateur'}</p>
-              ${c.collab_grade ? `<p class="collab-grade">${c.collab_grade}</p>` : ''}
-            </div>
-          </div>
-        `
-            )
-            .join("")}
-      </div>`;
-            modal.querySelector(".modal-body").appendChild(section);
-        }).catch((error) => {
-            console.warn("[onepage] Impossible de charger les collaborateurs", error);
-        });
+    if (modalBody) {
+        const toggleButton = document.createElement("button");
+        toggleButton.type = "button";
+        toggleButton.className = "btn btn-ghost modal-collaborators-toggle";
+        toggleButton.textContent = minister.id ? "Voir le cabinet" : "Cabinet non disponible";
+        toggleButton.setAttribute("aria-expanded", "false");
+
+        if (!minister.id) {
+            toggleButton.disabled = true;
+            toggleButton.setAttribute("aria-disabled", "true");
+        }
+
+        const metaSection = modalBody.querySelector(".modal-meta");
+        if (metaSection) {
+            metaSection.insertAdjacentElement("afterend", toggleButton);
+        } else {
+            modalBody.appendChild(toggleButton);
+        }
+
+        if (minister.id) {
+            let collaboratorsSection = null;
+            let isExpanded = false;
+            let isLoadingCollaborators = false;
+            let cachedGradeLookup = null;
+            const collabSectionId = `modal-collaborators-${minister.id}`;
+            toggleButton.setAttribute("aria-controls", collabSectionId);
+
+            const renderSection = (gradeLookup) => {
+                const cachedCollabs = collaboratorsCache.get(minister.id);
+                if (!cachedCollabs || cachedCollabs.length === 0) {
+                    return null;
+                }
+
+                const section = renderCabinetSection(minister, cachedCollabs, gradeLookup);
+                section.id = collabSectionId;
+
+                if (collaboratorsSection && collaboratorsSection.parentElement) {
+                    collaboratorsSection.replaceWith(section);
+                } else {
+                    modalBody.appendChild(section);
+                }
+
+                collaboratorsSection = section;
+                return collaboratorsSection;
+            };
+
+            const setExpandedState = (expanded) => {
+                isExpanded = expanded;
+                if (expanded) {
+                    collaboratorsSection?.classList.remove("is-hidden");
+                } else {
+                    collaboratorsSection?.classList.add("is-hidden");
+                }
+                toggleButton.textContent = expanded ? "Masquer le cabinet" : "Voir le cabinet";
+                toggleButton.setAttribute("aria-expanded", String(expanded));
+                modal.classList.toggle("modal--cabinet-active", expanded);
+            };
+
+            toggleButton.addEventListener("click", async () => {
+                if (isLoadingCollaborators) return;
+
+                if (!collaboratorsCache.has(minister.id)) {
+                    isLoadingCollaborators = true;
+                    toggleButton.disabled = true;
+                    toggleButton.textContent = "Chargement...";
+                    toggleButton.setAttribute("aria-disabled", "true");
+
+                    const collabs = await fetchCollaboratorsForMinister(minister.id);
+                    isLoadingCollaborators = false;
+                    toggleButton.disabled = false;
+                    toggleButton.removeAttribute("aria-disabled");
+
+                    if (!Array.isArray(collabs)) {
+                        collaboratorsCache.delete(minister.id);
+                        toggleButton.textContent = "Réessayer";
+                        return;
+                    }
+
+                    collaboratorsCache.set(minister.id, collabs);
+                }
+
+                const cachedCollabs = collaboratorsCache.get(minister.id) || [];
+
+                if (!cachedCollabs.length) {
+                    setExpandedState(false);
+                    toggleButton.textContent = "Aucun collaborateur renseigné";
+                    toggleButton.disabled = true;
+                    toggleButton.setAttribute("aria-disabled", "true");
+                    return;
+                }
+
+                const gradeLookup = cachedGradeLookup || (await getCollaboratorGradeLookup());
+                cachedGradeLookup = gradeLookup;
+
+                const section = renderSection(gradeLookup);
+                if (!section) {
+                    setExpandedState(false);
+                    return;
+                }
+
+                setExpandedState(!isExpanded);
+            });
+        }
     }
 
     modal.hidden = false;
@@ -515,6 +1094,7 @@ const openModal = (minister) => {
 const closeModal = () => {
     if (!modal) return;
     modal.hidden = true;
+    modal.classList.remove("modal--cabinet-active");
     document.body.style.overflow = "";
 };
 
