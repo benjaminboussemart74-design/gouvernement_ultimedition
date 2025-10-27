@@ -1476,9 +1476,21 @@ main {
 }
 
 @media print {
-    body.print-all {
+    body {
         background: #ffffff;
-        color: #000000;
+        color: var(--color-encre);
+    }
+
+    body.print-all,
+    body.print-single {
+        font-family: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-weight: 400;
+        line-height: 1.35;
+    }
+
+    body.print-all {
+        background: var(--color-perle);
+        color: var(--color-encre);
     }
 
     body.print-all *,
@@ -1494,37 +1506,112 @@ main {
     body.print-all .contact-card,
     body.print-all .minister-card,
     body.print-all .timeline-item {
-        background: #ffffff !important;
+        background: transparent !important;
         box-shadow: none !important;
     }
 
-    body.print-all main {
-        padding: 1.2cm 1.5cm;
+    body.print-all .site-header {
+        display: grid;
+        gap: 0.45cm;
+        padding: 0 0 0.9cm;
+        border-bottom: 0.18cm solid rgba(17, 23, 39, 0.12);
     }
 
-    body.print-all .section {
-        gap: 1.2rem;
+    body.print-all .site-header::after {
+        content: none !important;
     }
 
-    body.print-all .site-header::after,
-    body.print-all .modal {
-        display: none !important;
+    body.print-all .site-header::before {
+        content: attr(data-print-date);
+        display: block;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 0.85rem;
+        color: var(--color-sesame);
+        text-align: right;
+        font-weight: 600;
     }
 
-    body.print-all .site-nav,
-    body.print-all .header-search,
+    body.print-all .brand-block {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.35cm;
+    }
+
+    body.print-all .brand-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2cm;
+        padding: 0.2cm 0.5cm;
+        border-radius: 999px;
+        border: 1px solid rgba(17, 23, 39, 0.12);
+        background: rgba(100, 215, 205, 0.15);
+        color: var(--color-panthere);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+    }
+
+    body.print-all .brand-title h1 {
+        color: var(--color-encre);
+        font-size: 2.6rem;
+        margin: 0;
+    }
+
+    body.print-all .brand-baseline {
+        background: none;
+        color: var(--color-sesame);
+        font-size: 1.05rem;
+        padding: 0;
+    }
+
+    body.print-all .hero,
     body.print-all .hero-actions,
     body.print-all .toolbar,
+    body.print-all .site-nav,
+    body.print-all .header-search,
     body.print-all #export-page-pdf,
     body.print-all .minister-cta,
+    body.print-all .modal,
     body.print-all .modal-collaborators-toggle,
     body.print-all .site-footer .btn {
         display: none !important;
     }
 
+    body.print-all main {
+        padding: 1cm 0;
+    }
+
+    body.print-all .section {
+        padding: 0;
+        margin: 0 0 1cm;
+        gap: 0.8cm;
+    }
+
+    body.print-all .section-header {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    body.print-all .section-title {
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-size: 1.4rem;
+        color: var(--color-encre);
+        margin-bottom: 0.2cm;
+    }
+
+    body.print-all .section-subtitle {
+        font-size: 1rem;
+        color: var(--color-sesame);
+        margin: 0;
+    }
+
     body.print-all .ministers-grid {
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 0.75rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(7.2cm, 1fr));
+        gap: 0.8cm 0.75cm;
     }
 
     body.print-all .minister-card,
@@ -1534,14 +1621,104 @@ main {
 
     body.print-all .minister-card {
         transform: none !important;
-        border-color: rgba(0, 0, 0, 0.1);
-        border-left-color: rgba(0, 0, 0, 0.18);
+        display: grid;
+        grid-template-columns: 3.2cm minmax(0, 1fr);
+        gap: 0.5cm;
+        padding: 0.55cm;
+        border: 1px solid rgba(17, 23, 39, 0.14);
+        border-radius: 0.6cm;
+        background: #ffffff;
+        page-break-inside: avoid;
+        break-inside: avoid;
     }
 
     body.print-all .minister-card:hover,
     body.print-all .minister-card:focus {
         transform: none;
         box-shadow: none;
+    }
+
+    body.print-all .mc-right {
+        grid-column: 1;
+        display: grid;
+        gap: 0.4cm;
+        justify-items: center;
+        align-content: start;
+    }
+
+    body.print-all .mc-left {
+        grid-column: 2;
+        gap: 0.3cm;
+    }
+
+    body.print-all .minister-photo {
+        width: 3cm;
+        height: 3cm;
+        border-radius: 50%;
+        border: 3px solid rgba(100, 215, 205, 0.45);
+        background: var(--color-guimauve);
+        object-fit: cover;
+    }
+
+    body.print-all .mc-ministry {
+        font-size: 1.1rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-encre);
+        margin: 0;
+    }
+
+    body.print-all .mc-ministries {
+        margin: 0;
+        gap: 0.25cm;
+    }
+
+    body.print-all .mc-ministry-badge {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 0.12cm 0.35cm;
+        background: rgba(105, 135, 255, 0.08);
+        border-radius: 999px;
+        border: 1px solid rgba(17, 23, 39, 0.1);
+        box-shadow: none;
+    }
+
+    body.print-all .minister-card h3 {
+        font-size: 1.4rem;
+        margin: 0;
+        color: var(--color-encre);
+    }
+
+    body.print-all .mc-meta {
+        gap: 0.28cm;
+    }
+
+    body.print-all .minister-role {
+        font-size: 0.85rem;
+        color: var(--color-sesame);
+        margin: 0;
+    }
+
+    body.print-all .party-badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.14cm 0.35cm;
+        border-radius: 999px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    body.print-all .mc-mission {
+        font-size: 0.95rem;
+        color: var(--color-poivre);
+        margin: 0;
+    }
+
+    body.print-all .delegates,
+    body.print-all .minister-cta {
+        display: none !important;
     }
 
     body.print-all .btn {
@@ -1558,9 +1735,10 @@ main {
     }
 
     body.print-all .site-footer {
-        background: #ffffff;
-        box-shadow: none;
-        color: inherit;
+        border-top: 1px solid rgba(17, 23, 39, 0.12);
+        background: transparent;
+        color: var(--color-poivre);
+        padding-top: 0.6cm;
     }
 }
 
@@ -1602,10 +1780,18 @@ body.print-single #print-sheet {
     }
 
     body.print-single {
-        background: #fff;
+        background: var(--color-perle);
         color: var(--color-encre);
         font-family: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
         font-weight: 400;
+        line-height: 1.35;
+    }
+
+    body.print-single *,
+    body.print-single *::before,
+    body.print-single *::after {
+        box-shadow: none !important;
+        text-shadow: none !important;
     }
 
     body.print-single > *:not(#print-sheet) {
@@ -1615,39 +1801,44 @@ body.print-single #print-sheet {
     body.print-single #print-sheet {
         display: flex;
         flex-direction: column;
-        gap: 1.2cm;
+        gap: 0.9cm;
         padding: 0;
+        color: inherit;
     }
 
     body.print-single #print-sheet .print-sheet-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 1.5cm;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 0.8cm;
+        align-items: start;
+        padding-bottom: 0.6cm;
+        border-bottom: 2px solid rgba(17, 23, 39, 0.12);
     }
 
     body.print-single #print-sheet .print-sheet-brand {
-        flex: 1 1 auto;
+        display: grid;
+        gap: 0.25cm;
     }
 
     body.print-single #print-sheet .print-sheet-eyebrow {
         text-transform: uppercase;
-        letter-spacing: 0.12em;
-        font-size: 0.9rem;
+        letter-spacing: 0.16em;
+        font-size: 0.85rem;
         color: var(--color-sesame);
-        margin: 0 0 0.5cm;
+        margin: 0;
+        font-weight: 600;
     }
 
     body.print-single #print-sheet .print-sheet-name {
-        font-size: 2.6rem;
-        margin: 0 0 0.35cm;
+        font-size: 2.8rem;
+        margin: 0;
         color: var(--color-encre);
     }
 
     body.print-single #print-sheet .print-sheet-role {
-        font-size: 1.1rem;
-        margin: 0 0 0.3cm;
-        color: var(--color-poivre);
+        font-size: 1rem;
+        margin: 0;
+        color: var(--color-sesame);
         text-transform: uppercase;
         letter-spacing: 0.08em;
     }
@@ -1658,31 +1849,60 @@ body.print-single #print-sheet {
         color: var(--color-poivre);
     }
 
+    body.print-single #print-sheet .print-sheet-date {
+        margin: 0.15cm 0 0;
+        font-size: 0.95rem;
+        color: var(--color-sesame);
+    }
+
+    body.print-single #print-sheet .print-sheet-party {
+        align-self: start;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2cm;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 0.18cm 0.45cm;
+        border-radius: 999px;
+    }
+
     body.print-single #print-sheet .print-sheet-photo img {
-        width: 6.5cm;
-        height: 8.5cm;
+        width: 5.8cm;
+        height: 7.6cm;
         object-fit: cover;
-        border-radius: 1cm;
+        border-radius: 0.85cm;
         background: var(--color-guimauve);
+        border: 3px solid rgba(100, 215, 205, 0.3);
     }
 
     body.print-single #print-sheet .print-sheet-section {
         display: flex;
         flex-direction: column;
-        gap: 0.35cm;
+        gap: 0.45cm;
         page-break-inside: avoid;
+        background: #ffffff;
+        border-radius: 0.6cm;
+        border: 1px solid rgba(17, 23, 39, 0.12);
+        padding: 0.6cm;
     }
 
     body.print-single #print-sheet .print-section-title {
-        font-size: 1.2rem;
+        font-size: 1.15rem;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.12em;
         color: var(--color-sesame);
         margin: 0;
     }
 
+    body.print-single #print-sheet .print-section-body {
+        display: grid;
+        gap: 0.35cm;
+    }
+
     body.print-single #print-sheet .print-section-text {
-        font-size: 1rem;
+        font-size: 1.05rem;
         line-height: 1.5;
         color: var(--color-poivre);
         margin: 0;
@@ -1691,24 +1911,24 @@ body.print-single #print-sheet {
     body.print-single #print-sheet .print-sheet-meta {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(6cm, 1fr));
-        gap: 0.6cm;
+        gap: 0.5cm;
         margin: 0;
     }
 
     body.print-single #print-sheet .print-meta-item {
         border: 1px solid rgba(17, 23, 39, 0.12);
-        border-radius: 0.4cm;
-        padding: 0.6cm;
-        background: #f7f7f9;
+        border-radius: 0.45cm;
+        padding: 0.45cm;
+        background: rgba(236, 234, 237, 0.4);
         min-height: 0;
     }
 
     body.print-single #print-sheet .print-meta-label {
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.1em;
         color: var(--color-sesame);
-        margin: 0 0 0.2cm;
+        margin: 0 0 0.18cm;
     }
 
     body.print-single #print-sheet .print-meta-value {
@@ -1719,31 +1939,37 @@ body.print-single #print-sheet {
 
     body.print-single #print-sheet .print-collaborators-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(6.5cm, 1fr));
-        gap: 0.6cm;
+        grid-template-columns: repeat(auto-fit, minmax(6.4cm, 1fr));
+        gap: 0.45cm;
     }
 
     body.print-single #print-sheet .print-collaborator-card {
-        display: flex;
+        display: grid;
+        grid-template-columns: auto 1fr;
         align-items: center;
-        gap: 0.45cm;
+        gap: 0.35cm;
         border: 1px solid rgba(17, 23, 39, 0.12);
-        border-radius: 0.4cm;
-        padding: 0.5cm;
-        background: #fff;
+        border-radius: 0.45cm;
+        padding: 0.4cm;
+        background: #ffffff;
     }
 
     body.print-single #print-sheet .print-collaborator-photo img {
-        width: 2.6cm;
-        height: 2.6cm;
+        width: 2.4cm;
+        height: 2.4cm;
         border-radius: 50%;
         object-fit: cover;
         background: var(--color-guimauve);
     }
 
+    body.print-single #print-sheet .print-collaborator-details {
+        display: grid;
+        gap: 0.12cm;
+    }
+
     body.print-single #print-sheet .print-collaborator-name {
         font-weight: 600;
-        margin: 0 0 0.1cm;
+        margin: 0;
         color: var(--color-encre);
     }
 
