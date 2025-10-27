@@ -43,35 +43,6 @@ const MINISTRY_ORDER_MAP = new Map(
     MINISTRY_ORDER.map((label, idx) => [normalizeLabel(label), idx])
 );
 
-const getPrimaryMinistryLabel = (minister) => {
-    if (!minister) return "";
-    if (Array.isArray(minister.ministries) && minister.ministries.length) {
-        const primary = minister.ministries.find((entry) => entry?.isPrimary && entry?.label);
-        if (primary?.label) return primary.label;
-        const first = minister.ministries.find((entry) => entry?.label);
-        if (first?.label) return first.label;
-    }
-    return minister.portfolio || minister.ministry || "";
-};
-
-const compareMinisters = (a, b) => {
-    if (!a && !b) return 0;
-    if (!a) return 1;
-    if (!b) return -1;
-
-    const roleA = ROLE_PRIORITY[a.role] ?? Number.MAX_SAFE_INTEGER;
-    const roleB = ROLE_PRIORITY[b.role] ?? Number.MAX_SAFE_INTEGER;
-    if (roleA !== roleB) return roleA - roleB;
-
-    const portfolioKeyA = MINISTRY_ORDER_MAP.get(normalise(getPrimaryMinistryLabel(a)));
-    const portfolioKeyB = MINISTRY_ORDER_MAP.get(normalise(getPrimaryMinistryLabel(b)));
-    const orderA = typeof portfolioKeyA === "number" ? portfolioKeyA : Number.MAX_SAFE_INTEGER;
-    const orderB = typeof portfolioKeyB === "number" ? portfolioKeyB : Number.MAX_SAFE_INTEGER;
-    if (orderA !== orderB) return orderA - orderB;
-
-    return (a.name || "").localeCompare(b.name || "");
-};
-
 // Priorité d'importance par rôle
 // 0 = plus important (haut gauche), grandissant vers la droite/bas
 const ROLE_PRIORITY = {
@@ -353,17 +324,6 @@ const normalise = (value) =>
         .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase()
         .trim() ?? "";
-
-const getPortfolioLabel = (minister) => {
-    if (!minister) return "";
-    if (Array.isArray(minister.ministries) && minister.ministries.length) {
-        return minister.ministries
-            .map((entry) => entry?.label)
-            .filter(Boolean)
-            .join(" • ");
-    }
-    return minister.portfolio || minister.ministry || "";
-};
 
 const ensureSupabaseClient = () => {
     try {
@@ -1462,8 +1422,13 @@ const openModal = (minister) => {
     modalElements.role.textContent = formatRole(minister.role);
     modalElements.title.textContent = minister.name ?? "Nom du ministre";
 
-    const portfolioLabel = getPortfolioLabel(minister);
-    modalElements.portfolio.textContent = portfolioLabel || "Portefeuille à préciser";
+    const ministriesLabel = minister.ministries?.length
+        ? minister.ministries
+              .map((entry) => entry.label)
+              .filter(Boolean)
+              .join(" • ")
+        : null;
+    modalElements.portfolio.textContent = ministriesLabel || minister.portfolio || "Portefeuille à préciser";
 
     modalElements.description.textContent = minister.description ?? "Ajoutez ici une biographie synthétique.";
 
@@ -1509,19 +1474,6 @@ const openModal = (minister) => {
                 await switchToCabinetView(minister);
             });
         }
-    }
-
-    if (exportButton && !exportButton.dataset.bound) {
-        exportButton.addEventListener("click", async () => {
-            if (!activeMinister) return;
-            exportButton.disabled = true;
-            try {
-                await printMinisterSheet(activeMinister);
-            } finally {
-                exportButton.disabled = false;
-            }
-        });
-        exportButton.dataset.bound = "true";
     }
 
     modal.hidden = false;
