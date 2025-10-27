@@ -2,6 +2,7 @@ const ROLE_LABELS = {
     leader: "Premier ministre",
     "minister-state": "Ministre d'État",
     minister: "Ministre",
+    "minister-delegate": "Ministre délégué",
     "ministre-delegue": "Ministre délégué",
     secretary: "Secrétaire d'État",
     collaborator: "Collaborateur"
@@ -48,12 +49,23 @@ const ROLE_PRIORITY = {
     leader: 0,
     "minister-state": 1, // plus haut que "minister"
     minister: 2,
+    "minister-delegate": 3,
     "ministre-delegue": 3,
     secretary: 4,
     collaborator: 5
 };
 
-const MINISTER_ROLES = new Set(["leader", "minister-state", "minister", "ministre-delegue", "secretary"]);
+const MINISTER_ROLES = new Set([
+    "leader",
+    "minister-state",
+    "minister",
+    "minister-delegate",
+    "ministre-delegue",
+    "secretary"
+]);
+
+const DELEGATE_ROLES = new Set(["minister-delegate", "ministre-delegue", "secretary"]);
+const CORE_ROLES = new Set(["leader", "minister", "minister-state"]);
 const FALLBACK_DATA_URL = "data/ministers.json";
 
 // Mapping des valeurs `party` (valeurs possibles depuis Supabase) vers
@@ -103,6 +115,19 @@ const mapPartyLabel = (raw) => {
 };
 
 
+const createPartyBadge = (partyName) => {
+    if (!partyName) return null;
+    const badge = document.createElement("span");
+    badge.className = "party-badge";
+    const mapped = mapPartyLabel(partyName);
+    badge.textContent = mapped || partyName;
+    if (mapped) {
+        badge.setAttribute("data-party", mapped);
+    }
+    return badge;
+};
+
+
 const grid = document.getElementById("ministers-grid");
 const emptyState = document.getElementById("ministers-empty");
 const searchInput = document.getElementById("minister-search");
@@ -124,7 +149,6 @@ const modalElements = {
 let ministers = [];
 let coreMinisters = [];
 let delegateMinisters = [];
-let showDelegates = false;
 let currentRole = "all";
 let currentQuery = "";
 let lastFetchError = null; // store last fetch error for debug UI
@@ -160,31 +184,14 @@ const ensureSupabaseClient = () => {
 };
 
 const buildCard = (minister) => {
-    // Use an article element so we can safely include interactive controls inside the card
     const card = document.createElement("article");
     card.className = "minister-card";
     card.setAttribute("role", "listitem");
     card.dataset.role = minister.role ?? "";
-    // expose person id for quick navigation
     if (minister.id != null) card.dataset.personId = String(minister.id);
 
-    // Badge de rôle (sémantique)
-    const [badgeText, badgeVariant] = (() => {
-        const r = minister.role || "";
-        if (r === "minister" || r === "minister-state") return ["Ministre de plein exercice", "plein"];
-        if (r === "ministre-delegue") return ["Ministre délégué", "delegue"];
-        if (r === "leader") return [ROLE_LABELS[r] || "", "leader"];
-        if (r === "secretary") return [ROLE_LABELS[r] || "", "secretary"];
-        return [ROLE_LABELS[r] || "", "other"];
-    })();
-    if (badgeText) {
-        const badge = document.createElement("span");
-        badge.className = `role-badge role-badge--${badgeVariant}`;
-        badge.textContent = badgeText;
-        card.appendChild(badge);
-    }
-
-    if (minister.role === "leader") {
+    const roleKey = minister.role || "";
+    if (roleKey === "leader") {
         card.classList.add("is-leader");
         card.setAttribute("aria-label", "Premier ministre");
     }
@@ -193,7 +200,6 @@ const buildCard = (minister) => {
         card.style.setProperty("--accent-color", minister.accentColor);
     }
 
-    // New rectangular layout: ministry on left, info to the right
     const left = document.createElement("div");
     left.className = "mc-left";
     const right = document.createElement("div");
@@ -210,42 +216,21 @@ const buildCard = (minister) => {
 
     const meta = document.createElement("div");
     meta.className = "mc-meta";
+
     const role = document.createElement("p");
     role.className = "minister-role";
-    role.textContent = (() => {
-        if (minister.role === "minister" || minister.role === "minister-state") return "Ministre de plein exercice";
-        if (minister.role === "ministre-delegue") return "Ministre délégué";
-        return formatRole(minister.role);
-    })();
+    role.textContent = formatRole(roleKey);
     meta.appendChild(role);
-    // Affiche le badge de parti : valeur fournie -> badge normal; valeur absente -> badge "Sans étiquette" plus visible
-    const partyRaw = minister.party?.toString().trim();
-    if (partyRaw) {
-        const party = document.createElement("span");
-        party.className = "party-badge";
-        party.textContent = minister.party;
-        // Try to map the raw party value to a known label used by CSS selectors
-        const mapped = mapPartyLabel(partyRaw);
-        if (mapped) {
-            party.setAttribute("data-party", mapped);
-        } else {
-            // Fallback: try to apply a CSS variable if available (var(--party-<key>))
-            const rawKey = normalise(partyRaw).replace(/[^a-z0-9]/g, "");
-            party.style.backgroundColor = `var(--party-${rawKey})`;
-            // ensure readable text if the var isn't present: CSS rule `.party-badge[style]` sets a default text color
-        }
-        meta.appendChild(party);
-    } else {
-        // Affiche un grand badge neutre "Sans étiquette"
-        const none = document.createElement("span");
-        none.className = "party-badge party-badge--untagged";
-        none.textContent = "Sans étiquette";
-        meta.appendChild(none);
+
+    const partyValue = minister.party;
+    const partyBadge = createPartyBadge(partyValue == null ? "" : String(partyValue).trim());
+    if (partyBadge) {
+        meta.appendChild(partyBadge);
     }
+
     left.appendChild(meta);
 
-    // Bio affichée directement pour le Premier ministre
-    if (minister.role === "leader") {
+    if (roleKey === "leader") {
         const bio = document.createElement("p");
         bio.className = "mc-bio";
         bio.textContent = (minister.description || "").trim() || "Biographie prochainement disponible.";
@@ -258,7 +243,6 @@ const buildCard = (minister) => {
     photo.alt = minister.photoAlt ?? `Portrait de ${minister.name ?? "ministre"}`;
     right.appendChild(photo);
 
-    // CTA: open modal (now a proper button to avoid nesting interactive elements)
     const cta = document.createElement("button");
     cta.type = "button";
     cta.className = "btn btn-primary minister-cta";
@@ -269,162 +253,48 @@ const buildCard = (minister) => {
     });
     right.appendChild(cta);
 
-    // Determine delegates to show: prefer explicit `minister.delegates`, otherwise
-    // try to derive related delegates from the global `delegateMinisters`.
-    let delegatesContainer = null;
-    let delegatesToShow = [];
-    if (Array.isArray(minister.delegates) && minister.delegates.length > 0) {
-        delegatesToShow = minister.delegates.slice();
-    } else if (Array.isArray(delegateMinisters) && delegateMinisters.length > 0) {
-        const primaryId = minister.primaryMinistryId || null;
-        const keyA = normalise(minister.portfolio || minister.ministry || "");
+    const delegates = Array.isArray(minister.delegates) ? minister.delegates : [];
+    if (delegates.length) {
+        const delegatesContainer = document.createElement("div");
+        delegatesContainer.className = "delegates";
 
-        // 1) Relation par hiérarchie ministérielle: ministère parent de la tutelle
-        if (primaryId) {
-            delegatesToShow = delegateMinisters.filter((d) => {
-                const a = d.primaryParentMinistryId != null ? String(d.primaryParentMinistryId) : null;
-                const b = String(primaryId);
-                return !!a && a === b;
-            });
-        }
-
-        // 2) Relation directe par supérieur hiérarchique si renseignée
-        if (delegatesToShow.length === 0 && minister.id != null) {
-            delegatesToShow = delegateMinisters.filter((d) => {
-                const sup = d.superiorId != null ? String(d.superiorId) : null;
-                const mid = String(minister.id);
-                return !!sup && sup === mid;
-            });
-        }
-
-        // 3) Fallback: matching par libellé de portefeuille
-        if (delegatesToShow.length === 0 && keyA) {
-            // exact label match
-            delegatesToShow = delegateMinisters.filter((d) => normalise(d.portfolio || d.ministry || "") === keyA);
-        }
-
-        // 4) Fuzzy tokens sur le libellé
-        if (delegatesToShow.length === 0 && keyA) {
-            const tokens = keyA.split(/[^a-z0-9]+/).filter(Boolean).filter((t) => t.length > 3);
-            if (tokens.length) {
-                delegatesToShow = delegateMinisters.filter((d) => {
-                    const keyD = normalise(d.portfolio || d.ministry || "");
-                    return tokens.some((tok) => keyD.includes(tok));
-                });
-            }
-        }
-
-        // Keep a rich shape for each delegate so we can open their fiche (modal)
-        delegatesToShow = delegatesToShow.map((d) => ({
-            id: d.id || d.person_id || null,
-            name: d.name || d.full_name || "",
-            role: d.role || d.mission || d.job_title || "",
-            party: d.party || "",
-            photo: d.photo || d.photo_url || "",
-            photoAlt: d.photoAlt || (d.full_name ? `Portrait de ${d.full_name}` : undefined),
-            description: d.description || "",
-            mission: d.mission || d.role || "",
-            contact: d.contact || d.email || "",
-            portfolio: d.portfolio || d.ministry || "",
-            accentColor: d.accentColor || d.color || undefined,
-            superiorId: d.superiorId || d.superior_id || null,
-            primaryMinistryId: d.primaryMinistryId || d.primary_ministry_id || null
-        }));
-    }
-
-    // Always render the delegates block for visibility, even if empty
-    const actionsWrap = document.createElement("div");
-    actionsWrap.className = "card-actions";
-
-    const toggleBtn = document.createElement("button");
-    toggleBtn.type = "button";
-    toggleBtn.className = "toggle-btn";
-    toggleBtn.textContent = "Afficher les ministres délégués";
-
-    delegatesContainer = document.createElement("div");
-    delegatesContainer.className = "delegates";
-    delegatesContainer.setAttribute("aria-hidden", "true");
-
-    // populate delegate cards (or empty message)
-        if (delegatesToShow.length > 0) {
-        delegatesToShow.forEach((d) => {
-            const delegate = document.createElement("div");
-            delegate.className = "delegate-card";
-            delegate.tabIndex = 0;
-            delegate.setAttribute("role", "button");
+        delegates.forEach((delegate) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "delegate-card";
 
             const info = document.createElement("div");
-            const dn = document.createElement("h3");
-            dn.textContent = d.name || "";
-            const dr = document.createElement("p");
-            dr.textContent = d.role || "";
+            info.className = "delegate-info";
+
+            const dn = document.createElement("p");
+            dn.className = "delegate-name";
+            dn.textContent = delegate.name || "";
             info.appendChild(dn);
+
+            const dr = document.createElement("p");
+            dr.className = "delegate-role";
+            dr.textContent = delegate.portfolio || formatRole(delegate.role) || "";
             info.appendChild(dr);
 
-            const party = document.createElement("span");
-            party.textContent = d.party || "";
-            party.className = "party-badge";
-            const mapped = mapPartyLabel(d.party || "");
-            if (mapped) party.setAttribute("data-party", mapped);
+            btn.appendChild(info);
 
-            delegate.appendChild(info);
-            delegate.appendChild(party);
+            const delegateBadge = createPartyBadge(
+                delegate.party == null ? "" : String(delegate.party).trim()
+            );
+            if (delegateBadge) {
+                btn.appendChild(delegateBadge);
+            }
 
-            // When clicking a delegate card, open the modal with the delegate's fiche
-            const delegateFiche = {
-                id: d.id,
-                name: d.name,
-                role: d.role === "" ? "Ministre délégué" : d.role,
-                photo: d.photo || "assets/placeholder-minister.svg",
-                photoAlt: d.photoAlt || `Portrait de ${d.name || "ministre"}`,
-                portfolio: d.portfolio || "",
-                description: d.description || "",
-                mission: d.mission || "",
-                contact: d.contact || "",
-                ministries: d.primaryMinistryId ? [{ label: d.portfolio }] : []
-            };
-
-            delegate.addEventListener("click", (ev) => {
-                ev.stopPropagation();
-                openModal(delegateFiche);
-            });
-            delegate.addEventListener("keydown", (ev) => {
-                if (ev.key === "Enter" || ev.key === " ") {
-                    ev.preventDefault();
-                    openModal(delegateFiche);
-                }
+            btn.addEventListener("click", (event) => {
+                event.stopPropagation();
+                openModal(delegate);
             });
 
-            delegatesContainer.appendChild(delegate);
+            delegatesContainer.appendChild(btn);
         });
-    } else {
-        const empty = document.createElement("p");
-        empty.className = "legend";
-        empty.textContent = "Aucun ministre délégué rattaché";
-        delegatesContainer.appendChild(empty);
+
+        left.appendChild(delegatesContainer);
     }
-
-    // Open by default for all
-    delegatesContainer.classList.add("show");
-    delegatesContainer.setAttribute("aria-hidden", "false");
-    toggleBtn.textContent = "Masquer les ministres délégués";
-
-    toggleBtn.addEventListener("click", (ev) => {
-        ev.stopPropagation();
-        const isVisible = delegatesContainer.classList.contains("show");
-        if (isVisible) {
-            delegatesContainer.classList.remove("show");
-            delegatesContainer.setAttribute("aria-hidden", "true");
-            toggleBtn.textContent = "Afficher les ministres délégués";
-        } else {
-            delegatesContainer.classList.add("show");
-            delegatesContainer.setAttribute("aria-hidden", "false");
-            toggleBtn.textContent = "Masquer les ministres délégués";
-        }
-    });
-
-    actionsWrap.appendChild(toggleBtn);
-    left.appendChild(actionsWrap);
 
     card.appendChild(left);
     card.appendChild(right);
@@ -444,148 +314,114 @@ const renderGrid = (items) => {
     emptyState.hidden = true;
     const fragment = document.createDocumentFragment();
 
-    // 1) Premier ministre en tête
-    const leaders = items.filter((m) => m.role === "leader");
-    leaders.forEach((m) => fragment.appendChild(buildCard(m)));
+    const sorted = items
+        .slice()
+        .sort((a, b) => {
+            const ra = ROLE_PRIORITY[a.role] ?? Number.MAX_SAFE_INTEGER;
+            const rb = ROLE_PRIORITY[b.role] ?? Number.MAX_SAFE_INTEGER;
+            if (ra !== rb) return ra - rb;
+            const ia = MINISTRY_ORDER_MAP.get(normalise(a.portfolio || a.ministry || ""));
+            const ib = MINISTRY_ORDER_MAP.get(normalise(b.portfolio || b.ministry || ""));
+            const va = typeof ia === "number" ? ia : Number.MAX_SAFE_INTEGER;
+            const vb = typeof ib === "number" ? ib : Number.MAX_SAFE_INTEGER;
+            if (va !== vb) return va - vb;
+            return (a.name || "").localeCompare(b.name || "");
+        });
 
-    // 2) Tous les autres ministres à la suite (pile verticale)
-    const isFull = (m) => m.role === "minister" || m.role === "minister-state";
-    let others = items.filter((m) => m.role !== "leader");
-    if (!showDelegates) {
-        // Par défaut, n'affiche que les ministres de plein exercice
-        others = others.filter(isFull);
-    }
-    // Tri: priorité par rôle, puis ordre de ministère, puis nom
-    others.sort((a, b) => {
-        const ra = ROLE_PRIORITY[a.role] ?? 999;
-        const rb = ROLE_PRIORITY[b.role] ?? 999;
-        if (ra !== rb) return ra - rb;
-        const ia = MINISTRY_ORDER_MAP.get(normalise(a.portfolio || a.ministry || ""));
-        const ib = MINISTRY_ORDER_MAP.get(normalise(b.portfolio || b.ministry || ""));
-        const va = typeof ia === "number" ? ia : Number.MAX_SAFE_INTEGER;
-        const vb = typeof ib === "number" ? ib : Number.MAX_SAFE_INTEGER;
-        if (va !== vb) return va - vb;
-        return (a.name || "").localeCompare(b.name || "");
+    sorted.forEach((minister) => {
+        fragment.appendChild(buildCard(minister));
     });
-
-    others.forEach((m) => fragment.appendChild(buildCard(m)));
 
     grid.appendChild(fragment);
     grid.setAttribute("aria-busy", "false");
 };
 
-const applyFilters = () => {
-    const source = showDelegates ? coreMinisters.concat(delegateMinisters) : coreMinisters;
-    const filtered = source.filter((minister) => {
-        const matchesRole = currentRole === "all" || minister.role === currentRole;
-        if (!matchesRole) return false;
+const attachDelegatesToCore = () => {
+    if (!Array.isArray(coreMinisters) || !Array.isArray(delegateMinisters)) return;
 
-        if (!currentQuery) return true;
-        const haystack = normalise(
-            `${minister.name ?? ""} ${minister.portfolio ?? ""} ${minister.mission ?? ""} ${minister.searchIndex ?? ""}`
-        );
-        return haystack.includes(currentQuery);
+    const coreById = new Map();
+    coreMinisters.forEach((minister) => {
+        if (minister && minister.id != null) {
+            coreById.set(String(minister.id), minister);
+        }
+        if (Array.isArray(minister?.delegates)) {
+            minister.delegates = minister.delegates.slice();
+        } else {
+            minister.delegates = [];
+        }
     });
 
-    // Tri: ministère (ordre fixe) -> rôle (priorité) -> nom
-    const ministryScore = (m) => {
-        const key = normalise(m.portfolio || m.ministry || "");
-        const idx = MINISTRY_ORDER_MAP.get(key);
-        return typeof idx === "number" ? idx : Number.MAX_SAFE_INTEGER;
+    const tryAssign = (delegate, target) => {
+        if (!target) return false;
+        target.delegates = Array.isArray(target.delegates) ? target.delegates : [];
+        target.delegates.push(delegate);
+        return true;
     };
-    const roleScore = (m) => (ROLE_PRIORITY[m.role] ?? Number.MAX_SAFE_INTEGER);
 
-    filtered.sort((a, b) => {
-        const ma = ministryScore(a);
-        const mb = ministryScore(b);
-        if (ma !== mb) return ma - mb;
+    delegateMinisters.forEach((delegate) => {
+        if (!delegate) return;
+        let parent = null;
+        const supId = delegate.superiorId != null ? String(delegate.superiorId) : null;
+        if (supId && coreById.has(supId)) {
+            parent = coreById.get(supId);
+        }
+        if (!parent && supId) {
+            parent = coreMinisters.find((minister) => String(minister.id) === supId) || null;
+        }
+        if (!parent && delegate.primaryParentMinistryId) {
+            const parentId = String(delegate.primaryParentMinistryId);
+            parent = coreMinisters.find((minister) => String(minister.primaryMinistryId || "") === parentId) || null;
+        }
+        if (!parent && delegate.primaryMinistryId) {
+            const ministryId = String(delegate.primaryMinistryId);
+            parent = coreMinisters.find((minister) => String(minister.primaryMinistryId || "") === ministryId) || null;
+        }
+        if (!parent) {
+            const delegateKey = normalise(delegate.portfolio || "");
+            if (delegateKey) {
+                parent = coreMinisters.find((minister) => normalise(minister.portfolio || "") === delegateKey) || null;
+            }
+        }
 
-        const ra = roleScore(a);
-        const rb = roleScore(b);
-        if (ra !== rb) return ra - rb;
-
-        return (a.name || "").localeCompare(b.name || "");
+        if (!tryAssign(delegate, parent)) {
+            // keep delegates accessible individually when no parent found
+            delegate.isOrphanDelegate = true;
+        }
     });
 
-    renderGrid(filtered);
+    coreMinisters.forEach((minister) => {
+        if (Array.isArray(minister.delegates) && minister.delegates.length > 1) {
+            minister.delegates.sort((a, b) => {
+                const ra = ROLE_PRIORITY[a.role] ?? Number.MAX_SAFE_INTEGER;
+                const rb = ROLE_PRIORITY[b.role] ?? Number.MAX_SAFE_INTEGER;
+                if (ra !== rb) return ra - rb;
+                return (a.name || "").localeCompare(b.name || "");
+            });
+        }
+    });
 };
 
-// Chargement des ministres délégués / secrétaires d'État à la demande
-const fetchDelegatesFromSupabase = async () => {
-    const client = ensureSupabaseClient();
-    if (!client) throw new Error("Client Supabase non initialisé");
+const applyFilters = () => {
+    let source;
+    if (currentRole === "all") {
+        source = coreMinisters.slice();
+    } else if (currentRole === "secretary") {
+        source = delegateMinisters.filter((minister) => DELEGATE_ROLES.has(minister.role));
+    } else {
+        source = coreMinisters.filter((minister) => minister.role === currentRole);
+    }
 
-    // Récupère toutes les personnes puis filtre côté client pour tolérer les variantes d'orthographe/accents
-    const { data: persons, error } = await client
-        .from("persons")
-        .select("id, full_name, role, description, photo_url, job_title, cabinet_role, email, party, superior_id")
-        .order("full_name", { ascending: true });
-    if (error) throw error;
-    // Filtrer côté client: accepter de multiples variantes
-    const isDelegateRole = (r) => {
-        const n = normalise(r || "");
-        return (
-            n === "ministre-delegue" ||
-            n === "ministre delegue" ||
-            n === "ministredelegue" ||
-            n === "ministredetat" ||
-            n === "secretaire" ||
-            n === "secretaire-etat" ||
-            n === "secretaire d'etat" ||
-            n === "secretairedetat" ||
-            n === "secretary"
-        );
-    };
-    const delegatePersons = (persons || []).filter((p) => isDelegateRole(p.role));
-    const ids = delegatePersons.map((p) => p.id);
-    let ministries = new Map();
-    if (ids.length) {
-        const { data: links } = await client
-            .from("person_ministries")
-            .select("person_id, ministry_id, is_primary, role_label")
-            .in("person_id", ids);
-        const ministryIds = Array.from(new Set((links || []).map((l) => l.ministry_id).filter(Boolean)));
-        if (ministryIds.length) {
-            const { data: mins } = await client
-                .from("ministries")
-                .select("id, name, short_name, color, category, parent_ministry_id")
-                .in("id", ministryIds);
-            ministries = new Map((mins || []).map((m) => [m.id, m]));
-        }
-        const linksByPerson = new Map();
-        (links || []).forEach((l) => {
-            const arr = linksByPerson.get(l.person_id) || [];
-            arr.push(l);
-            linksByPerson.set(l.person_id, arr);
-        });
-
-        return delegatePersons.map((p) => {
-            const lps = (linksByPerson.get(p.id) || []).sort((a, b) => (a.is_primary === b.is_primary ? 0 : a.is_primary ? -1 : 1));
-            const primary = lps[0];
-            const m = primary ? ministries.get(primary.ministry_id) : null;
-            return {
-                id: p.id,
-                name: p.full_name,
-                role: p.role,
-                description: p.description || "",
-                mission: primary?.role_label || p.job_title || p.cabinet_role || "",
-                portfolio: m?.short_name || m?.name || p.job_title || p.cabinet_role || "",
-                contact: p.email || "",
-                party: p.party || "",
-                photo: p.photo_url || "",
-                photoAlt: p.full_name ? `Portrait de ${p.full_name}` : undefined,
-                accentColor: m?.color || undefined,
-                ministries: lps.map((lk) => {
-                    const mm = ministries.get(lk.ministry_id);
-                    return { label: mm?.short_name || mm?.name || "", roleLabel: lk.role_label || null, isPrimary: !!lk.is_primary };
-                }).filter((x) => x.label),
-                superiorId: p.superior_id || null,
-                primaryMinistryId: m?.id || null,
-                primaryParentMinistryId: m?.parent_ministry_id || null,
-            };
+    const query = currentQuery;
+    if (query) {
+        source = source.filter((minister) => {
+            const haystack = normalise(
+                `${minister.name ?? ""} ${minister.portfolio ?? ""} ${minister.mission ?? ""} ${minister.searchIndex ?? ""}`
+            );
+            return haystack.includes(query);
         });
     }
-    return [];
+
+    renderGrid(source);
 };
 
 // ===============================
@@ -608,14 +444,7 @@ const fetchCollaboratorsForMinister = async (ministerId) => {
             return [];
         }
 
-        return (data || []).map((c) => ({
-            id: c.id,
-            name: c.full_name,
-            role: c.cabinet_role || "Collaborateur",
-            grade: c.collab_grade || "",
-            photo: c.photo_url || "assets/placeholder-minister.svg",
-            email: c.email || "",
-        }));
+        return data || [];
     } catch (e) {
         console.warn("[onepage] Erreur lors de la récupération des collaborateurs :", e);
         return [];
@@ -650,59 +479,34 @@ const openModal = (minister) => {
     }
 
     // Récupère et affiche les collaborateurs (si Supabase présent)
-    (async () => {
-        try {
-            const collabs = await fetchCollaboratorsForMinister(minister.id);
+    if (minister.id) {
+        fetchCollaboratorsForMinister(minister.id).then((collabs) => {
             if (!Array.isArray(collabs) || collabs.length === 0) return;
-
             const section = document.createElement("div");
             section.className = "modal-collaborators";
-
-            const title = document.createElement("h4");
-            title.textContent = "Collaborateurs";
-            section.appendChild(title);
-
-            const list = document.createElement("div");
-            list.className = "collaborators-list";
-
-            collabs.forEach((c) => {
-                const card = document.createElement("div");
-                card.className = "collaborator-card";
-
-                const img = document.createElement("img");
-                img.src = c.photo;
-                img.alt = `Portrait de ${c.name}`;
-                img.className = "collaborator-photo";
-
-                const info = document.createElement("div");
-                const name = document.createElement("p");
-                name.className = "collab-name";
-                name.textContent = c.name;
-
-                const role = document.createElement("p");
-                role.className = "collab-role";
-                role.textContent = c.role;
-
-                const grade = document.createElement("p");
-                grade.className = "collab-grade";
-                grade.textContent = c.grade;
-
-                info.appendChild(name);
-                info.appendChild(role);
-                if (c.grade) info.appendChild(grade);
-
-                card.appendChild(img);
-                card.appendChild(info);
-                list.appendChild(card);
-            });
-
-            section.appendChild(list);
-            const bodyEl = modal.querySelector(".modal-body") || modal;
-            bodyEl.appendChild(section);
-        } catch (e) {
-            console.warn('[onepage] Impossible de charger les collaborateurs', e);
-        }
-    })();
+            section.innerHTML = `
+      <h4>Collaborateurs</h4>
+      <div class="collaborators-list">
+        ${collabs
+            .map(
+                (c) => `
+          <div class="collaborator-card">
+            <img src="${c.photo_url || 'assets/placeholder-minister.svg'}" class="collaborator-photo" alt="">
+            <div>
+              <p class="collab-name">${c.full_name}</p>
+              <p class="collab-role">${c.cabinet_role || 'Collaborateur'}</p>
+              ${c.collab_grade ? `<p class="collab-grade">${c.collab_grade}</p>` : ''}
+            </div>
+          </div>
+        `
+            )
+            .join("")}
+      </div>`;
+            modal.querySelector(".modal-body").appendChild(section);
+        }).catch((error) => {
+            console.warn("[onepage] Impossible de charger les collaborateurs", error);
+        });
+    }
 
     modal.hidden = false;
     document.body.style.overflow = "hidden";
@@ -728,9 +532,14 @@ const fetchMinistersFromSupabase = async () => {
 
     const { data: persons, error: personsError } = await client
         .from("persons")
-        .select("id, full_name, role, description, photo_url, job_title, cabinet_role, email, party, superior_id")
-        // Don't filter by role enum here to avoid invalid enum errors — some projects have different role values.
-        // The join with person_ministries below will determine which persons have ministries.
+        .select(
+            `id, full_name, role, description, photo_url, email, party, superior_id,
+             person_ministries(
+                role_label,
+                is_primary,
+                ministries(id, short_name, name, color, parent_ministry_id)
+             )`
+        )
         .order("role", { ascending: true })
         .order("full_name", { ascending: true });
 
@@ -738,85 +547,44 @@ const fetchMinistersFromSupabase = async () => {
         throw personsError;
     }
 
-    if (!persons || !persons.length) {
+    const validPersons = (persons || []).filter((person) => MINISTER_ROLES.has(person.role));
+    if (!validPersons.length) {
         return [];
     }
 
-    const personIds = persons.map((person) => person.id).filter((value) => typeof value === "number" || typeof value === "string");
-    if (!personIds.length) {
-        return [];
-    }
+    return validPersons.map((person) => {
+        const links = Array.isArray(person.person_ministries) ? person.person_ministries.slice() : [];
+        links.sort((a, b) => {
+            if (!!a.is_primary === !!b.is_primary) {
+                const labelA = a?.ministries?.short_name || a?.ministries?.name || "";
+                const labelB = b?.ministries?.short_name || b?.ministries?.name || "";
+                return labelA.localeCompare(labelB);
+            }
+            return a.is_primary ? -1 : 1;
+        });
 
-    const { data: links, error: linksError } = await client
-        .from("person_ministries")
-        .select("person_id, ministry_id, is_primary, role_label")
-        .in("person_id", personIds);
+        const primaryLink = links.find((link) => link.is_primary) ?? links[0] ?? null;
+        const primaryMinistry = primaryLink?.ministries ?? null;
 
-    if (linksError) {
-        throw linksError;
-    }
-
-    const ministryIds = Array.from(
-        new Set((links || []).map((link) => link.ministry_id).filter((value) => value != null))
-    );
-
-    let ministries = [];
-    if (ministryIds.length) {
-        const { data: ministriesData, error: ministriesError } = await client
-            .from("ministries")
-            .select("id, name, short_name, color, category, parent_ministry_id")
-            .in("id", ministryIds);
-
-        if (ministriesError) {
-            throw ministriesError;
-        }
-        ministries = ministriesData ?? [];
-    }
-
-    const ministriesById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
-    const linksByPerson = new Map();
-    (links || []).forEach((link) => {
-        const list = linksByPerson.get(link.person_id) ?? [];
-        list.push(link);
-        linksByPerson.set(link.person_id, list);
-    });
-
-    return persons.map((person) => {
-        const personLinks = linksByPerson.get(person.id) ?? [];
-        const sortedLinks = personLinks
-            .slice()
-            .sort((a, b) => {
-                if (!!a.is_primary === !!b.is_primary) {
-                    const ministryA = ministriesById.get(a.ministry_id);
-                    const ministryB = ministriesById.get(b.ministry_id);
-                    const labelA = ministryA?.short_name || ministryA?.name || "";
-                    const labelB = ministryB?.short_name || ministryB?.name || "";
-                    return labelA.localeCompare(labelB);
-                }
-                return a.is_primary ? -1 : 1;
-            });
-
-        const primaryLink = sortedLinks.find((link) => link.is_primary) ?? sortedLinks[0] ?? null;
-        const primaryMinistry = primaryLink ? ministriesById.get(primaryLink.ministry_id) : null;
-
-        const ministriesLabels = sortedLinks.map((link) => {
-            const ministry = ministriesById.get(link.ministry_id);
-            if (!ministry) return null;
-            const label = ministry.short_name || ministry.name || null;
-            return {
-                label,
-                roleLabel: link.role_label || null,
-                isPrimary: !!link.is_primary
-            };
-        }).filter(Boolean);
+        const ministriesLabels = links
+            .map((link) => {
+                const ministry = link?.ministries;
+                if (!ministry) return null;
+                const label = ministry.short_name || ministry.name || "";
+                if (!label) return null;
+                return {
+                    label,
+                    roleLabel: link.role_label || null,
+                    isPrimary: !!link.is_primary
+                };
+            })
+            .filter(Boolean);
 
         const searchIndexParts = [
             person.full_name,
-            person.job_title,
-            person.cabinet_role,
             person.description,
-            ...ministriesLabels.map((entry) => entry?.label ?? ""),
-            ...ministriesLabels.map((entry) => entry?.roleLabel ?? "")
+            ...ministriesLabels.map((entry) => entry.label),
+            ...ministriesLabels.map((entry) => entry.roleLabel || "")
         ];
 
         return {
@@ -824,13 +592,8 @@ const fetchMinistersFromSupabase = async () => {
             name: person.full_name ?? "",
             role: person.role ?? "",
             description: person.description ?? "",
-            mission: primaryLink?.role_label || person.job_title || person.cabinet_role || "",
-            portfolio:
-                primaryMinistry?.short_name ||
-                primaryMinistry?.name ||
-                person.job_title ||
-                person.cabinet_role ||
-                "",
+            mission: primaryLink?.role_label || "",
+            portfolio: primaryMinistry?.short_name || primaryMinistry?.name || "",
             contact: person.email || "",
             party: person.party || "",
             photo: person.photo_url || "",
@@ -839,6 +602,7 @@ const fetchMinistersFromSupabase = async () => {
             ministries: ministriesLabels,
             superiorId: person.superior_id || null,
             primaryMinistryId: primaryMinistry?.id || null,
+            primaryParentMinistryId: primaryMinistry?.parent_ministry_id || null,
             searchIndex: searchIndexParts.filter(Boolean).join(" ")
         };
     });
@@ -942,38 +706,27 @@ const loadMinisters = async () => {
     let dataLoaded = false;
 
     try {
-        // Try the multi-query strategy first (persons + person_ministries + ministries)
-        // This avoids generating a 404 when the optional view `vw_ministernode` is not present.
         let supabaseMinisters = [];
         try {
             supabaseMinisters = await fetchMinistersFromSupabase();
-            coreMinisters = supabaseMinisters.filter((m) => m.role === "leader" || m.role === "minister" || m.role === "minister-state");
-            delegateMinisters = supabaseMinisters.filter((m) => m.role === "ministre-delegue" || m.role === "secretary");
+            ministers = supabaseMinisters;
+            coreMinisters = supabaseMinisters.filter((m) => CORE_ROLES.has(m.role));
+            delegateMinisters = supabaseMinisters.filter((m) => DELEGATE_ROLES.has(m.role));
         } catch (firstErr) {
-            // If the multi-query fails (network / permissions), try the view as a fallback
             lastFetchError = firstErr;
             console.warn('[onepage] fetchMinistersFromSupabase failed, attempting vw_ministernode as fallback', firstErr);
             try {
                 supabaseMinisters = await fetchMinistersFromView();
-                coreMinisters = supabaseMinisters;
-                // Préchargement: récupérer les délégués/SE pour activer le toggle dès le rendu
-                try {
-                    delegateMinisters = await fetchDelegatesFromSupabase();
-                } catch (preErr) {
-                    console.warn('[onepage] Préchargement des délégués indisponible', preErr);
-                    delegateMinisters = [];
-                }
+                ministers = supabaseMinisters;
+                coreMinisters = supabaseMinisters.filter((m) => CORE_ROLES.has(m.role));
+                delegateMinisters = supabaseMinisters.filter((m) => DELEGATE_ROLES.has(m.role));
             } catch (viewErr) {
-                // propagate the view error after recording it
                 lastFetchError = viewErr;
                 throw viewErr;
             }
         }
         if (supabaseMinisters.length) {
-            ministers = supabaseMinisters;
-            // Ensure leader is first visually
-            const score = (m) => (m.role === "leader" ? 0 : 1);
-            ministers.sort((a, b) => score(a) - score(b));
+            attachDelegatesToCore();
             dataLoaded = true;
         }
     } catch (error) {
@@ -986,8 +739,9 @@ const loadMinisters = async () => {
             const fallbackMinisters = await fetchMinistersFromFallback();
             if (fallbackMinisters.length) {
                 ministers = fallbackMinisters;
-                coreMinisters = fallbackMinisters.filter((m) => m.role === "leader" || m.role === "minister" || m.role === "minister-state");
-                delegateMinisters = fallbackMinisters.filter((m) => m.role === "ministre-delegue" || m.role === "secretary");
+                coreMinisters = fallbackMinisters.filter((m) => CORE_ROLES.has(m.role));
+                delegateMinisters = fallbackMinisters.filter((m) => DELEGATE_ROLES.has(m.role));
+                attachDelegatesToCore();
                 dataLoaded = true;
             }
         } catch (error) {
@@ -1013,21 +767,6 @@ const loadMinisters = async () => {
                     try { buildHeaderSearchIndex(); } catch (e) { /* ignore */ }
                 }
             }, 60);
-        }
-        // If we have delegate ministers available from the data source, show them by default
-        // so the UI displays ministres délégués without requiring an extra click.
-        try {
-            if (!showDelegates && Array.isArray(delegateMinisters) && delegateMinisters.length > 0) {
-                showDelegates = true;
-                const toggleBtnEl = document.getElementById('toggle-delegates');
-                if (toggleBtnEl) {
-                    toggleBtnEl.setAttribute('aria-pressed', 'true');
-                    toggleBtnEl.textContent = 'Masquer les ministres délégués';
-                }
-                applyFilters();
-            }
-        } catch (e) {
-            // ignore any errors when adjusting UI
         }
     } else {
         ministers = [];
@@ -1069,27 +808,6 @@ const initApp = () => {
             closeModal();
         }
     });
-
-    // Toggle: afficher/masquer les ministres délégués
-    const toggleDelegatesBtn = document.getElementById("toggle-delegates");
-    if (toggleDelegatesBtn) {
-        toggleDelegatesBtn.addEventListener("click", async () => {
-            showDelegates = !showDelegates;
-            toggleDelegatesBtn.setAttribute("aria-pressed", String(showDelegates));
-            toggleDelegatesBtn.textContent = showDelegates
-                ? "Masquer les ministres délégués"
-                : "Afficher les ministres délégués";
-
-            if (showDelegates && delegateMinisters.length === 0) {
-                try {
-                    delegateMinisters = await fetchDelegatesFromSupabase();
-                } catch (e) {
-                    console.warn("[onepage] Impossible de charger les ministres délégués", e);
-                }
-            }
-            applyFilters();
-        });
-    }
 
     // Lancer le chargement des données
     loadMinisters().catch((err) => {

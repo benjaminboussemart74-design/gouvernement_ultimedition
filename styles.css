@@ -557,66 +557,16 @@ main {
 
 /* Actions dans la carte (ex: bouton délégués) */
 .card-actions { margin-top: 0.75rem; }
-.toggle-btn {
-    background: var(--color-panthere);
-    color: var(--color-perle);
-    border: 1px solid rgba(62,62,61,0.15);
-    border-radius: 8px;
-    padding: 0.45rem 0.75rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 200ms ease, transform 150ms ease;
-}
-.toggle-btn:hover { background: var(--color-prune); transform: translateY(-1px); }
-
-/* Bloc des ministres délégués (animé) */
-.delegates {
-    margin-top: 0.75rem;
-    padding: 0.6rem;
-    background: rgba(255,255,255,0.9);
-    border-radius: var(--radius-base);
-    border: 1px solid rgba(62,62,61,0.15);
-    backdrop-filter: blur(6px);
-    max-height: 0;
-    opacity: 0;
-    transform: translateY(-6px);
-    filter: blur(6px);
-    overflow: hidden;
-    transition: all 420ms cubic-bezier(.2,.9,.2,1);
-}
-.delegates.show {
-    max-height: 640px; /* assez grand pour le contenu */
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-}
-
-.delegate-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.75rem;
-    background: var(--color-perle);
-    border-radius: 8px;
-    padding: 0.6rem 0.75rem;
-    border: 1px solid rgba(62,62,61,0.15);
-}
-.delegate-card + .delegate-card { margin-top: 0.5rem; }
-.delegate-card h3 { font-size: 0.95rem; margin: 0; font-weight: 700; color: var(--color-encre); }
-.delegate-card p { margin: 0; font-size: 0.85rem; color: var(--color-sesame); }
-
-/* Badge dans la ligne délégué: réutilise party-badge global */
-.delegate-card .party-badge { font-size: 0.7rem; padding: 0.15rem 0.5rem; }
-
 /* Badges de parti — utilitaire simple */
 .party-badge {
     display: inline-block;
-    padding: 0.25rem 0.5rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--rumeur-encre, #111727);
+    margin-top: 0.3rem;
+    background: var(--color-perle);
+    color: var(--color-encre);
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
 }
 
 /* Mapping par étiquette (valeurs attendues dans `data-party` ou champ `party`) */
@@ -668,48 +618,60 @@ main {
     letter-spacing: 0.08em;
 }
 
-/* Conteneur des ministres délégués (animation : flou + translation) */
+/* Conteneur des ministres délégués affichés directement sous leur ministre */
 .delegates {
-    margin-top: 12px;
-    padding: 10px;
-    background: #ffffffc5;
-    border-radius: 10px;
-    border: 1px solid var(--color-sesame);
-    backdrop-filter: blur(6px);
-
-    /* animation-friendly initial state */
-    max-height: 0;
-    opacity: 0;
-    transform: translateY(-6px);
-    filter: blur(6px);
-    overflow: hidden;
-    transition: all 420ms cubic-bezier(.2,.9,.2,1);
-}
-
-.delegates.show {
-    max-height: 600px; /* suffisant pour la plupart des contenus */
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
+    margin-top: 1rem;
+    display: grid;
+    gap: 0.6rem;
 }
 
 .delegate-card {
-    background: var(--color-perle);
-    border-radius: 8px;
-    padding: 10px;
-    border: 1px solid var(--color-sesame);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border-radius: 10px;
+    border: 1px solid rgba(62, 62, 61, 0.12);
+    background: rgba(255, 255, 255, 0.95);
+    cursor: pointer;
+    text-align: left;
+    transition: transform 180ms ease, box-shadow 180ms ease;
 }
-.delegate-card + .delegate-card { margin-top: 8px; }
-.delegate-card h3 { font-size: 0.95rem; margin: 0; font-weight: 600; color: var(--color-encre); }
-.delegate-card p { margin: 0; font-size: 0.85rem; color: var(--color-sesame); }
-.delegate-card span { font-size: 0.78rem; display: inline-block; margin-left: 12px; padding: 4px 8px; border-radius: 9999px; background: var(--rumeur-panthere); color: var(--rumeur-perle); font-weight:700; }
-.delegate-card[data-party="Renaissance"] span { background: var(--party-renaissance); color: var(--rumeur-encre); }
-.delegate-card[data-party="MoDem"] span { background: var(--party-modem); }
-.delegate-card[data-party="Les Républicains"] span { background: var(--party-lr); color: #fff; }
-.delegate-card[data-party="Horizons"] span { background: var(--party-horizons); color: #fff; }
+
+.delegate-card:hover,
+.delegate-card:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(39, 8, 59, 0.08);
+}
+
+.delegate-card:focus-visible {
+    outline: 2px solid var(--color-prune);
+    outline-offset: 2px;
+}
+
+.delegate-info {
+    display: grid;
+    gap: 0.15rem;
+}
+
+.delegate-name {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-encre);
+}
+
+.delegate-role {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-sesame);
+}
+
+.delegate-card .party-badge {
+    margin-top: 0;
+}
 
 /* Keep party badge visual mapping defined above; only adjust spacing here */
 .mc-meta .party-badge {
@@ -865,6 +827,18 @@ main {
     height: 48px;
     border-radius: 50%;
     object-fit: cover;
+}
+
+.collab-name {
+    font-weight: 600;
+    margin: 0;
+}
+
+.collab-role,
+.collab-grade {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-sesame);
 }
 
 
