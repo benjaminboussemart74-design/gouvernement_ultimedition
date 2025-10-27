@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hiérarchie des collaborateurs</title>
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --muted:#64748b;
+      --accent:#2563eb;
+      --text:#0f172a;
+    }
+    html,body{height:100%;}
+    body{
+      font-family: "Inter", "Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:1.25rem;
+      padding:2rem;
+    }
+
+    .header{
+      text-align:center;
+      max-width:900px;
+      width:100%;
+    }
+
+    .minister {
+      text-align: center;
+      padding: 0.9rem 1.2rem;
+      background-color: var(--accent);
+      color: white;
+      border-radius: 12px;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      box-shadow: 0 6px 18px rgba(37,99,235,0.12);
+      display:inline-block;
+    }
+
+    .tree-wrap{
+      width:100%;
+      max-width:1100px;
+      display:flex;
+      justify-content:center;
+    }
+
+    .tree {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:1.25rem;
+      width:100%;
+    }
+
+    .level{
+      display:flex;
+      justify-content:center;
+      flex-wrap:wrap;
+      gap:1rem 1.5rem;
+      align-items:flex-start;
+      width:100%;
+      padding:0 0.5rem;
+    }
+
+    .person{
+      background:var(--card);
+      border:1px solid #e2e8f0;
+      border-radius:10px;
+      padding:0.75rem 1rem;
+      box-shadow:0 6px 14px rgba(2,6,23,0.04);
+      min-width:170px;
+      max-width:220px;
+      text-align:center;
+      transition:transform .15s ease, box-shadow .15s ease;
+      cursor:default;
+    }
+    .person:hover{transform:translateY(-4px); box-shadow:0 10px 22px rgba(2,6,23,0.08);}
+    .person strong{display:block; margin-bottom:0.25rem;}
+    .grade{font-size:0.82rem; color:#475569}
+
+    .line{width:2px; height:18px; background:var(--muted); margin:0.25rem auto 0; border-radius:2px}
+
+    .controls{display:flex; gap:0.5rem; align-items:center; margin-top:0.25rem}
+    .small{font-size:0.9rem; color:#475569}
+
+    pre.jsondump{background:#0f172a; color:#e6f1ff; padding:0.75rem; border-radius:8px; overflow:auto; max-height:220px; width:100%; box-sizing:border-box}
+
+    @media (max-width:640px){
+      .person{min-width:140px}
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="minister" id="ministerTitle">Ministre</div>
+    <div class="controls">
+      <div class="small">Exemple dynamique — données en mémoire (modifie le tableau JS pour tester)</div>
+      <label for="ministerSelect" style="margin-left:1rem; font-size:0.95rem; color:#334155">Ministre :</label>
+      <select id="ministerSelect" style="margin-left:0.5rem; padding:0.25rem 0.4rem; border-radius:6px; border:1px solid #cbd5e1; background:white">
+        <option value="__all">Tous les ministres</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="tree-wrap">
+    <div class="tree" id="treeContainer" aria-live="polite"></div>
+  </div>
+
+  <details style="max-width:1100px; width:100%;">
+    <summary style="cursor:pointer; padding:0.5rem 0;">Voir les données JSON utilisées</summary>
+    <pre class="jsondump" id="jsonDump"></pre>
+  </details>
+
+  <!-- Charger la config locale Supabase (optionnelle) et le client JS Supabase -->
+  <script src="config/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+
+  <script>
+    // Exemple de données plates suivant la logique SQL : id, name, role, superior_id (chaîne de subordination), collab_grade
+    const persons = [
+      { id: 1, name: "Mme Dupont", role: "Ministre", superior_id: null, collab_grade: "Ministre" },
+      { id: 2, name: "Jean Martin", role: "Directeur de cabinet", superior_id: 1, collab_grade: "Directeur de cabinet" },
+      { id: 3, name: "Sophie Bernard", role: "Chef de cabinet adjoint", superior_id: 2, collab_grade: "Chef de cabinet adjoint" },
+      { id: 4, name: "Luc Moreau", role: "Conseiller technique", superior_id: 2, collab_grade: "Conseiller technique" },
+      { id: 5, name: "Amélie Giraud", role: "Attachée de presse", superior_id: 3, collab_grade: "Attachée de presse" },
+      { id: 6, name: "Paul Simon", role: "Chargé de mission", superior_id: 3, collab_grade: "Chargé de mission" },
+      { id: 7, name: "Clara Petit", role: "Secrétaire particulière", superior_id: 3, collab_grade: "Secrétaire particulière" }
+    ];
+
+    const treeContainer = document.getElementById('treeContainer');
+    const ministerTitle = document.getElementById('ministerTitle');
+    const jsonDump = document.getElementById('jsonDump');
+
+    // Affiche les données JSON (formatées)
+    jsonDump.textContent = JSON.stringify(persons, null, 2);
+
+  // --- Supabase integration -------------------------------------------------
+    // Si `config/supabase.js` définit window.SUPABASE_URL and window.SUPABASE_ANON_KEY,
+    // on essaiera de charger `collab_grades` et une table de collaborateurs depuis Supabase.
+    async function tryLoadFromSupabase(){
+      if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
+        console.info('Supabase config absente, utilisation des données locales.');
+        return null;
+      }
+
+      // createClient est exposé par le bundle UMD comme `supabase.createClient`
+      if (!window.supabase || typeof window.supabase.createClient !== 'function'){
+        console.warn('Client Supabase non disponible dans le scope global.');
+        return null;
+      }
+
+      const client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  const result = { grades: null, collaborators: null, persons: null };
+
+      // Charger collab_grades
+      try{
+        const { data: grades, error: gErr } = await client.from('collab_grades').select('*').order('rank');
+        if (gErr) {
+          console.warn('Erreur en récupérant collab_grades:', gErr);
+        } else {
+          result.grades = grades;
+        }
+      } catch(e){ console.warn('Exception fetching collab_grades', e); }
+
+      // Essayer quelques noms de tables possibles pour les collaborateurs
+      const candidateTables = ['collaborators','people','members','ministers','cabinet','collabs','persons'];
+      for(const tbl of candidateTables){
+        try{
+          const { data, error } = await client.from(tbl).select('*');
+          if (!error && Array.isArray(data) && data.length > 0){
+            result.collaborators = { table: tbl, rows: data };
+            break;
+          }
+        } catch(e){ /* ignore */ }
+      }
+
+      // If collaborators came from another table, try to fetch `persons` to get ministers info
+      try{
+        const { data: personsData, error: pErr } = await client.from('persons').select('*');
+        if (!pErr && Array.isArray(personsData) && personsData.length > 0){
+          result.persons = personsData;
+        }
+      } catch(e){ /* ignore */ }
+
+      return result;
+    }
+
+    // Helper pour normaliser id -> string (évite mismatch entre types SQL et JS)
+    function normalizeId(v){ return v === null || v === undefined ? null : String(v); }
+
+    // Rebuild tree that tolerates string ids
+    function buildTree(flat){
+      const map = new Map();
+      flat.forEach(p => map.set(String(p.id), {...p, subordinates: []}));
+
+      const roots = [];
+      map.forEach(node => {
+        const sup = node.superior_id === null || node.superior_id === undefined ? null : String(node.superior_id);
+        if (sup === null) {
+          roots.push(node);
+        } else {
+          const parent = map.get(sup);
+          if (parent) parent.subordinates.push(node);
+          else roots.push(node); // orphans -> treat as root
+        }
+      });
+      // Trier les subordinates par collab_rank (asc) puis par nom
+      map.forEach(n => {
+        if (Array.isArray(n.subordinates) && n.subordinates.length > 1){
+          n.subordinates.sort((a,b) => {
+            const ra = (a.collab_rank !== undefined) ? Number(a.collab_rank) : 99;
+            const rb = (b.collab_rank !== undefined) ? Number(b.collab_rank) : 99;
+            if (ra !== rb) return ra - rb;
+            return String(a.name).localeCompare(String(b.name));
+          });
+        }
+      });
+      return roots;
+    }
+
+
+    // (la fonction buildTree tolérante aux string ids est définie plus haut)
+
+    // Crée des niveaux (par profondeur) depuis les racines
+    function groupByLevel(roots){
+      const levels = [];
+      const queue = [];
+      roots.forEach(r => queue.push({node:r, depth:0}));
+
+      while(queue.length){
+        const {node, depth} = queue.shift();
+        if (!levels[depth]) levels[depth] = [];
+        levels[depth].push(node);
+        node.subordinates.forEach(child => queue.push({node:child, depth: depth+1}));
+      }
+      return levels;
+    }
+
+    // Rendu : chaque niveau devient une .level ; on place une .line entre les niveaux
+    function renderHierarchy(flatData){
+      treeContainer.innerHTML = '';
+      if (!Array.isArray(flatData) || flatData.length === 0) {
+        treeContainer.textContent = 'Aucune donnée.';
+        return;
+      }
+
+      const roots = buildTree(flatData);
+
+      // Titre : affichons que la hiérarchie des collaborateurs (le ministre n'est pas rendu)
+      ministerTitle.textContent = 'Hiérarchie des collaborateurs';
+
+      const levels = groupByLevel(roots);
+
+      levels.forEach((lvl, i) => {
+        const levelEl = document.createElement('div');
+        levelEl.className = 'level';
+
+        lvl.forEach(person => {
+          const p = document.createElement('div');
+          p.className = 'person';
+          p.innerHTML = `<strong>${escapeHtml(person.name)}</strong><div class="grade">${escapeHtml(person.collab_grade || person.role || '')}</div>`;
+
+          // tooltip détaillé au hover (accessibilité)
+          p.title = `${person.name} — ${person.role || person.collab_grade || ''}`;
+
+          levelEl.appendChild(p);
+        });
+
+        treeContainer.appendChild(levelEl);
+
+        // ligne entre niveaux (sauf après le dernier)
+        if (i < levels.length - 1) {
+          const line = document.createElement('div');
+          line.className = 'line';
+          treeContainer.appendChild(line);
+        }
+      });
+    }
+
+    // Petite fonction d'échappement pour éviter XSS si tu colles des données externes
+    function escapeHtml(str){
+      if (typeof str !== 'string') return '';
+      return str.replace(/[&<>"']/g, function(ch){
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[ch];
+      });
+    }
+
+    // Populate minister <select>
+    function populateMinisterSelect(options){
+      const sel = document.getElementById('ministerSelect');
+      if (!sel) return;
+      // clear (preserve first 'Tous les ministres' option)
+      sel.innerHTML = '<option value="__all">Tous les ministres</option>';
+      options.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o.id;
+        opt.textContent = o.name;
+        sel.appendChild(opt);
+      });
+    }
+
+    // Charger depuis Supabase si possible, sinon utiliser les données locales
+    (async function init(){
+      try{
+        const sup = await tryLoadFromSupabase();
+        if (sup && sup.collaborators){
+          // construire des maps des grades si disponibles (code -> {label,rank})
+          const gradeLabel = new Map();
+          const gradeRank = new Map();
+          if (Array.isArray(sup.grades)) sup.grades.forEach(g => { gradeLabel.set(String(g.code), g.label || g.code); gradeRank.set(String(g.code), Number(g.rank) || 99); });
+
+          // De la table persons (si disponible) on récupère les ministres
+          let personsData = sup.persons || null;
+          if (!personsData && sup.collaborators && sup.collaborators.table === 'persons') personsData = sup.collaborators.rows;
+
+          // Normaliser et filtrer : ne garder que les collaborateurs
+          const collRows = sup.collaborators.rows
+            .filter(r => {
+              const role = String(r.role || '').toLowerCase();
+              return role === 'collaborator' || role === 'collaborateur' || (r.collab_grade !== null && r.collab_grade !== undefined);
+            })
+            .map(r => {
+              const code = r.collab_grade || r.grade || null;
+              const codeStr = code === null ? null : String(code);
+              return {
+                id: r.id,
+                name: r.name || r.full_name || r.nom || r.label || ('#' + String(r.id)),
+                role: 'collaborator',
+                superior_id: r.superior_id !== undefined ? r.superior_id : (r.superior || null),
+                collab_code: codeStr,
+                collab_grade: codeStr && gradeLabel.has(codeStr) ? gradeLabel.get(codeStr) : (codeStr || ''),
+                collab_rank: codeStr && gradeRank.has(codeStr) ? gradeRank.get(codeStr) : 99
+              };
+            });
+
+          // Construire une map d'id -> node pour remonter la hiérarchie
+          const idMap = new Map();
+          if (Array.isArray(personsData)) personsData.forEach(p => idMap.set(String(p.id), {...p}));
+          collRows.forEach(c => idMap.set(String(c.id), {...c}));
+
+          // Déterminer ministres : depuis personsData (role non-collaborator ou role contenant 'minister')
+          const ministers = [];
+          if (Array.isArray(personsData)){
+            personsData.forEach(p => {
+              const role = String(p.role || '').toLowerCase();
+              if (role !== 'collaborator' && (role.includes('minister') || p.superior_id === null || p.superior_id === undefined)){
+                ministers.push({ id: String(p.id), name: p.name || p.full_name || p.nom || ('#' + String(p.id)) });
+              }
+            });
+          }
+
+          // Pour chaque collaborateur, trouver le ministre racine (ou __none)
+          const byMinister = new Map();
+          for (const c of collRows){
+            let curr = c;
+            let top = null;
+            const seen = new Set();
+            while (curr && curr.superior_id != null){
+              const supId = String(curr.superior_id);
+              if (seen.has(supId)) break;
+              seen.add(supId);
+              const parent = idMap.get(supId);
+              if (!parent){ top = null; break; }
+              const parentRole = String(parent.role || '').toLowerCase();
+              if (parentRole !== 'collaborator' && parentRole !== 'collaborateur') { top = parent; break; }
+              curr = parent;
+            }
+            const key = top ? String(top.id) : '__none';
+            if (!byMinister.has(key)) byMinister.set(key, []);
+            byMinister.get(key).push(c);
+          }
+
+          // Préparer la liste d'options pour le select
+          const ministerOptions = [];
+          if (ministers.length){
+            ministers.forEach(m => ministerOptions.push({ id: m.id, name: m.name }));
+          }
+          // Ajouter option pour 'Sans ministre'
+          if (!ministerOptions.find(o => o.id === '__none')) ministerOptions.push({ id: '__none', name: 'Sans ministre' });
+
+          populateMinisterSelect(ministerOptions);
+
+          const sel = document.getElementById('ministerSelect');
+          // Sélection par défaut : premier ministre s'il existe, sinon Sans ministre
+          if (ministers.length) sel.value = ministers[0].id; else sel.value = '__none';
+
+          function renderForSelected(){
+            const val = sel.value;
+            const rowsToRender = byMinister.get(val) || [];
+            jsonDump.textContent = JSON.stringify({ from: sup.collaborators.table, minister: val, rows: rowsToRender, grades: sup.grades || [] }, null, 2);
+            renderHierarchy(rowsToRender);
+          }
+
+          sel.addEventListener('change', renderForSelected);
+          renderForSelected();
+          return;
+        }
+      } catch(e){ console.warn('Erreur init Supabase', e); }
+
+      // fallback local: ne garder que les collaborateurs
+      const localRows = persons
+        .filter(p => {
+          const role = String(p.role || '').toLowerCase();
+          return role === 'collaborator' || role === 'collaborateur' || (p.collab_grade !== null && p.collab_grade !== undefined && p.collab_grade !== '');
+        })
+        .map(p => ({
+          id: p.id,
+          name: p.name || p.nom || ('#' + String(p.id)),
+          role: 'collaborator',
+          superior_id: p.superior_id !== undefined ? p.superior_id : (p.superior || null),
+          collab_code: null,
+          collab_grade: p.collab_grade || p.grade || '',
+          collab_rank: 99
+        }));
+
+      // Fallback: pas de ministres locaux dans cet exemple => afficher tous les collaborateurs
+      populateMinisterSelect([{ id: '__none', name: 'Sans ministre' }]);
+      document.getElementById('ministerSelect').value = '__none';
+      jsonDump.textContent = JSON.stringify({ from: 'local', rows: localRows }, null, 2);
+      renderHierarchy(localRows);
+    })();
+
+    // Exemple : si plus tard tu récupères depuis Supabase, appelle renderHierarchy(newArray)
+    // Exemple (simulé) : setTimeout(() => { persons.push({id:8, name:'Nouveau', role:'Adjoint', superior_id:2, collab_grade:'Adjoint'}); renderHierarchy(persons); jsonDump.textContent = JSON.stringify(persons, null, 2); }, 4000);
+  </script>
+</body>
+</html>
