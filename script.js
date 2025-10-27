@@ -733,171 +733,6 @@ const fetchCollaboratorsForMinister = async (ministerId) => {
 
 const collaboratorsCache = new Map();
 
-const toCabinetNode = (person) => ({
-    id: person?.id != null ? String(person.id) : null,
-    superiorId: person?.superior_id != null ? String(person.superior_id) : null,
-    name: person?.full_name?.trim() || "Collaborateur·rice",
-    role: person?.cabinet_role?.trim() || person?.collab_grade?.trim() || "Collaborateur",
-    grade: person?.collab_grade?.trim() || null,
-    email: person?.email?.trim() || null,
-    order: typeof person?.cabinet_order === "number" ? person.cabinet_order : null,
-    photo: person?.photo_url || null,
-    subordinates: []
-});
-
-const sortCabinetBranch = (branch) => {
-    branch.sort((a, b) => {
-        const orderA = a.order ?? Number.POSITIVE_INFINITY;
-        const orderB = b.order ?? Number.POSITIVE_INFINITY;
-        if (orderA !== orderB) return orderA - orderB;
-        return (a.name || "").localeCompare(b.name || "");
-    });
-    branch.forEach((child) => {
-        if (child.subordinates?.length) {
-            sortCabinetBranch(child.subordinates);
-        }
-    });
-};
-
-const buildCabinetTree = (minister, collaborators) => {
-    const rootId = minister?.id != null ? String(minister.id) : null;
-    const rootNode = {
-        id: rootId,
-        name: minister?.name || "Ministre",
-        role: minister?.portfolio || minister?.ministries?.[0]?.label || "Portefeuille à préciser",
-        grade: formatRole(minister?.role) || "Ministre",
-        photo: minister?.photo || null,
-        order: -1,
-        subordinates: []
-    };
-
-    if (!Array.isArray(collaborators) || !collaborators.length) {
-        return rootNode;
-    }
-
-    const nodeMap = new Map();
-    collaborators.forEach((person) => {
-        const node = toCabinetNode(person);
-        if (!node.id) return;
-        nodeMap.set(node.id, node);
-    });
-
-    nodeMap.forEach((node) => {
-        const parentId = node.superiorId;
-        if (parentId && nodeMap.has(parentId)) {
-            nodeMap.get(parentId).subordinates.push(node);
-        } else if (parentId && rootId && parentId === rootId) {
-            rootNode.subordinates.push(node);
-        } else {
-            rootNode.subordinates.push(node);
-        }
-    });
-
-    sortCabinetBranch(rootNode.subordinates);
-    return rootNode;
-};
-
-const buildCabinetLevels = (rootNode) => {
-    if (!rootNode?.subordinates?.length) return [];
-    const levels = [];
-    let current = rootNode.subordinates.slice();
-    while (current.length) {
-        levels.push(current);
-        current = current.flatMap((node) => node.subordinates || []);
-    }
-    return levels;
-};
-
-const createCabinetCard = (node, { isRoot = false } = {}) => {
-    const card = document.createElement("article");
-    card.className = "cabinet-person";
-    if (isRoot) {
-        card.classList.add("is-root");
-    }
-    if (Array.isArray(node?.subordinates) && node.subordinates.length) {
-        card.classList.add("has-children");
-    }
-
-    const photo = document.createElement("img");
-    photo.src = node?.photo || "assets/placeholder-minister.svg";
-    photo.alt = node?.name ? `Portrait de ${node.name}` : "Portrait";
-    card.appendChild(photo);
-
-    const name = document.createElement("strong");
-    name.textContent = node?.name || "Collaborateur·rice";
-    card.appendChild(name);
-
-    if (node?.role) {
-        const role = document.createElement("p");
-        role.className = "cabinet-role";
-        role.textContent = node.role;
-        card.appendChild(role);
-    }
-
-    if (node?.grade && node.grade !== node.role) {
-        const grade = document.createElement("p");
-        grade.className = "cabinet-grade";
-        grade.textContent = node.grade;
-        card.appendChild(grade);
-    }
-
-    if (node?.email) {
-        const emailLink = document.createElement("a");
-        emailLink.className = "cabinet-email";
-        emailLink.href = `mailto:${node.email}`;
-        emailLink.textContent = node.email;
-        emailLink.rel = "noopener";
-        card.appendChild(emailLink);
-    }
-
-    return card;
-};
-
-const renderCabinetSection = (minister, collaborators) => {
-    const section = document.createElement("section");
-    section.className = "modal-collaborators is-hidden";
-    section.setAttribute("role", "region");
-    section.setAttribute("aria-label", "Cabinet du ministre");
-    section.setAttribute("aria-live", "polite");
-
-    const heading = document.createElement("h4");
-    heading.textContent = "Cabinet du ministre";
-    section.appendChild(heading);
-
-    const rootNode = buildCabinetTree(minister, collaborators);
-
-    const ministerWrapper = document.createElement("div");
-    ministerWrapper.className = "cabinet-minister";
-    const rootCard = createCabinetCard(rootNode, { isRoot: true });
-    ministerWrapper.appendChild(rootCard);
-    section.appendChild(ministerWrapper);
-
-    const levels = buildCabinetLevels(rootNode);
-    if (levels.length) {
-        const treeWrap = document.createElement("div");
-        treeWrap.className = "cabinet-tree-wrap";
-
-        const tree = document.createElement("div");
-        tree.className = "cabinet-tree";
-
-        levels.forEach((levelNodes) => {
-            if (!levelNodes.length) return;
-            const levelEl = document.createElement("div");
-            levelEl.className = "cabinet-level";
-            levelNodes.forEach((node) => {
-                const card = createCabinetCard(node);
-                levelEl.appendChild(card);
-            });
-            tree.appendChild(levelEl);
-        });
-
-        treeWrap.appendChild(tree);
-        section.appendChild(treeWrap);
-    }
-
-    return section;
-};
-
 const renderCollaboratorsTemplate = (collaborators) => `
       <h4>Collaborateurs</h4>
       <div class="collaborators-list">
@@ -1149,6 +984,55 @@ const handleExportMinisterClick = async (minister = activeMinister) => {
 
     panel.appendChild(lanesWrapper);
     return section;
+};
+
+// Cabinet grade helpers and caches
+let collaboratorGradesLookup = null;
+let collaboratorGradesPromise = null;
+
+const toAlphaKey = (value) => {
+    if (value == null) return null;
+    try {
+        return String(value)
+            .normalize("NFD")
+            .replace(/\p{Diacritic}+/gu, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "")
+            .trim();
+    } catch {
+        const s = String(value).toLowerCase();
+        return s.replace(/[^a-z0-9]+/g, "").trim();
+    }
+};
+
+const CABINET_GRADE_ALIASES = [
+    ["dircab", "direcab"],
+    ["directeurdecabinet", "direcab"],
+    ["directricedecabinet", "direcab"],
+    ["chefcab", "chefcab"],
+    ["chefdecabinet", "chefcab"],
+    ["direcabadj", "direcab-adj"],
+    ["directeuradjointdecabinet", "direcab-adj"],
+    ["chefcabadj", "chefcabadj"],
+    ["adjointaucheffedecabinet", "chefcabadj"],
+    ["conseiller", "conseiller"],
+    ["conseillere", "conseiller"],
+];
+
+const FALLBACK_COLLAB_GRADES = [
+    { key: "direcab", code: "DIRECAB", label: "Directeur·rice de cabinet", rank: 1 },
+    { key: "direcab-adj", code: "DIRECAB-ADJ", label: "Adjoint·e au directeur de cabinet", rank: 2 },
+    { key: "chefcab", code: "CHEFCAB", label: "Chef·fe de cabinet", rank: 3 },
+    { key: "chefcabadj", code: "CHEFCAB-ADJ", label: "Adjoint·e au·à la chef·fe de cabinet", rank: 4 },
+    { key: "conseiller", code: "CONSEILLER", label: "Conseiller·ère", rank: 10 },
+];
+
+const canonicaliseCabinetGrade = (grade, gradeLookup) => {
+    const key = toAlphaKey(grade);
+    if (!key) return null;
+    const alias = gradeLookup?.alias;
+    if (alias && alias.has(key)) return alias.get(key);
+    return key;
 };
 
 const createGradeLookup = (grades) => {
@@ -1550,8 +1434,17 @@ const renderCabinetSection = (minister, collaborators, gradeLookup) => {
 
 const openModal = (minister) => {
     if (!modal) return;
+    // Ensure any cabinet overlay is hidden/cleared when opening detail view
+    const modalContent = modal.querySelector('.modal-content');
+    const overlay = modalContent?.querySelector('.cabinet-overlay');
+    if (overlay) {
+        overlay.hidden = true;
+        overlay.innerHTML = '';
+    }
+    modal.classList.remove('modal--cabinet-mode', 'modal--cabinet-active');
     activeMinister = minister;
     const modalBody = modal.querySelector(".modal-body");
+    if (modalBody) modalBody.hidden = false;
     if (exportButton) {
         if (minister) {
             exportButton.disabled = false;
@@ -1612,75 +1505,8 @@ const openModal = (minister) => {
         }
 
         if (minister.id) {
-            let collaboratorsSection = null;
-            let isExpanded = false;
-            let isLoadingCollaborators = false;
-            const collabSectionId = `modal-collaborators-${minister.id}`;
-            toggleButton.setAttribute("aria-controls", collabSectionId);
-
-            const ensureCollaboratorsSection = () => {
-                const cachedCollabs = collaboratorsCache.get(minister.id);
-                if (!cachedCollabs || cachedCollabs.length === 0) {
-                    return null;
-                }
-
-                if (!collaboratorsSection || !modalBody.contains(collaboratorsSection)) {
-                    collaboratorsSection = document.createElement("div");
-                    collaboratorsSection.className = "modal-collaborators is-hidden";
-                    collaboratorsSection.id = collabSectionId;
-                    modalBody.appendChild(collaboratorsSection);
-                }
-
-                collaboratorsSection.innerHTML = renderCollaboratorsTemplate(cachedCollabs);
-                return collaboratorsSection;
-            };
-
             toggleButton.addEventListener("click", async () => {
-                if (isLoadingCollaborators) return;
-
-                if (!collaboratorsCache.has(minister.id)) {
-                    isLoadingCollaborators = true;
-                    toggleButton.disabled = true;
-                    toggleButton.textContent = "Chargement...";
-
-                    const collabs = await fetchCollaboratorsForMinister(minister.id);
-                    collaboratorsCache.set(minister.id, Array.isArray(collabs) ? collabs : []);
-
-                    isLoadingCollaborators = false;
-                    const cachedCollabs = collaboratorsCache.get(minister.id) || [];
-
-                    if (!cachedCollabs.length) {
-                        toggleButton.textContent = "Aucun collaborateur renseigné";
-                        toggleButton.disabled = true;
-                        toggleButton.setAttribute("aria-expanded", "false");
-                        toggleButton.setAttribute("aria-disabled", "true");
-                        return;
-                    }
-
-                    toggleButton.disabled = false;
-                    toggleButton.removeAttribute("aria-disabled");
-                    ensureCollaboratorsSection();
-                    isExpanded = true;
-                    collaboratorsSection?.classList.remove("is-hidden");
-                    toggleButton.textContent = "Masquer le cabinet";
-                    toggleButton.setAttribute("aria-expanded", "true");
-                    return;
-                }
-
-                const cachedCollabs = collaboratorsCache.get(minister.id) || [];
-                if (!cachedCollabs.length) {
-                    toggleButton.textContent = "Aucun collaborateur renseigné";
-                    toggleButton.disabled = true;
-                    toggleButton.setAttribute("aria-expanded", "false");
-                    toggleButton.setAttribute("aria-disabled", "true");
-                    return;
-                }
-
-                ensureCollaboratorsSection();
-                isExpanded = !isExpanded;
-                collaboratorsSection?.classList.toggle("is-hidden", !isExpanded);
-                toggleButton.textContent = isExpanded ? "Masquer le cabinet" : "Voir le cabinet";
-                toggleButton.setAttribute("aria-expanded", String(isExpanded));
+                await switchToCabinetView(minister);
             });
         }
     }
@@ -1705,7 +1531,15 @@ const openModal = (minister) => {
 const closeModal = () => {
     if (!modal) return;
     modal.hidden = true;
-    modal.classList.remove("modal--cabinet-active");
+    modal.classList.remove("modal--cabinet-active", "modal--cabinet-mode");
+    const modalBody = modal.querySelector('.modal-body');
+    if (modalBody) modalBody.hidden = false;
+    const modalContent = modal.querySelector('.modal-content');
+    const overlay = modalContent?.querySelector('.cabinet-overlay');
+    if (overlay) {
+        overlay.hidden = true;
+        overlay.innerHTML = '';
+    }
     document.body.style.overflow = "";
     cleanupPrintSheet();
     if (exportButton) {
@@ -1715,6 +1549,71 @@ const closeModal = () => {
         exportButton.setAttribute("aria-disabled", "true");
     }
     activeMinister = null;
+};
+
+// Switch modal content to cabinet-only view
+const switchToCabinetView = async (minister) => {
+    if (!modal) return;
+    const modalBody = modal.querySelector(".modal-body");
+    const modalContent = modal.querySelector(".modal-content");
+    if (!modalBody || !modalContent) return;
+
+    let collabs = collaboratorsCache.get(minister.id);
+    if (!collabs) {
+        try {
+            collabs = await fetchCollaboratorsForMinister(minister.id);
+        } catch (e) {
+            collabs = [];
+        }
+        collaboratorsCache.set(minister.id, Array.isArray(collabs) ? collabs : []);
+    }
+
+    const gradeLookup = await getCollaboratorGradeLookup();
+
+    // Create an overlay container above the detail content (kept intact)
+    let overlay = modalContent.querySelector('.cabinet-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'cabinet-overlay';
+        modalContent.appendChild(overlay);
+    } else {
+        overlay.innerHTML = '';
+    }
+
+    const backbar = document.createElement('div');
+    backbar.className = 'cabinet-backbar';
+    const backBtn = document.createElement('button');
+    backBtn.type = 'button';
+    backBtn.className = 'btn btn-ghost cabinet-back';
+    backBtn.textContent = 'Retour à la fiche';
+    backBtn.addEventListener('click', () => switchToDetailView(minister));
+    backbar.appendChild(backBtn);
+    overlay.appendChild(backbar);
+
+    const section = renderCabinetSection(minister, collabs, gradeLookup);
+    section.classList.remove('is-hidden');
+    overlay.appendChild(section);
+
+    modalBody.hidden = true;
+    overlay.hidden = false;
+    modal.classList.add('modal--cabinet-mode');
+};
+
+const switchToDetailView = (minister) => {
+    if (!modal) return;
+    const modalBody = modal.querySelector('.modal-body');
+    const modalContent = modal.querySelector('.modal-content');
+    const overlay = modalContent?.querySelector('.cabinet-overlay');
+    if (overlay) {
+        overlay.hidden = true;
+        overlay.innerHTML = '';
+    }
+    if (modalBody) {
+        modalBody.hidden = false;
+    }
+    modal.classList.remove('modal--cabinet-mode');
+    // Ensure detail view shows current minister info
+    openModal(minister);
 };
 
 const refreshGridForPrint = () => {
