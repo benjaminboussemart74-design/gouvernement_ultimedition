@@ -250,8 +250,8 @@ a:focus {
     background-repeat: no-repeat;
     background-position: center center;
     background-size: contain;
-    opacity: 0.06; /* very subtle */
-    filter: blur(0.8px) saturate(120%);
+    opacity: 0.32; /* make logo visible (user requested not transparent) */
+    filter: saturate(120%);
     transform: translateY(6vh);
     will-change: opacity, transform;
 }
