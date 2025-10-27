@@ -1410,6 +1410,33 @@ body.print-all .toolbar {
 
 .modal-export {
     justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.4rem;
+    border-radius: var(--radius-base);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    border: 1px solid rgba(236, 234, 237, 0.3);
+    background: rgba(236, 234, 237, 0.12);
+    color: var(--color-perle);
+    transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, color 160ms ease;
+    cursor: pointer;
+}
+
+.modal-export:hover,
+.modal-export:focus {
+    background: rgba(236, 234, 237, 0.22);
+    transform: translateY(-2px);
+}
+
+.modal-export[disabled],
+.modal-export[aria-disabled="true"] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
 }
 
 .modal-header {

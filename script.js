@@ -235,10 +235,6 @@ const cleanupPrintSheet = () => {
     printSheetContainer.innerHTML = "";
 };
 
-if (typeof window !== "undefined") {
-    window.addEventListener("afterprint", cleanupPrintSheet);
-}
-
 updatePartyFilterOptions();
 
 const hasDelegates = (minister) => Array.isArray(minister?.delegates) && minister.delegates.length > 0;
@@ -1052,32 +1048,43 @@ const printMinisterSheet = async (minister) => {
     document.body.appendChild(printSheet);
     document.body.classList.add("print-single");
 
+    const handleAfterPrint = () => {
+        cleanupPrintSheet();
+        window.removeEventListener("afterprint", handleAfterPrint);
+    };
+
+    window.addEventListener("afterprint", handleAfterPrint);
+
     window.print();
 
     window.setTimeout(() => {
         if (document.body.classList.contains("print-single")) {
             cleanupPrintSheet();
+            window.removeEventListener("afterprint", handleAfterPrint);
         }
     }, 1000);
 };
 
-const handleExportMinisterClick = async () => {
-    if (!exportButton || !activeMinister) return;
+const handleExportMinisterClick = async (minister = activeMinister) => {
+    if (!exportButton || !minister) return;
 
     exportButton.disabled = true;
     exportButton.setAttribute("aria-busy", "true");
+    exportButton.setAttribute("aria-disabled", "true");
 
     try {
-        await printMinisterSheet(activeMinister);
+        await printMinisterSheet(minister);
     } finally {
-        exportButton.disabled = false;
         exportButton.removeAttribute("aria-busy");
+        if (modal && !modal.hidden) {
+            exportButton.disabled = false;
+            exportButton.removeAttribute("aria-disabled");
+        } else {
+            exportButton.disabled = true;
+            exportButton.setAttribute("aria-disabled", "true");
+        }
     }
 };
-
-if (exportButton) {
-    exportButton.addEventListener("click", handleExportMinisterClick);
-}
 
 const openModal = (minister) => {
     if (!modal) return;
@@ -1088,9 +1095,11 @@ const openModal = (minister) => {
             exportButton.disabled = false;
             exportButton.removeAttribute("aria-disabled");
             exportButton.removeAttribute("aria-busy");
+            exportButton.onclick = () => handleExportMinisterClick(minister);
         } else {
             exportButton.disabled = true;
             exportButton.setAttribute("aria-disabled", "true");
+            exportButton.onclick = null;
         }
     }
     modalElements.photo.src = minister.photo ?? "assets/placeholder-minister.svg";
@@ -1230,6 +1239,7 @@ const closeModal = () => {
     document.body.style.overflow = "";
     cleanupPrintSheet();
     if (exportButton) {
+        exportButton.onclick = null;
         exportButton.disabled = true;
         exportButton.removeAttribute("aria-busy");
         exportButton.setAttribute("aria-disabled", "true");
