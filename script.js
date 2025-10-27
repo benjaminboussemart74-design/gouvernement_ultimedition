@@ -431,28 +431,366 @@ const fetchCollaboratorsForMinister = async (ministerId) => {
     const client = ensureSupabaseClient();
     if (!client || !ministerId) return [];
 
-    try {
-        const { data, error } = await client
-            .from("persons")
-            .select("id, full_name, photo_url, cabinet_role, collab_grade, email, cabinet_order")
-            .eq("role", "collaborator")
-            .eq("superior_id", ministerId)
-            .order("cabinet_order", { ascending: true });
+    const collected = [];
+    const seen = new Set();
+    const queue = [ministerId];
+    let encounteredError = false;
 
-        if (error) {
-            console.warn("[onepage] Impossible de récupérer les collaborateurs :", error);
-            return [];
+    while (queue.length) {
+        const parentId = queue.shift();
+        try {
+            const { data, error } = await client
+                .from("persons")
+                .select(
+                    "id, superior_id, full_name, photo_url, cabinet_role, collab_grade, job_title, email, cabinet_order"
+                )
+                .eq("role", "collaborator")
+                .eq("superior_id", parentId)
+                .order("cabinet_order", { ascending: true });
+
+            if (error) {
+                console.warn("[onepage] Impossible de récupérer les collaborateurs :", error);
+                encounteredError = true;
+                break;
+            }
+
+            for (const person of data || []) {
+                if (!person || person.id == null || seen.has(person.id)) continue;
+                collected.push(person);
+                seen.add(person.id);
+                queue.push(person.id);
+            }
+        } catch (e) {
+            console.warn("[onepage] Erreur lors de la récupération des collaborateurs :", e);
+            encounteredError = true;
+            break;
+        }
+    }
+
+    return encounteredError ? null : collected;
+};
+
+const collaboratorsCache = new Map();
+
+const toAlphaKey = (value) => normalise(value).replace(/[^a-z]/g, "");
+
+const CABINET_GRADE_ALIASES = new Map([
+    ["direcab", "direcab"],
+    ["directeurdecabinet", "direcab"],
+    ["directricedecabinet", "direcab"],
+    ["dircab", "direcab"],
+    ["dircabadj", "direcab-adj"],
+    ["dircabadjoint", "direcab-adj"],
+    ["dircabadjointe", "direcab-adj"],
+    ["direcadj", "direcab-adj"],
+    ["direcadjoint", "direcab-adj"],
+    ["directeuradjointdecabinet", "direcab-adj"],
+    ["directeurdecabinetadjoint", "direcab-adj"],
+    ["directriceadjointe", "direcab-adj"],
+    ["directricedecabinetadjointe", "direcab-adj"],
+    ["chefcab", "chefcab"],
+    ["chefcabinet", "chefcab"],
+    ["chefdecabinet", "chefcab"],
+    ["chefcabadj", "chefcabadj"],
+    ["chefcabadjoint", "chefcabadj"],
+    ["chefcabinetadjoint", "chefcabadj"],
+    ["chefdecabinetadjoint", "chefcabadj"],
+    ["chefdecabinetadjointe", "chefcabadj"],
+    ["chefcabinetadjointe", "chefcabadj"],
+    ["chefdepole", "chefpole"],
+    ["chefpole", "chefpole"],
+    ["chefdepôle", "chefpole"],
+    ["chefdepoleadjoint", "chefpole"],
+    ["chefdepoleadjointe", "chefpole"],
+    ["conseiller", "conseiller"],
+    ["conseillere", "conseiller"],
+    ["conseillere", "conseiller"],
+    ["conseillereprincipal", "conseiller"],
+    ["conseillerprincipal", "conseiller"],
+    ["conseillertechnique", "conseiller"],
+    ["conseillerespecial", "conseiller"],
+    ["chargemission", "conseiller"],
+    ["chargedemission", "conseiller"],
+    ["chargedeprojet", "conseiller"],
+    ["directeurdeprojet", "conseiller"],
+    ["directricedeprojet", "conseiller"]
+]);
+
+const canonicaliseCabinetGrade = (grade) => {
+    if (!grade) return null;
+    const alphaKey = toAlphaKey(grade);
+    if (!alphaKey) return null;
+    if (CABINET_GRADE_ALIASES.has(alphaKey)) {
+        return CABINET_GRADE_ALIASES.get(alphaKey);
+    }
+
+    if (alphaKey.startsWith("conseiller") || alphaKey.startsWith("chargemission")) {
+        return "conseiller";
+    }
+
+    if (alphaKey.startsWith("chefdepole") || alphaKey.startsWith("chefpole")) {
+        return "chefpole";
+    }
+
+    if (alphaKey.startsWith("directeuradjoint") || alphaKey.startsWith("directriceadjointe")) {
+        return "direcab-adj";
+    }
+
+    return null;
+};
+
+const CABINET_GRADE_TO_LANE = new Map([
+    ["direcab", "direcab"],
+    ["direcab-adj", "direcab-adj"],
+    ["chefcab", "chefcab"],
+    ["chefcabadj", "chefcab"],
+    ["chefpole", "chefpole"],
+    ["conseiller", "conseiller"]
+]);
+
+const CABINET_LANES = [
+    {
+        key: "direcab",
+        label: "Dircab",
+        grades: ["direcab"],
+        jobTitleOnly: true
+    },
+    {
+        key: "direcab-adj",
+        label: "Dircab adjoint·e",
+        grades: ["direcab-adj"],
+        jobTitleOnly: true
+    },
+    {
+        key: "chefcab",
+        label: "Chef·fe de cabinet & adjoint·e",
+        grades: ["chefcab", "chefcabadj"],
+        jobTitleOnly: true
+    },
+    {
+        key: "chefpole",
+        label: "Chef·fe de pôle",
+        grades: ["chefpole"],
+        jobTitleOnly: false
+    },
+    {
+        key: "conseiller",
+        label: "Conseiller·ère·s",
+        grades: ["conseiller"],
+        jobTitleOnly: false
+    }
+];
+
+const CABINET_FALLBACK_LANE = {
+    key: "autres",
+    label: "Autres membres du cabinet",
+    grades: [],
+    jobTitleOnly: false
+};
+
+const DISPLAY_JOB_TITLE_ONLY_GRADES = new Set(["direcab", "direcab-adj", "chefcab", "chefcabadj"]);
+
+const toCabinetNode = (person) => {
+    const gradeKey = canonicaliseCabinetGrade(person?.collab_grade);
+    const laneKey = gradeKey ? CABINET_GRADE_TO_LANE.get(gradeKey) || null : null;
+
+    return {
+        id: person?.id != null ? String(person.id) : null,
+        superiorId: person?.superior_id != null ? String(person.superior_id) : null,
+        name: person?.full_name?.trim() || "Collaborateur·rice",
+        cabinetRole: person?.cabinet_role?.trim() || null,
+        jobTitle: person?.job_title?.trim() || null,
+        gradeLabel: person?.collab_grade?.trim() || null,
+        gradeKey,
+        laneKey,
+        email: person?.email?.trim() || null,
+        order: typeof person?.cabinet_order === "number" ? person.cabinet_order : null,
+        photo: person?.photo_url || null
+    };
+};
+
+const compareCabinetMembers = (a, b) => {
+    const orderA = a.order ?? Number.POSITIVE_INFINITY;
+    const orderB = b.order ?? Number.POSITIVE_INFINITY;
+    if (orderA !== orderB) return orderA - orderB;
+    return (a.name || "").localeCompare(b.name || "");
+};
+
+const normaliseCabinetMembers = (collaborators) => {
+    if (!Array.isArray(collaborators)) return [];
+    return collaborators
+        .map((person) => toCabinetNode(person))
+        .filter((node) => node?.id)
+        .sort(compareCabinetMembers);
+};
+
+const createCabinetPersonCard = (member, { jobTitleOnly = false } = {}) => {
+    const card = document.createElement("article");
+    card.className = "cabinet-person";
+
+    const photo = document.createElement("img");
+    photo.src = member?.photo || "assets/placeholder-minister.svg";
+    photo.alt = member?.name ? `Portrait de ${member.name}` : "Portrait";
+    card.appendChild(photo);
+
+    const info = document.createElement("div");
+    info.className = "cabinet-person-info";
+
+    const header = document.createElement("div");
+    header.className = "cabinet-person-header";
+
+    if (member?.gradeLabel) {
+        const badge = document.createElement("span");
+        badge.className = "cabinet-person-grade";
+        badge.textContent = member.gradeLabel;
+        header.appendChild(badge);
+    }
+
+    const name = document.createElement("strong");
+    name.className = "cabinet-person-name";
+    name.textContent = member?.name || "Collaborateur·rice";
+    header.appendChild(name);
+    info.appendChild(header);
+
+    const normalizedRole = member?.cabinetRole?.trim() || null;
+    const normalizedJob = member?.jobTitle?.trim() || null;
+    const normalizedGrade = member?.gradeLabel?.trim() || null;
+
+    const shouldShowJobTitleOnly = jobTitleOnly || DISPLAY_JOB_TITLE_ONLY_GRADES.has(member?.gradeKey);
+
+    if (shouldShowJobTitleOnly) {
+        const titleLine = normalizedJob || normalizedRole || normalizedGrade;
+        if (titleLine) {
+            const title = document.createElement("p");
+            title.className = "cabinet-person-title";
+            title.textContent = titleLine;
+            info.appendChild(title);
+        }
+    } else {
+        if (normalizedRole) {
+            const roleLine = document.createElement("p");
+            roleLine.className = "cabinet-person-role";
+            roleLine.textContent = normalizedRole;
+            info.appendChild(roleLine);
         }
 
-        return data || [];
-    } catch (e) {
-        console.warn("[onepage] Erreur lors de la récupération des collaborateurs :", e);
-        return [];
+        if (normalizedJob && normalizedJob !== normalizedRole) {
+            const jobLine = document.createElement("p");
+            jobLine.className = "cabinet-person-title";
+            jobLine.textContent = normalizedJob;
+            info.appendChild(jobLine);
+        }
     }
+
+    if (member?.email) {
+        const email = document.createElement("a");
+        email.href = `mailto:${member.email}`;
+        email.textContent = member.email;
+        email.className = "cabinet-person-email";
+        email.rel = "noopener";
+        info.appendChild(email);
+    }
+
+    card.appendChild(info);
+    return card;
 };
+
+const renderCabinetLane = (laneDefinition, members) => {
+    if (!members.length) return null;
+
+    const lane = document.createElement("section");
+    lane.className = "cabinet-lane";
+    lane.dataset.lane = laneDefinition.key;
+
+    const title = document.createElement("h3");
+    title.className = "cabinet-lane-title";
+    title.textContent = laneDefinition.label;
+    lane.appendChild(title);
+
+    const list = document.createElement("div");
+    list.className = "cabinet-lane-list";
+
+    members.forEach((member) => {
+        list.appendChild(createCabinetPersonCard(member, { jobTitleOnly: laneDefinition.jobTitleOnly }));
+    });
+
+    lane.appendChild(list);
+    return lane;
+};
+
+const renderCabinetSection = (minister, collaborators) => {
+    const members = normaliseCabinetMembers(collaborators);
+    const section = document.createElement("section");
+    section.className = "modal-collaborators is-hidden";
+    section.setAttribute("role", "region");
+    section.setAttribute("aria-label", "Cabinet du ministre");
+    section.setAttribute("aria-live", "polite");
+
+    const panel = document.createElement("div");
+    panel.className = "cabinet-panel";
+    section.appendChild(panel);
+
+    const header = document.createElement("header");
+    header.className = "cabinet-panel-header";
+
+    const title = document.createElement("h2");
+    title.className = "cabinet-panel-title";
+    title.textContent = "Collaborateurs";
+    header.appendChild(title);
+
+    const context = document.createElement("p");
+    context.className = "cabinet-panel-context";
+    context.textContent = minister?.name ? `Cabinet de ${minister.name}` : "Organisation du cabinet";
+    header.appendChild(context);
+
+    const count = document.createElement("span");
+    count.className = "cabinet-panel-count";
+    count.textContent = members.length
+        ? `${members.length} membre${members.length > 1 ? "s" : ""}`
+        : "Aucun membre";
+    header.appendChild(count);
+
+    panel.appendChild(header);
+
+    if (!members.length) {
+        const empty = document.createElement("p");
+        empty.className = "cabinet-empty";
+        empty.textContent = "Les collaborateurs de ce cabinet seront bientôt disponibles.";
+        panel.appendChild(empty);
+        return section;
+    }
+
+    const assignedIds = new Set();
+    const lanesWrapper = document.createElement("div");
+    lanesWrapper.className = "cabinet-lanes";
+
+    CABINET_LANES.forEach((laneDefinition) => {
+        const laneMembers = members.filter((member) => laneDefinition.grades.includes(member.gradeKey));
+        laneMembers.forEach((member) => assignedIds.add(member.id));
+
+        const lane = renderCabinetLane(laneDefinition, laneMembers);
+        if (lane) {
+            lanesWrapper.appendChild(lane);
+        }
+    });
+
+    const remainingMembers = members.filter((member) => !assignedIds.has(member.id));
+    if (remainingMembers.length) {
+        const fallbackLane = renderCabinetLane(CABINET_FALLBACK_LANE, remainingMembers);
+        if (fallbackLane) {
+            lanesWrapper.appendChild(fallbackLane);
+        }
+    }
+
+    panel.appendChild(lanesWrapper);
+    return section;
+};
+
 
 const openModal = (minister) => {
     if (!modal) return;
+    const modalBody = modal.querySelector(".modal-body");
+    modal.classList.remove("modal--cabinet-active");
     modalElements.photo.src = minister.photo ?? "assets/placeholder-minister.svg";
     modalElements.photo.alt = minister.photoAlt ?? `Portrait de ${minister.name ?? "ministre"}`;
     modalElements.role.textContent = formatRole(minister.role);
@@ -470,42 +808,112 @@ const openModal = (minister) => {
     modalElements.mission.textContent = minister.mission ?? "Mission principale à renseigner.";
     modalElements.contact.textContent = minister.contact ?? "Contact prochainement disponible.";
 
-    // Nettoie la section collaborateurs si elle existe
-    try {
-        const oldCollabSection = modal.querySelector(".modal-collaborators");
+    if (modalBody) {
+        const oldCollabSection = modalBody.querySelector(".modal-collaborators");
         if (oldCollabSection) oldCollabSection.remove();
-    } catch (e) {
-        /* noop */
+        const oldToggle = modalBody.querySelector(".modal-collaborators-toggle");
+        if (oldToggle) oldToggle.remove();
     }
 
-    // Récupère et affiche les collaborateurs (si Supabase présent)
-    if (minister.id) {
-        fetchCollaboratorsForMinister(minister.id).then((collabs) => {
-            if (!Array.isArray(collabs) || collabs.length === 0) return;
-            const section = document.createElement("div");
-            section.className = "modal-collaborators";
-            section.innerHTML = `
-      <h4>Collaborateurs</h4>
-      <div class="collaborators-list">
-        ${collabs
-            .map(
-                (c) => `
-          <div class="collaborator-card">
-            <img src="${c.photo_url || 'assets/placeholder-minister.svg'}" class="collaborator-photo" alt="">
-            <div>
-              <p class="collab-name">${c.full_name}</p>
-              <p class="collab-role">${c.cabinet_role || 'Collaborateur'}</p>
-              ${c.collab_grade ? `<p class="collab-grade">${c.collab_grade}</p>` : ''}
-            </div>
-          </div>
-        `
-            )
-            .join("")}
-      </div>`;
-            modal.querySelector(".modal-body").appendChild(section);
-        }).catch((error) => {
-            console.warn("[onepage] Impossible de charger les collaborateurs", error);
-        });
+    if (modalBody) {
+        const toggleButton = document.createElement("button");
+        toggleButton.type = "button";
+        toggleButton.className = "btn btn-ghost modal-collaborators-toggle";
+        toggleButton.textContent = minister.id ? "Voir le cabinet" : "Cabinet non disponible";
+        toggleButton.setAttribute("aria-expanded", "false");
+
+        if (!minister.id) {
+            toggleButton.disabled = true;
+            toggleButton.setAttribute("aria-disabled", "true");
+        }
+
+        const metaSection = modalBody.querySelector(".modal-meta");
+        if (metaSection) {
+            metaSection.insertAdjacentElement("afterend", toggleButton);
+        } else {
+            modalBody.appendChild(toggleButton);
+        }
+
+        if (minister.id) {
+            let collaboratorsSection = null;
+            let isExpanded = false;
+            let isLoadingCollaborators = false;
+            const collabSectionId = `modal-collaborators-${minister.id}`;
+            toggleButton.setAttribute("aria-controls", collabSectionId);
+
+            const renderSection = () => {
+                const cachedCollabs = collaboratorsCache.get(minister.id);
+                if (!cachedCollabs || cachedCollabs.length === 0) {
+                    return null;
+                }
+
+                const section = renderCabinetSection(minister, cachedCollabs);
+                section.id = collabSectionId;
+
+                if (collaboratorsSection && collaboratorsSection.parentElement) {
+                    collaboratorsSection.replaceWith(section);
+                } else {
+                    modalBody.appendChild(section);
+                }
+
+                collaboratorsSection = section;
+                return collaboratorsSection;
+            };
+
+            const setExpandedState = (expanded) => {
+                isExpanded = expanded;
+                if (expanded) {
+                    collaboratorsSection?.classList.remove("is-hidden");
+                } else {
+                    collaboratorsSection?.classList.add("is-hidden");
+                }
+                toggleButton.textContent = expanded ? "Masquer le cabinet" : "Voir le cabinet";
+                toggleButton.setAttribute("aria-expanded", String(expanded));
+                modal.classList.toggle("modal--cabinet-active", expanded);
+            };
+
+            toggleButton.addEventListener("click", async () => {
+                if (isLoadingCollaborators) return;
+
+                if (!collaboratorsCache.has(minister.id)) {
+                    isLoadingCollaborators = true;
+                    toggleButton.disabled = true;
+                    toggleButton.textContent = "Chargement...";
+                    toggleButton.setAttribute("aria-disabled", "true");
+
+                    const collabs = await fetchCollaboratorsForMinister(minister.id);
+                    isLoadingCollaborators = false;
+                    toggleButton.disabled = false;
+                    toggleButton.removeAttribute("aria-disabled");
+
+                    if (!Array.isArray(collabs)) {
+                        collaboratorsCache.delete(minister.id);
+                        toggleButton.textContent = "Réessayer";
+                        return;
+                    }
+
+                    collaboratorsCache.set(minister.id, collabs);
+                }
+
+                const cachedCollabs = collaboratorsCache.get(minister.id) || [];
+
+                if (!cachedCollabs.length) {
+                    setExpandedState(false);
+                    toggleButton.textContent = "Aucun collaborateur renseigné";
+                    toggleButton.disabled = true;
+                    toggleButton.setAttribute("aria-disabled", "true");
+                    return;
+                }
+
+                const section = renderSection();
+                if (!section) {
+                    setExpandedState(false);
+                    return;
+                }
+
+                setExpandedState(!isExpanded);
+            });
+        }
     }
 
     modal.hidden = false;
@@ -515,6 +923,7 @@ const openModal = (minister) => {
 const closeModal = () => {
     if (!modal) return;
     modal.hidden = true;
+    modal.classList.remove("modal--cabinet-active");
     document.body.style.overflow = "";
 };
 
