@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ministres — Démonstration (HTML/CSS/JS pur)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --rumeur-panthere: #002E5B;
+      --rumeur-perle: #F2F2F2;
+      --rumeur-encre: #111727;
+      --rumeur-sesame: #868895;
+      --rumeur-prune: #4B2579;
+
+      --party-renaissance: #FFD700;
+      --party-modem: #F28C00;
+      --party-lr: #0055A4;
+      --party-horizons: #0055A4;
+    }
+
+    * { box-sizing: border-box; }
+    body { font-family: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--rumeur-perle); color: var(--rumeur-encre); margin: 0; padding: 32px 16px; }
+
+    /* Conteneur principal */
+    .ministers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Carte ministre */
+    .minister-card {
+      position: relative;
+      background: var(--rumeur-perle);
+      border: 1px solid var(--rumeur-sesame);
+      border-radius: 10px;
+      overflow: hidden;
+      text-align: center;
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+      padding: 20px;
+    }
+    .minister-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
+
+    .minister-card h2 { font-weight: 700; color: var(--rumeur-encre); margin: 6px 0; font-size: 1.05rem; }
+    .minister-card p { color: var(--rumeur-sesame); font-size: 0.9rem; margin: 6px 0 12px; }
+
+    .party-badge { display: inline-block; padding: 6px 10px; border-radius: 9999px; font-weight: 700; font-size: 0.78rem; margin-bottom: 8px; }
+    .party-renaissance { background: var(--party-renaissance); color: var(--rumeur-encre); }
+    .party-modem { background: var(--party-modem); color: #fff; }
+    .party-lr { background: var(--party-lr); color: #fff; }
+    .party-horizons { background: var(--party-horizons); color: #fff; }
+
+    /* Bouton */
+    .toggle-btn { background: var(--rumeur-panthere); color: var(--rumeur-perle); border: none; border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; cursor: pointer; transition: background 0.25s; }
+    .toggle-btn:hover { background: var(--rumeur-prune); }
+
+    /* Conteneur des ministres délégués - animated */
+    .delegates {
+      margin-top: 12px;
+      padding: 10px;
+      background: #ffffffc5;
+      border-radius: 10px;
+      border: 1px solid var(--rumeur-sesame);
+      backdrop-filter: blur(6px);
+
+      /* animation-friendly initial state */
+      max-height: 0;
+      opacity: 0;
+      transform: translateY(-6px);
+      filter: blur(6px);
+      overflow: hidden;
+      transition: all 420ms cubic-bezier(.2,.9,.2,1);
+    }
+
+    .delegates.show {
+      max-height: 600px; /* large enough to reveal content */
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+
+    .delegate-card {
+      background: var(--rumeur-perle);
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid var(--rumeur-sesame);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .delegate-card + .delegate-card { margin-top: 8px; }
+    .delegate-card h3 { font-size: 0.95rem; margin: 0; font-weight: 600; color: var(--rumeur-encre); }
+    .delegate-card p { margin: 0; font-size: 0.85rem; color: var(--rumeur-sesame); }
+    .delegate-card span { font-size: 0.78rem; display: inline-block; margin-left: 12px; padding: 4px 8px; border-radius: 9999px; background: var(--rumeur-panthere); color: var(--rumeur-perle); font-weight:700; }
+    .delegate-card[data-party="Renaissance"] span { background: var(--party-renaissance); color: var(--rumeur-encre); }
+    .delegate-card[data-party="MoDem"] span { background: var(--party-modem); }
+    .delegate-card[data-party="Les Républicains"] span { background: var(--party-lr); color: #fff; }
+    .delegate-card[data-party="Horizons"] span { background: var(--party-horizons); color: #fff; }
+
+    /* Small helper for layout inside card */
+    .card-body { display: grid; gap: 6px; }
+    .card-actions { margin-top: 10px; }
+
+    /* Small responsive tweak */
+    @media (max-width:600px) {
+      body { padding: 20px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 style="text-align:center;">Ministres – démo (HTML/CSS/JS pur)</h1>
+    <section id="ministers-container" class="ministers-grid" aria-live="polite"></section>
+  </main>
+
+  <script>
+    // Données simulées (extrait du prompt)
+    const ministers = [
+      {
+        id: 1,
+        name: "Catherine VAUTRIN",
+        ministry: "Armées",
+        category: "ministre",
+        party: "Renaissance",
+        delegates: [
+          { name: "Jean DUPONT", role: "Ministre délégué", party: "MoDem" },
+          { name: "Sophie MARTIN", role: "Secrétaire d’État", party: "Horizons" }
+        ]
+      },
+      {
+        id: 2,
+        name: "Rachida DATI",
+        ministry: "Culture",
+        category: "ministre",
+        party: "Les Républicains",
+        delegates: [
+          { name: "Pierre LEROY", role: "Ministre délégué", party: "Les Républicains" }
+        ]
+      }
+    ];
+
+    const container = document.getElementById("ministers-container");
+
+    ministers.forEach((m) => {
+      const card = document.createElement("article");
+      card.classList.add("minister-card");
+      card.innerHTML = `
+        <div class="card-body">
+          <h2>${m.name}</h2>
+          <p>${m.ministry}</p>
+          <div class="party-badge ${m.party.toLowerCase().includes('renaissance')? 'party-renaissance' : m.party.toLowerCase().includes('modem') ? 'party-modem' : m.party.toLowerCase().includes('républicain') || m.party.toLowerCase().includes('republicain') ? 'party-lr' : ''}">${m.party}</div>
+          <div class="card-actions">
+            <button class="toggle-btn">Afficher les ministres délégués</button>
+          </div>
+        </div>
+        <div class="delegates" aria-hidden="true"></div>
+      `;
+
+      const btn = card.querySelector('.toggle-btn');
+      const delegatesContainer = card.querySelector('.delegates');
+
+      // Ajouter les délégués dans le DOM
+      m.delegates.forEach((d) => {
+        const delegate = document.createElement('div');
+        delegate.classList.add('delegate-card');
+        delegate.dataset.party = d.party;
+        delegate.innerHTML = `
+          <div>
+            <h3>${d.name}</h3>
+            <p>${d.role}</p>
+          </div>
+          <span>${d.party}</span>
+        `;
+        delegatesContainer.appendChild(delegate);
+      });
+
+      // Interaction bouton
+      btn.addEventListener('click', () => {
+        const isVisible = delegatesContainer.classList.contains('show');
+        if (isVisible) {
+          delegatesContainer.classList.remove('show');
+          delegatesContainer.setAttribute('aria-hidden','true');
+          btn.textContent = 'Afficher les ministres délégués';
+        } else {
+          // For a nicer progressive effect, add a tiny delay to stagger the appearance
+          delegatesContainer.classList.add('show');
+          delegatesContainer.setAttribute('aria-hidden','false');
+          btn.textContent = 'Masquer les ministres délégués';
+        }
+      });
+
+      container.appendChild(card);
+    });
+  </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 :root {
-    --color-panthere: #002E5B; /* Réservée au logo / baseline */
+    --color-panthere: #002E5B;
     --color-perle: #F2F2F2;
     --color-guimauve: #ECEAED;
     --color-sesame: #868895;
@@ -20,6 +20,39 @@
     --radius-base: 10px;
     --shadow-soft: 0 20px 45px rgba(39, 8, 59, 0.12);
     --shadow-hover: 0 28px 60px rgba(75, 37, 121, 0.18);
+
+    /* --- Couleurs des partis (palette Rumeur / mapping local) --- */
+    /* Centre / majorités */
+    --party-renaissance: #FFD700;    /* Jaune doré - Renaissance */
+    --party-horizons: #0055A4;       /* Bleu institutionnel - Horizons */
+    --party-modem: #F28C00;          /* Orange - MoDem */
+    --party-prv: #003366;            /* Bleu marine - Parti Radical */
+    --party-centristes: #0072BB;     /* Bleu clair - Les Centristes */
+    --party-udi: #6BA5E7;            /* Lavande bleue - UDI */
+
+    /* Droite / nationalistes */
+    --party-lr: #0055A4;             /* Bleu républicain - Les Républicains */
+    --party-dlf: #004AAD;            /* Bleu patriotique - Debout la France */
+    --party-rn: #0D378A;             /* Bleu nuit - Rassemblement National */
+    --party-reconquete: #002E5B;     /* Bleu Panthère - Reconquête */
+    --party-patriotes: #0A3161;      /* Bleu sombre - Les Patriotes */
+
+    /* Gauche / écologie */
+    --party-ps: #E2001A;             /* Rouge vif - Parti Socialiste */
+    --party-placepub: #D36A9E;       /* Rose magenta - Place Publique */
+    --party-generations: #B51F67;    /* Rose fuchsia - Génération.s */
+    --party-eelv: #00A95C;           /* Vert franc - Europe Écologie Les Verts */
+    --party-pcf: #D50000;            /* Rouge profond - Parti Communiste Français */
+    --party-lfi: #CE2B37;            /* Rouge rosé - La France Insoumise */
+    --party-npa: #E30016;            /* Rouge militant - NPA */
+    --party-lo: #B70000;             /* Rouge foncé - Lutte Ouvrière */
+    --party-prg: #FFB347;            /* Orange doré - Parti Radical de Gauche */
+
+    /* Autres / minoritaires */
+    --party-poi: #BF3030;            /* Rouge brique - Parti Ouvrier Indépendant */
+    --party-animaliste: #C77EB5;     /* Violet clair - Parti Animaliste */
+    --party-volt: #6F42C1;           /* Violet européen - Volt France */
+    --party-regionalistes: #2E2E2E;  /* Gris anthracite - Partis régionaux */
 }
 
 * {
@@ -30,10 +63,10 @@ body {
     margin: 0;
     min-height: 100vh;
     font-family: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
-    font-weight: 400;
+    font-weight: 300;
     background-color: var(--color-perle);
-    color: var(--color-sesame);
-    line-height: 1.6;
+    color: var(--color-poivre);
+    line-height: 1.15;
     -webkit-font-smoothing: antialiased;
 }
 
@@ -43,9 +76,10 @@ h3,
 h4,
 h5,
 h6 {
-    color: var(--color-poivre);
-    line-height: 1.2;
+    color: var(--color-encre);
+    line-height: 1.15;
     margin: 0 0 0.75rem;
+    font-weight: 700;
 }
 
 p {
@@ -112,9 +146,13 @@ a:focus {
 }
 
 .brand-baseline {
+    display: inline-block;
     font-size: 1.05rem;
-    max-width: 42ch;
-    color: var(--color-perle);
+    max-width: 46ch;
+    color: var(--color-panthere);
+    background: var(--color-perle);
+    padding: 0.35rem 0.65rem;
+    border-radius: var(--radius-base);
 }
 
 .site-nav ul {
@@ -175,6 +213,110 @@ a:focus {
     gap: 0.75rem;
 }
 
+/* Header quick search (discrete) */
+.header-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: 1rem;
+    position: relative;
+}
+.header-search-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.10);
+    color: var(--color-guimauve);
+    cursor: pointer;
+    transition: transform 180ms ease, box-shadow 180ms ease, background-color 120ms ease;
+}
+.header-search-field { position: relative; }
+.header-search-input {
+    width: 520px;
+    padding: 0.95rem 1.15rem;
+    border-radius: 14px;
+    border: 1px solid rgba(236,234,237,0.12);
+    background: rgba(255,255,255,0.10);
+    color: var(--color-encre);
+    font-size: 1.15rem;
+    font-weight: 500;
+    transition: width 260ms cubic-bezier(.2,.9,.2,1), background-color 160ms ease, box-shadow 220ms ease, transform 160ms ease;
+    box-shadow: 0 18px 44px rgba(39,8,59,0.10);
+}
+.header-search-input::placeholder { color: rgba(242,242,242,0.65); }
+.header-search-input:focus {
+    outline: none;
+    width: 720px;
+    background: rgba(255,255,255,0.16);
+    box-shadow: 0 26px 56px rgba(39,8,59,0.18);
+    transform: translateY(-4px) scale(1.01);
+}
+
+/* Suggestions dropdown */
+.header-suggestions {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 8px);
+    width: 100%;
+    background: var(--color-perle);
+    border: 1px solid rgba(62,62,61,0.08);
+    border-radius: 10px;
+    box-shadow: 0 12px 30px rgba(17,23,39,0.12);
+    max-height: 360px;
+    overflow: auto;
+    z-index: 60;
+}
+.header-suggestion {
+    padding: 0.65rem 0.9rem;
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(62,62,61,0.03);
+}
+.header-suggestion:last-child { border-bottom: none; }
+.header-suggestion .label { font-weight: 600; color: var(--color-encre); }
+.header-suggestion .meta { font-size: 0.85rem; color: var(--color-sesame); }
+.header-suggestion[aria-selected="true"], .header-suggestion:hover { background: rgba(100,215,205,0.06); }
+
+/* Avatar in suggestion */
+.header-suggestion img.avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex: 0 0 56px;
+    background: var(--color-guimauve);
+    box-shadow: 0 8px 20px rgba(39,8,59,0.08);
+}
+.header-suggestion .text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.header-suggestion .meta { font-size: 0.78rem; color: var(--color-sesame); }
+
+/* Highlight animation for target cards */
+.search-highlight {
+    animation: rp-pulse 1.8s ease-in-out both;
+    border-color: var(--accent-primary) !important;
+}
+@keyframes rp-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(100,215,205,0.00); transform: translateY(0); }
+    30% { box-shadow: 0 16px 32px rgba(100,215,205,0.10); transform: translateY(-6px); }
+    100% { box-shadow: 0 10px 26px rgba(100,215,205,0.06); transform: translateY(0); }
+}
+
+/* small highlight when navigation target is found */
+.search-highlight {
+    box-shadow: 0 8px 30px rgba(100, 215, 205, 0.18);
+    border-color: var(--accent-primary) !important;
+    transform: translateY(-6px);
+}
+
 .btn {
     display: inline-flex;
     align-items: center;
@@ -229,11 +371,13 @@ main {
 
 .section-title {
     font-size: clamp(2rem, 4vw, 2.6rem);
+    font-weight: 700;
 }
 
 .section-subtitle {
-    color: var(--color-sesame);
+    color: var(--color-encre);
     font-size: 1.1rem;
+    font-weight: 600;
 }
 
 .presentation-grid {
@@ -323,46 +467,269 @@ main {
 
 .ministers-grid {
     display: grid;
-    gap: 1.25rem;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    /* Stack ministry groups vertically to avoid collisions */
+    grid-template-columns: 1fr;
+    gap: 2rem;
 }
 
 .minister-card {
     position: relative;
     border-radius: var(--radius-base);
-    padding: 1.4rem;
+    /* Reserve space for the role badge to prevent overlap */
+    padding: 1.6rem 1rem 1rem;
     background: var(--color-perle);
     border: 1px solid rgba(62, 62, 61, 0.1);
+    border-left: 6px solid var(--accent-color, rgba(62, 62, 61, 0.08));
     box-shadow: var(--shadow-soft);
     display: grid;
-    gap: 1rem;
+    grid-template-columns: 2.1fr 1fr;
+    gap: 0.9rem 1rem;
+    align-items: start;
     cursor: pointer;
-    transition: transform 180ms ease, box-shadow 180ms ease;
+    transition: transform 140ms ease, box-shadow 140ms ease;
+    min-height: 220px;
+    z-index: 0;
+    overflow: hidden;
+}
+
+/* Premier ministre mis en avant, centré */
+.minister-card.is-leader {
+    grid-column: 1 / -1;
+    max-width: 760px;
+    margin-inline: auto;
+    padding: 1.25rem;
+    border: 1px solid rgba(62, 62, 61, 0.15);
+    box-shadow: var(--shadow-hover);
+}
+
+.minister-card.is-leader h3 {
+    font-size: 1.8rem;
+}
+
+.minister-card.is-leader .minister-role {
+    font-size: 1rem;
 }
 
 .minister-card:hover,
 .minister-card:focus {
-    transform: translateY(-6px);
+    transform: translateY(-4px);
     box-shadow: var(--shadow-hover);
+    z-index: 10;
 }
 
-.minister-card img {
+/* Small interactive expansion state (optional) */
+.minister-card.expanded {
+    transform: scale(1.02);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.minister-card .minister-photo {
     width: 100%;
-    aspect-ratio: 4 / 5;
+    height: 140px;
     object-fit: cover;
     border-radius: calc(var(--radius-base) - 2px);
     background: var(--color-guimauve);
 }
 
 .minister-card h3 {
-    font-size: 1.4rem;
+    font-size: 1.25rem;
+    line-height: 1.2;
 }
+
+.mc-ministry {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-encre);
+    margin-bottom: 0.35rem;
+}
+
+.mc-left { display: grid; gap: 0.35rem; }
+.mc-right { display: grid; gap: 0.6rem; align-content: start; justify-items: end; }
+
+.mc-meta { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+
+/* Bio courte affichée dans la carte du Premier ministre */
+.mc-bio {
+    margin-top: 0.5rem;
+    color: var(--color-poivre);
+    line-height: 1.45;
+}
+
+/* Actions dans la carte (ex: bouton délégués) */
+.card-actions { margin-top: 0.75rem; }
+.toggle-btn {
+    background: var(--color-panthere);
+    color: var(--color-perle);
+    border: 1px solid rgba(62,62,61,0.15);
+    border-radius: 8px;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 200ms ease, transform 150ms ease;
+}
+.toggle-btn:hover { background: var(--color-prune); transform: translateY(-1px); }
+
+/* Bloc des ministres délégués (animé) */
+.delegates {
+    margin-top: 0.75rem;
+    padding: 0.6rem;
+    background: rgba(255,255,255,0.9);
+    border-radius: var(--radius-base);
+    border: 1px solid rgba(62,62,61,0.15);
+    backdrop-filter: blur(6px);
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-6px);
+    filter: blur(6px);
+    overflow: hidden;
+    transition: all 420ms cubic-bezier(.2,.9,.2,1);
+}
+.delegates.show {
+    max-height: 640px; /* assez grand pour le contenu */
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+}
+
+.delegate-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--color-perle);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid rgba(62,62,61,0.15);
+}
+.delegate-card + .delegate-card { margin-top: 0.5rem; }
+.delegate-card h3 { font-size: 0.95rem; margin: 0; font-weight: 700; color: var(--color-encre); }
+.delegate-card p { margin: 0; font-size: 0.85rem; color: var(--color-sesame); }
+
+/* Badge dans la ligne délégué: réutilise party-badge global */
+.delegate-card .party-badge { font-size: 0.7rem; padding: 0.15rem 0.5rem; }
+
+/* Badges de parti — utilitaire simple */
+.party-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--rumeur-encre, #111727);
+}
+
+/* Mapping par étiquette (valeurs attendues dans `data-party` ou champ `party`) */
+.party-badge[data-party="Renaissance"]     { background-color: var(--party-renaissance); }
+.party-badge[data-party="Horizons"]        { background-color: var(--party-horizons); color: #F2F2F2; }
+.party-badge[data-party="MoDem"]           { background-color: var(--party-modem); }
+.party-badge[data-party="PRV"]             { background-color: var(--party-prv); color: #F2F2F2; }
+.party-badge[data-party="Centristes"]      { background-color: var(--party-centristes); color: #F2F2F2; }
+.party-badge[data-party="UDI"]             { background-color: var(--party-udi); }
+.party-badge[data-party="LR"]              { background-color: var(--party-lr); color: #F2F2F2; }
+.party-badge[data-party="DLF"]             { background-color: var(--party-dlf); color: #F2F2F2; }
+.party-badge[data-party="RN"]              { background-color: var(--party-rn); color: #F2F2F2; }
+.party-badge[data-party="Reconquête"]      { background-color: var(--party-reconquete); color: #F2F2F2; }
+.party-badge[data-party="Patriotes"]       { background-color: var(--party-patriotes); color: #F2F2F2; }
+.party-badge[data-party="PS"]              { background-color: var(--party-ps); color: #F2F2F2; }
+.party-badge[data-party="Place Publique"]  { background-color: var(--party-placepub); }
+.party-badge[data-party="Génération.s"]    { background-color: var(--party-generations); color: #F2F2F2; }
+.party-badge[data-party="EELV"]            { background-color: var(--party-eelv); color: #111727; }
+.party-badge[data-party="PCF"]             { background-color: var(--party-pcf); color: #F2F2F2; }
+.party-badge[data-party="LFI"]             { background-color: var(--party-lfi); color: #F2F2F2; }
+.party-badge[data-party="NPA"]             { background-color: var(--party-npa); color: #F2F2F2; }
+.party-badge[data-party="LO"]              { background-color: var(--party-lo); color: #F2F2F2; }
+.party-badge[data-party="PRG"]             { background-color: var(--party-prg); }
+.party-badge[data-party="POI"]             { background-color: var(--party-poi); color: #F2F2F2; }
+.party-badge[data-party="Animaliste"]      { background-color: var(--party-animaliste); color: #111727; }
+.party-badge[data-party="Volt"]            { background-color: var(--party-volt); color: #F2F2F2; }
+.party-badge[data-party="Regionalistes"]   { background-color: var(--party-regionalistes); color: #F2F2F2; }
+
+/* Fallback: si on fournit la couleur inline via style, on la respecte */
+.party-badge[style] { color: var(--rumeur-encre, #111727); }
+
+/* Variante visible pour les ministres sans appartenance déclarée */
+.party-badge--untagged {
+    background: linear-gradient(90deg, rgba(236,234,237,0.9), rgba(242,242,242,0.95));
+    color: var(--color-poivre);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(39,8,59,0.06);
+    border: 1px solid rgba(62,62,61,0.06);
+}
+
+.minister-cta { justify-self: start; padding: 0.6rem 1rem; }
 
 .minister-role {
     font-size: 0.9rem;
     color: var(--color-sesame);
     text-transform: uppercase;
     letter-spacing: 0.08em;
+}
+
+/* Conteneur des ministres délégués (animation : flou + translation) */
+.delegates {
+    margin-top: 12px;
+    padding: 10px;
+    background: #ffffffc5;
+    border-radius: 10px;
+    border: 1px solid var(--color-sesame);
+    backdrop-filter: blur(6px);
+
+    /* animation-friendly initial state */
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-6px);
+    filter: blur(6px);
+    overflow: hidden;
+    transition: all 420ms cubic-bezier(.2,.9,.2,1);
+}
+
+.delegates.show {
+    max-height: 600px; /* suffisant pour la plupart des contenus */
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+}
+
+.delegate-card {
+    background: var(--color-perle);
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid var(--color-sesame);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.delegate-card + .delegate-card { margin-top: 8px; }
+.delegate-card h3 { font-size: 0.95rem; margin: 0; font-weight: 600; color: var(--color-encre); }
+.delegate-card p { margin: 0; font-size: 0.85rem; color: var(--color-sesame); }
+.delegate-card span { font-size: 0.78rem; display: inline-block; margin-left: 12px; padding: 4px 8px; border-radius: 9999px; background: var(--rumeur-panthere); color: var(--rumeur-perle); font-weight:700; }
+.delegate-card[data-party="Renaissance"] span { background: var(--party-renaissance); color: var(--rumeur-encre); }
+.delegate-card[data-party="MoDem"] span { background: var(--party-modem); }
+.delegate-card[data-party="Les Républicains"] span { background: var(--party-lr); color: #fff; }
+.delegate-card[data-party="Horizons"] span { background: var(--party-horizons); color: #fff; }
+
+/* Keep party badge visual mapping defined above; only adjust spacing here */
+.mc-meta .party-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 0.35rem;
+}
+
+/* Indicateur de rang/importance */
+.role-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: var(--accent-secondary);
+    color: var(--color-perle);
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
 }
 
 .empty-state {
@@ -374,17 +741,71 @@ main {
     border: 1px solid rgba(105, 135, 255, 0.25);
 }
 
-.programme {
-    background: var(--color-guimauve);
-    border-radius: var(--radius-base);
-    padding: clamp(2rem, 4vw, 3rem);
-    box-shadow: var(--shadow-soft);
+/* Groupes par ministère */
+.ministry-group {
+    display: grid;
+    gap: 0.75rem;
 }
 
-.timeline {
-    display: grid;
-    gap: 1.5rem;
+.ministry-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
+
+.ministry-label {
+    display: inline-block;
+    padding: 0.35rem 0.65rem;
+    background: var(--color-guimauve);
+    border: 1px solid rgba(62, 62, 61, 0.12);
+    border-radius: var(--radius-base);
+    color: var(--color-encre);
+    font-weight: 600;
+}
+
+/* Grille interne des cartes de ministères: plus large, évite les collisions */
+.ministry-grid {
+    display: grid;
+    gap: 2rem;
+    /* Default: single column; see breakpoints below */
+    grid-template-columns: 1fr;
+    isolation: isolate;
+}
+
+/* Set exact column counts by viewport width */
+@media (min-width: 600px) {
+    .ministry-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 900px) {
+    .ministry-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 1200px) {
+    .ministry-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (min-width: 1440px) {
+    .ministry-grid { grid-template-columns: repeat(5, 1fr); }
+}
+
+.minister-card {
+    position: relative;
+    border-radius: var(--radius-base);
+    /* Reserve space for the role badge to prevent overlap */
+    padding: 1.6rem 1rem 1rem;
+    background: var(--color-perle);
+    border: 1px solid rgba(62, 62, 61, 0.1);
+    border-left: 6px solid var(--accent-color, rgba(62, 62, 61, 0.08));
+    box-shadow: var(--shadow-soft);
+    display: grid;
+    grid-template-columns: 2.1fr 1fr;
+    gap: 0.9rem 1rem;
+    align-items: start;
+    cursor: pointer;
+    transition: transform 140ms ease, box-shadow 140ms ease;
+    min-height: 220px;
+    z-index: 0;
+    overflow: hidden;
+}
+
 
 .timeline-item {
     padding: 1.5rem;
@@ -411,6 +832,41 @@ main {
     border: 1px solid rgba(62, 62, 61, 0.08);
     box-shadow: var(--shadow-soft);
 }
+.modal-collaborators {
+    margin-top: 1.5rem;
+    border-top: 1px solid rgba(62,62,61,0.1);
+    padding-top: 1.25rem;
+}
+
+.modal-collaborators h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-encre);
+    margin-bottom: 0.75rem;
+}
+
+.collaborators-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.collaborator-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--color-guimauve);
+    padding: 0.6rem 0.8rem;
+    border-radius: 10px;
+    border: 1px solid rgba(62,62,61,0.1);
+}
+
+.collaborator-photo {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
 
 .contact-card .btn-ghost {
     color: var(--color-prune);
@@ -587,4 +1043,33 @@ main {
     .footer-inner {
         justify-content: center;
     }
+
+    .minister-card {
+        grid-template-columns: 1fr;
+    }
+
+    .mc-right { justify-items: start; }
 }
+
+/* ===== Utilities (charte) ===== */
+.text-encre { color: var(--color-encre); }
+.text-poivre { color: var(--color-poivre); }
+.text-sesame { color: var(--color-sesame); }
+.text-perle { color: var(--color-perle); }
+.text-guimauve { color: var(--color-guimauve); }
+
+.bg-aubergine { background: var(--color-aubergine); }
+.bg-prune { background: var(--color-prune); }
+.bg-framboise { background: var(--color-framboise); }
+.bg-lavande { background: var(--color-lavande); }
+.bg-curacao { background: var(--color-curacao); }
+.bg-matcha { background: var(--color-matcha); }
+.bg-citron { background: var(--color-citron); }
+.bg-peche { background: var(--color-peche); }
+
+.rounded-10 { border-radius: var(--radius-base); }
+.legend { color: var(--color-sesame); font-size: 0.95rem; }
+
+.u-separator { display: block; height: 1px; width: 100%; background: currentColor; opacity: 0.35; border: 0; }
+.u-separator--thin { height: 0.5px; }
+.u-separator--wide { width: 150%; max-width: 150%; }

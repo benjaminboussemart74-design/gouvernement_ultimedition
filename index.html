@@ -30,16 +30,29 @@
             <div class="brand-title">
                 <span class="brand-eyebrow">RumeurLAB</span>
                 <h1>Gouvernement Lecornu II</h1>
-                <p class="brand-baseline">Interface interactive pour explorer la composition du gouvernement</p>
+                <p class="brand-baseline">Une marque sans prise de position est une marque sans influence</p>
             </div>
             <nav class="site-nav" aria-label="Navigation principale">
                 <ul>
                     <li><a href="#presentation">Présentation</a></li>
                     <li><a href="#ministres">Ministres</a></li>
-                    <li><a href="#programme">Programme</a></li>
                     <li><a href="#contact">Contact</a></li>
                 </ul>
             </nav>
+            <!-- Quick header search (discrete) -->
+            <form id="header-search" class="header-search" role="search" aria-label="Recherche rapide">
+                <button id="header-search-toggle" class="header-search-toggle" type="button" aria-expanded="false" aria-label="Ouvrir la recherche">
+                    <!-- simple magnifier svg -->
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                </button>
+                <div class="header-search-field">
+                    <input id="header-search-input" class="header-search-input" type="search" placeholder="Aller à un ministre ou ministère…" aria-label="Recherche rapide" autocomplete="off" />
+                    <div id="header-search-suggestions" class="header-suggestions" role="listbox" aria-label="Suggestions de recherche" hidden></div>
+                </div>
+            </form>
         </div>
         <!-- Hero Section -->
         <div class="hero">
@@ -55,35 +68,12 @@
 
     <!-- ================= MAIN ================= -->
     <main>
-        <!-- Présentation du projet -->
-        <section id="presentation" class="section presentation">
-            <div class="section-header">
-                <h2 class="section-title">Présentation</h2>
-                <p class="section-subtitle">Des données structurées, un récit lisible</p>
-            </div>
-            <div class="presentation-grid">
-                <article class="info-card">
-                    <h3>Vision stratégique</h3>
-                    <p>Mettre à disposition des acteurs publics une cartographie précise des décideurs. Chaque fiche ministre met en avant les responsabilités, les priorités et les contacts clés.</p>
-                </article>
-                <article class="info-card">
-                    <h3>Approche éditoriale</h3>
-                    <p>Une hiérarchie claire, des textes courts, et des visuels percutants encapsulés dans des rectangles arrondis, signature graphique de Rumeur Publique.</p>
-                </article>
-                <article class="info-card">
-                    <h3>Expérience interactive</h3>
-                    <p>Filtrez, recherchez, ouvrez des fiches détaillées : l'expérience a été pensée pour fonctionner aussi bien sur desktop que sur mobile.</p>
-                </article>
-            </div>
-        </section>
-
         <!-- Section ministres -->
         <section id="ministres" class="section ministers">
             <div class="section-header">
                 <h2 class="section-title">Les ministres</h2>
                 <p class="section-subtitle">Cliquez sur une carte pour afficher la fiche détaillée.</p>
             </div>
-            <!-- Filtres et recherche -->
             <div class="toolbar" role="region" aria-label="Filtres ministres">
                 <label class="search" for="minister-search">
                     <span class="search-label">Recherche</span>
@@ -102,27 +92,7 @@
             <p id="ministers-empty" class="empty-state" hidden>Ajoutez vos données dans <code>data/ministers.json</code> pour alimenter cette section.</p>
         </section>
 
-        <!-- Section programme -->
-        <section id="programme" class="section programme">
-            <div class="section-header">
-                <h2 class="section-title">Programme &amp; calendrier</h2>
-                <p class="section-subtitle">Des repères clairs pour suivre l'action gouvernementale.</p>
-            </div>
-            <div class="timeline">
-                <article class="timeline-item">
-                    <h3>100 premiers jours</h3>
-                    <p>Définir les chantiers prioritaires, coordonner les équipes et poser les jalons législatifs majeurs.</p>
-                </article>
-                <article class="timeline-item">
-                    <h3>1 an</h3>
-                    <p>Évaluer les réformes engagées, ajuster les portefeuilles et renforcer la coordination interministérielle.</p>
-                </article>
-                <article class="timeline-item">
-                    <h3>À plus long terme</h3>
-                    <p>Assurer la cohérence stratégique, maintenir le dialogue avec les parties prenantes et préparer les bilans publics.</p>
-                </article>
-            </div>
-        </section>
+        
 
         <!-- Section contact -->
         <section id="contact" class="section contact">
@@ -183,6 +153,10 @@
     </div>
 
     <!-- ================= SCRIPTS ================= -->
-    <script src="script.js" type="module"></script>
+    <!-- Supabase client (required to fetch live ministers) -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Local Supabase configuration -->
+    <script src="config/supabase.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

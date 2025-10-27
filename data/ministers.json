@@ -1,1 +1,35 @@
-[]
+[
+	{
+		"id": "1",
+		"name": "Jean Dupont",
+		"role": "leader",
+		"portfolio": "Premier ministre",
+		"photo": "assets/placeholder-minister.svg",
+		"photoAlt": "Portrait de Jean Dupont",
+		"description": "Chef du gouvernement, responsable de la coordination interministérielle.",
+		"mission": "Coordonner l'action gouvernementale.",
+		"contact": "jean.dupont@example.com"
+	},
+	{
+		"id": "2",
+		"name": "Marie Curie",
+		"role": "minister",
+		"portfolio": "Ministre de l'Économie",
+		"photo": "assets/placeholder-minister.svg",
+		"photoAlt": "Portrait de Marie Curie",
+		"description": "En charge des politiques économiques et du soutien aux entreprises.",
+		"mission": "Piloter la stratégie économique.",
+		"contact": "marie.curie@example.com"
+	},
+	{
+		"id": "3",
+		"name": "Paul Martin",
+		"role": "secretary",
+		"portfolio": "Secrétaire d'État chargé des Transports",
+		"photo": "assets/placeholder-minister.svg",
+		"photoAlt": "Portrait de Paul Martin",
+		"description": "Soutient le ministre des Transports sur les dossiers de mobilité.",
+		"mission": "Suivre les réformes de mobilité.",
+		"contact": "paul.martin@example.com"
+	}
+]
