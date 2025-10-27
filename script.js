@@ -142,6 +142,10 @@ const modal = document.getElementById("minister-modal");
 const modalBackdrop = modal?.querySelector("[data-dismiss]");
 const modalClose = modal?.querySelector(".modal-close");
 const exportButton = document.getElementById("export-minister-pdf");
+if (exportButton) {
+    exportButton.disabled = true;
+    exportButton.setAttribute("aria-disabled", "true");
+}
 const sortSelect = document.getElementById("sort-order");
 const delegatesToggle = document.getElementById("filter-delegates");
 const bioToggle = document.getElementById("filter-bio");
@@ -210,6 +214,30 @@ let onlyWithDelegates = false;
 let onlyWithBio = false;
 let lastFetchError = null; // store last fetch error for debug UI
 let activeMinister = null;
+let printSheetContainer = null;
+
+const ensurePrintSheetContainer = () => {
+    if (typeof document === "undefined") return null;
+    if (!printSheetContainer) {
+        printSheetContainer = document.createElement("div");
+        printSheetContainer.id = "print-sheet";
+    }
+    return printSheetContainer;
+};
+
+const cleanupPrintSheet = () => {
+    if (typeof document === "undefined" || !document.body) return;
+    document.body.classList.remove("print-single");
+    if (!printSheetContainer) return;
+    if (printSheetContainer.parentElement) {
+        printSheetContainer.parentElement.removeChild(printSheetContainer);
+    }
+    printSheetContainer.innerHTML = "";
+};
+
+if (typeof window !== "undefined") {
+    window.addEventListener("afterprint", cleanupPrintSheet);
+}
 
 updatePartyFilterOptions();
 
@@ -865,15 +893,12 @@ const ensureCollaboratorsForPrint = async (minister) => {
 };
 
 const printMinisterSheet = async (minister) => {
-    if (!minister) return;
+    if (!minister || typeof document === "undefined" || !document.body) return;
 
-    let printSheet = document.getElementById("print-sheet");
-    if (!printSheet) {
-        printSheet = document.createElement("div");
-        printSheet.id = "print-sheet";
-    } else {
-        printSheet.innerHTML = "";
-    }
+    const printSheet = ensurePrintSheetContainer();
+    if (!printSheet) return;
+
+    printSheet.innerHTML = "";
 
     const ensureText = (value, fallback = "") => {
         if (typeof value !== "string") {
@@ -998,30 +1023,47 @@ const printMinisterSheet = async (minister) => {
     document.body.appendChild(printSheet);
     document.body.classList.add("print-single");
 
-    const cleanup = () => {
-        document.body.classList.remove("print-single");
-        if (printSheet.parentElement) {
-            printSheet.parentElement.removeChild(printSheet);
-        } else {
-            printSheet.innerHTML = "";
-        }
-        window.removeEventListener("afterprint", cleanup);
-    };
-
-    window.addEventListener("afterprint", cleanup);
     window.print();
 
     window.setTimeout(() => {
         if (document.body.classList.contains("print-single")) {
-            cleanup();
+            cleanupPrintSheet();
         }
     }, 1000);
 };
+
+const handleExportMinisterClick = async () => {
+    if (!exportButton || !activeMinister) return;
+
+    exportButton.disabled = true;
+    exportButton.setAttribute("aria-busy", "true");
+
+    try {
+        await printMinisterSheet(activeMinister);
+    } finally {
+        exportButton.disabled = false;
+        exportButton.removeAttribute("aria-busy");
+    }
+};
+
+if (exportButton) {
+    exportButton.addEventListener("click", handleExportMinisterClick);
+}
 
 const openModal = (minister) => {
     if (!modal) return;
     activeMinister = minister;
     const modalBody = modal.querySelector(".modal-body");
+    if (exportButton) {
+        if (minister) {
+            exportButton.disabled = false;
+            exportButton.removeAttribute("aria-disabled");
+            exportButton.removeAttribute("aria-busy");
+        } else {
+            exportButton.disabled = true;
+            exportButton.setAttribute("aria-disabled", "true");
+        }
+    }
     modalElements.photo.src = minister.photo ?? "assets/placeholder-minister.svg";
     modalElements.photo.alt = minister.photoAlt ?? `Portrait de ${minister.name ?? "ministre"}`;
     modalElements.role.textContent = formatRole(minister.role);
@@ -1148,19 +1190,6 @@ const openModal = (minister) => {
         }
     }
 
-    if (exportButton && !exportButton.dataset.bound) {
-        exportButton.addEventListener("click", async () => {
-            if (!activeMinister) return;
-            exportButton.disabled = true;
-            try {
-                await printMinisterSheet(activeMinister);
-            } finally {
-                exportButton.disabled = false;
-            }
-        });
-        exportButton.dataset.bound = "true";
-    }
-
     modal.hidden = false;
     document.body.style.overflow = "hidden";
 };
@@ -1170,6 +1199,12 @@ const closeModal = () => {
     modal.hidden = true;
     modal.classList.remove("modal--cabinet-active");
     document.body.style.overflow = "";
+    cleanupPrintSheet();
+    if (exportButton) {
+        exportButton.disabled = true;
+        exportButton.removeAttribute("aria-busy");
+        exportButton.setAttribute("aria-disabled", "true");
+    }
     activeMinister = null;
 };
 
