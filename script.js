@@ -1130,14 +1130,8 @@ const openModal = (minister) => {
         const toggleButton = document.createElement("button");
         toggleButton.type = "button";
         toggleButton.className = "btn btn-ghost modal-collaborators-toggle";
-        // include pictogram/icon and a label span so we can update text without removing the icon
-    toggleButton.innerHTML = `<img src="assets/organigramme.svg" class="icon-org" alt="" style="width:20px;height:20px;margin-right:0.5rem;vertical-align:middle"> <span class="toggle-label"></span>`;
+        toggleButton.textContent = minister.id ? "Voir le cabinet" : "Cabinet non disponible";
         toggleButton.setAttribute("aria-expanded", "false");
-        const setToggleLabel = (txt) => {
-            const lbl = toggleButton.querySelector('.toggle-label');
-            if (lbl) lbl.textContent = String(txt || '');
-        };
-        setToggleLabel(minister.id ? "Voir le cabinet" : "Cabinet non disponible");
 
         if (!minister.id) {
             toggleButton.disabled = true;
@@ -1181,7 +1175,7 @@ const openModal = (minister) => {
                 if (!collaboratorsCache.has(minister.id)) {
                     isLoadingCollaborators = true;
                     toggleButton.disabled = true;
-                    setToggleLabel("Chargement...");
+                    toggleButton.textContent = "Chargement...";
 
                     const collabs = await fetchCollaboratorsForMinister(minister.id);
                     collaboratorsCache.set(minister.id, Array.isArray(collabs) ? collabs : []);
@@ -1190,7 +1184,7 @@ const openModal = (minister) => {
                     const cachedCollabs = collaboratorsCache.get(minister.id) || [];
 
                     if (!cachedCollabs.length) {
-                        setToggleLabel("Aucun collaborateur renseigné");
+                        toggleButton.textContent = "Aucun collaborateur renseigné";
                         toggleButton.disabled = true;
                         toggleButton.setAttribute("aria-expanded", "false");
                         toggleButton.setAttribute("aria-disabled", "true");
@@ -1202,14 +1196,14 @@ const openModal = (minister) => {
                     ensureCollaboratorsSection();
                     isExpanded = true;
                     collaboratorsSection?.classList.remove("is-hidden");
-                    setToggleLabel("Masquer le cabinet");
+                    toggleButton.textContent = "Masquer le cabinet";
                     toggleButton.setAttribute("aria-expanded", "true");
                     return;
                 }
 
                 const cachedCollabs = collaboratorsCache.get(minister.id) || [];
                 if (!cachedCollabs.length) {
-                    setToggleLabel("Aucun collaborateur renseigné");
+                    toggleButton.textContent = "Aucun collaborateur renseigné";
                     toggleButton.disabled = true;
                     toggleButton.setAttribute("aria-expanded", "false");
                     toggleButton.setAttribute("aria-disabled", "true");
@@ -1219,7 +1213,7 @@ const openModal = (minister) => {
                 ensureCollaboratorsSection();
                 isExpanded = !isExpanded;
                 collaboratorsSection?.classList.toggle("is-hidden", !isExpanded);
-                setToggleLabel(isExpanded ? "Masquer le cabinet" : "Voir le cabinet");
+                toggleButton.textContent = isExpanded ? "Masquer le cabinet" : "Voir le cabinet";
                 toggleButton.setAttribute("aria-expanded", String(isExpanded));
             });
         }
