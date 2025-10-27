@@ -242,7 +242,7 @@
       return levels;
     }
 
-    // Rendu : chaque niveau devient une .level ; on place une .line entre les niveaux
+    // Rendu : une ligne par fonction/grade (dircab, diradj, chefcab, chefadj, chefpole, conseiller)
     function renderHierarchy(flatData){
       treeContainer.innerHTML = '';
       if (!Array.isArray(flatData) || flatData.length === 0) {
@@ -250,37 +250,88 @@
         return;
       }
 
-      const roots = buildTree(flatData);
+      // Ordre des fonctions (rank asc)
+      const functions = [
+        { code: 'dircab', label: 'Directeur de cabinet', rank: 1 },
+        { code: 'diradj', label: 'Directeur adjoint', rank: 2 },
+        { code: 'chefcab', label: 'Chef de cabinet', rank: 3 },
+        { code: 'chefadj', label: 'Chef adjoint', rank: 4 },
+        { code: 'chefpole', label: 'Chef de pôle', rank: 5 },
+        { code: 'conseiller', label: 'Conseiller', rank: 6 }
+      ];
 
-      // Titre : affichons que la hiérarchie des collaborateurs (le ministre n'est pas rendu)
-      ministerTitle.textContent = 'Hiérarchie des collaborateurs';
+      // map labels/codes to rank
+      const mapRank = {};
+      functions.forEach(f => { mapRank[f.code] = f.rank; mapRank[f.label.toLowerCase()] = f.rank; });
 
-      const levels = groupByLevel(roots);
+      // bucket collaborators by function rank
+      const buckets = new Map();
+      functions.forEach(f => buckets.set(f.rank, []));
 
-      levels.forEach((lvl, i) => {
-        const levelEl = document.createElement('div');
-        levelEl.className = 'level';
+      flatData.forEach(p => {
+        let r = undefined;
+        if (p.collab_rank !== undefined && p.collab_rank !== null) {
+          const n = Number(p.collab_rank);
+          if (!Number.isNaN(n) && n >= 1 && n <= 6) r = n;
+        }
+        if (!r && p.collab_code) {
+          r = mapRank[String(p.collab_code).toLowerCase()];
+        }
+        if (!r && p.collab_grade) {
+          const g = String(p.collab_grade).toLowerCase();
+          for (const k in mapRank) if (g.includes(k)) { r = mapRank[k]; break; }
+        }
+        if (!r) r = 6;
+        buckets.get(r).push(p);
+      });
 
-        lvl.forEach(person => {
-          const p = document.createElement('div');
-          p.className = 'person';
-          p.innerHTML = `<strong>${escapeHtml(person.name)}</strong><div class="grade">${escapeHtml(person.collab_grade || person.role || '')}</div>`;
+      const container = document.createElement('div');
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
+      container.style.gap = '0.75rem';
+      container.style.width = '100%';
 
-          // tooltip détaillé au hover (accessibilité)
-          p.title = `${person.name} — ${person.role || person.collab_grade || ''}`;
+      functions.forEach(f => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'flex-start';
+        row.style.gap = '1rem';
+        row.style.padding = '0.5rem';
+        row.style.borderRadius = '10px';
+        row.style.background = '#fff';
+        row.style.boxShadow = '0 4px 10px rgba(2,6,23,0.03)';
 
-          levelEl.appendChild(p);
+        const header = document.createElement('div');
+        header.style.minWidth = '220px';
+        header.style.padding = '0.4rem 0.6rem';
+        header.style.borderRadius = '8px';
+        header.style.background = '#f1f5f9';
+        header.style.fontWeight = '700';
+        header.style.textAlign = 'left';
+        header.textContent = f.label;
+
+        const list = document.createElement('div');
+        list.style.display = 'flex';
+        list.style.flexWrap = 'wrap';
+        list.style.gap = '0.75rem';
+        list.style.alignItems = 'flex-start';
+
+        const items = buckets.get(f.rank) || [];
+        items.sort((a,b) => String(a.name).localeCompare(String(b.name)));
+        items.forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'person';
+          card.style.margin = '0';
+          card.innerHTML = `<strong>${escapeHtml(p.name)}</strong><div class="grade">${escapeHtml(p.collab_grade || '')}</div>`;
+          list.appendChild(card);
         });
 
-        treeContainer.appendChild(levelEl);
-
-        // ligne entre niveaux (sauf après le dernier)
-        if (i < levels.length - 1) {
-          const line = document.createElement('div');
-          line.className = 'line';
-          treeContainer.appendChild(line);
-        }
+        row.appendChild(header);
+        row.appendChild(list);
+        container.appendChild(row);
       });
+
+      treeContainer.appendChild(container);
     }
 
     // Petite fonction d'échappement pour éviter XSS si tu colles des données externes
@@ -393,6 +444,8 @@
           function renderForSelected(){
             const val = sel.value;
             const rowsToRender = byMinister.get(val) || [];
+            const selectedText = sel.selectedOptions[0]?.textContent || '';
+            ministerTitle.textContent = selectedText ? `Hiérarchie des collaborateurs — ${selectedText}` : 'Hiérarchie des collaborateurs';
             jsonDump.textContent = JSON.stringify({ from: sup.collaborators.table, minister: val, rows: rowsToRender, grades: sup.grades || [] }, null, 2);
             renderHierarchy(rowsToRender);
           }
@@ -422,6 +475,7 @@
       // Fallback: pas de ministres locaux dans cet exemple => afficher tous les collaborateurs
       populateMinisterSelect([{ id: '__none', name: 'Sans ministre' }]);
       document.getElementById('ministerSelect').value = '__none';
+      ministerTitle.textContent = 'Hiérarchie des collaborateurs — Sans ministre';
       jsonDump.textContent = JSON.stringify({ from: 'local', rows: localRows }, null, 2);
       renderHierarchy(localRows);
     })();
