@@ -1060,7 +1060,7 @@ const openModal = (minister) => {
         toggleButton.type = "button";
         toggleButton.className = "btn btn-ghost modal-collaborators-toggle";
         // include pictogram/icon and a label span so we can update text without removing the icon
-        toggleButton.innerHTML = `<img src="assets/Organigramme.png" class="icon-org" alt="" style="width:20px;height:20px;margin-right:0.5rem;vertical-align:middle"> <span class="toggle-label"></span>`;
+    toggleButton.innerHTML = `<img src="assets/organigramme.svg" class="icon-org" alt="" style="width:20px;height:20px;margin-right:0.5rem;vertical-align:middle"> <span class="toggle-label"></span>`;
         toggleButton.setAttribute("aria-expanded", "false");
         const setToggleLabel = (txt) => {
             const lbl = toggleButton.querySelector('.toggle-label');
