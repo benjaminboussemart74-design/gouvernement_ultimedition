@@ -1566,6 +1566,10 @@ body.print-all .toolbar {
     transform: none;
 }
 
+.modal-export {
+    justify-self: start;
+}
+
 .modal-header {
     display: grid;
     grid-template-columns: auto 1fr;
