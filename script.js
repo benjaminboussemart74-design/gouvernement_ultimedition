@@ -826,8 +826,6 @@ const renderCabinetSection = (minister, collaborators) => {
     return section;
 };
 
-const collaboratorsCache = new Map();
-
 const renderCollaboratorsTemplate = (collaborators) => `
       <h4>Collaborateurs</h4>
       <div class="collaborators-list">
