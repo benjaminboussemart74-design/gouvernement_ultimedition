@@ -43,6 +43,35 @@ const MINISTRY_ORDER_MAP = new Map(
     MINISTRY_ORDER.map((label, idx) => [normalizeLabel(label), idx])
 );
 
+const getPrimaryMinistryLabel = (minister) => {
+    if (!minister) return "";
+    if (Array.isArray(minister.ministries) && minister.ministries.length) {
+        const primary = minister.ministries.find((entry) => entry?.isPrimary && entry?.label);
+        if (primary?.label) return primary.label;
+        const first = minister.ministries.find((entry) => entry?.label);
+        if (first?.label) return first.label;
+    }
+    return minister.portfolio || minister.ministry || "";
+};
+
+const compareMinisters = (a, b) => {
+    if (!a && !b) return 0;
+    if (!a) return 1;
+    if (!b) return -1;
+
+    const roleA = ROLE_PRIORITY[a.role] ?? Number.MAX_SAFE_INTEGER;
+    const roleB = ROLE_PRIORITY[b.role] ?? Number.MAX_SAFE_INTEGER;
+    if (roleA !== roleB) return roleA - roleB;
+
+    const portfolioKeyA = MINISTRY_ORDER_MAP.get(normalise(getPrimaryMinistryLabel(a)));
+    const portfolioKeyB = MINISTRY_ORDER_MAP.get(normalise(getPrimaryMinistryLabel(b)));
+    const orderA = typeof portfolioKeyA === "number" ? portfolioKeyA : Number.MAX_SAFE_INTEGER;
+    const orderB = typeof portfolioKeyB === "number" ? portfolioKeyB : Number.MAX_SAFE_INTEGER;
+    if (orderA !== orderB) return orderA - orderB;
+
+    return (a.name || "").localeCompare(b.name || "");
+};
+
 // Priorité d'importance par rôle
 // 0 = plus important (haut gauche), grandissant vers la droite/bas
 const ROLE_PRIORITY = {
@@ -135,6 +164,7 @@ const filterButtons = Array.from(document.querySelectorAll(".filter-btn"));
 const modal = document.getElementById("minister-modal");
 const modalBackdrop = modal?.querySelector("[data-dismiss]");
 const modalClose = modal?.querySelector(".modal-close");
+const exportButton = document.getElementById("export-minister-pdf");
 
 const modalElements = {
     photo: document.getElementById("modal-photo"),
@@ -152,6 +182,7 @@ let delegateMinisters = [];
 let currentRole = "all";
 let currentQuery = "";
 let lastFetchError = null; // store last fetch error for debug UI
+let activeMinister = null;
 
 const debounce = (fn, wait = 220) => {
     let timeout;
@@ -169,6 +200,17 @@ const normalise = (value) =>
         .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase()
         .trim() ?? "";
+
+const getPortfolioLabel = (minister) => {
+    if (!minister) return "";
+    if (Array.isArray(minister.ministries) && minister.ministries.length) {
+        return minister.ministries
+            .map((entry) => entry?.label)
+            .filter(Boolean)
+            .join(" • ");
+    }
+    return minister.portfolio || minister.ministry || "";
+};
 
 const ensureSupabaseClient = () => {
     try {
@@ -376,19 +418,7 @@ const renderGrid = (items) => {
     emptyState.hidden = true;
     const fragment = document.createDocumentFragment();
 
-    const sorted = items
-        .slice()
-        .sort((a, b) => {
-            const ra = ROLE_PRIORITY[a.role] ?? Number.MAX_SAFE_INTEGER;
-            const rb = ROLE_PRIORITY[b.role] ?? Number.MAX_SAFE_INTEGER;
-            if (ra !== rb) return ra - rb;
-            const ia = MINISTRY_ORDER_MAP.get(normalise(a.portfolio || a.ministry || ""));
-            const ib = MINISTRY_ORDER_MAP.get(normalise(b.portfolio || b.ministry || ""));
-            const va = typeof ia === "number" ? ia : Number.MAX_SAFE_INTEGER;
-            const vb = typeof ib === "number" ? ib : Number.MAX_SAFE_INTEGER;
-            if (va !== vb) return va - vb;
-            return (a.name || "").localeCompare(b.name || "");
-        });
+    const sorted = items.slice().sort(compareMinisters);
 
     sorted.forEach((minister) => {
         fragment.appendChild(buildCard(minister));
@@ -534,21 +564,406 @@ const renderCollaboratorsTemplate = (collaborators) => `
             .join("")}
       </div>`;
 
+const ensureCollaboratorsForPrint = async (minister) => {
+    if (!minister?.id) return [];
+
+    if (!collaboratorsCache.has(minister.id)) {
+        const collabs = await fetchCollaboratorsForMinister(minister.id);
+        collaboratorsCache.set(minister.id, Array.isArray(collabs) ? collabs : []);
+    }
+
+    return collaboratorsCache.get(minister.id) || [];
+};
+
+const collectAllMinistersForPrint = () => {
+    const seen = new Set();
+    const combined = [];
+    const pushUnique = (person) => {
+        if (!person) return;
+        const key =
+            person.id != null
+                ? `id:${person.id}`
+                : `${normalise(person.name || "")}|${normalise(getPortfolioLabel(person))}|${person.role || ""}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        combined.push(person);
+    };
+
+    if (Array.isArray(coreMinisters)) coreMinisters.forEach(pushUnique);
+    if (Array.isArray(delegateMinisters)) delegateMinisters.forEach(pushUnique);
+    if (!combined.length && Array.isArray(ministers)) ministers.forEach(pushUnique);
+
+    return combined.sort(compareMinisters);
+};
+
+const printMinisterSheet = async (minister) => {
+    if (!minister) return;
+
+    let printSheet = document.getElementById("print-sheet");
+    if (!printSheet) {
+        printSheet = document.createElement("div");
+        printSheet.id = "print-sheet";
+    } else {
+        printSheet.innerHTML = "";
+    }
+    printSheet.className = "print-sheet";
+
+    const ensureText = (value, fallback = "") => {
+        if (typeof value !== "string") {
+            return value != null ? String(value) : fallback;
+        }
+        const trimmed = value.trim();
+        return trimmed || fallback;
+    };
+
+    const createElement = (tag, className, text) => {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        if (text != null) element.textContent = text;
+        return element;
+    };
+
+    const fragment = document.createDocumentFragment();
+
+    const roleLabel = ensureText(formatRole(minister.role));
+    const nameLabel = ensureText(minister.name, "Nom du ministre");
+    const portfolioLabel = ensureText(getPortfolioLabel(minister));
+    const descriptionText = ensureText(
+        minister.description,
+        "Ajoutez ici une biographie synthétique."
+    );
+    const missionText = ensureText(minister.mission);
+    const contactText = ensureText(minister.contact, "Contact prochainement disponible.");
+    const rawParty = minister.party == null ? "" : String(minister.party).trim();
+    const partyText = rawParty ? mapPartyLabel(rawParty) || rawParty : "";
+
+    let collaborators = [];
+    try {
+        collaborators = await ensureCollaboratorsForPrint(minister);
+    } catch (error) {
+        console.warn("[onepage] Impossible de préparer les collaborateurs pour l'impression", error);
+    }
+    const delegates = Array.isArray(minister.delegates) ? minister.delegates.filter(Boolean) : [];
+    const allMinisters = collectAllMinistersForPrint();
+
+    const cover = createElement("section", "print-sheet-cover");
+    const coverBrand = createElement("div", "print-cover-brand");
+    coverBrand.appendChild(createElement("p", "print-cover-eyebrow", "Gouvernement Lecornu II"));
+    coverBrand.appendChild(createElement("h1", "print-cover-title", "Fiche ministre"));
+
+    const subtitleParts = [nameLabel];
+    if (roleLabel) subtitleParts.push(roleLabel);
+    const coverSubtitle = createElement("p", "print-cover-subtitle", subtitleParts.join(" • "));
+    coverBrand.appendChild(coverSubtitle);
+    if (portfolioLabel) {
+        coverBrand.appendChild(createElement("p", "print-cover-portfolio", portfolioLabel));
+    }
+    coverBrand.appendChild(
+        createElement(
+            "p",
+            "print-cover-note",
+            "Document généré automatiquement depuis la plateforme Gouvernement Lecornu II"
+        )
+    );
+
+    cover.appendChild(coverBrand);
+    const tricolor = createElement("div", "print-cover-tricolor");
+    ["bleu", "blanc", "rouge"].forEach((tone) => {
+        tricolor.appendChild(createElement("span", `print-cover-swatch is-${tone}`));
+    });
+    cover.appendChild(tricolor);
+    fragment.appendChild(cover);
+
+    const profile = createElement("section", "print-profile");
+    const profileInfo = createElement("div", "print-profile-info");
+    const profileHeader = createElement("div", "print-profile-header");
+    profileHeader.appendChild(
+        createElement(
+            "p",
+            "print-profile-role",
+            roleLabel || "Membre du gouvernement"
+        )
+    );
+    profileHeader.appendChild(createElement("h2", "print-profile-name", nameLabel));
+    if (portfolioLabel) {
+        profileHeader.appendChild(createElement("p", "print-profile-portfolio", portfolioLabel));
+    }
+    profileInfo.appendChild(profileHeader);
+
+    if (descriptionText) {
+        profileInfo.appendChild(createElement("p", "print-profile-description", descriptionText));
+    }
+
+    if (partyText) {
+        const badges = createElement("ul", "print-profile-badges");
+        const badge = createElement("li", "print-profile-badge", partyText);
+        badges.appendChild(badge);
+        profileInfo.appendChild(badges);
+    }
+
+    const metaItems = [];
+    if (missionText) {
+        metaItems.push({ label: "Mission prioritaire", value: missionText });
+    }
+    if (contactText) {
+        metaItems.push({ label: "Contact", value: contactText });
+    }
+
+    if (metaItems.length) {
+        const metaList = createElement("dl", "print-sheet-meta print-profile-meta");
+        metaItems.forEach((entry) => {
+            const wrapper = createElement("div", "print-meta-item");
+            wrapper.appendChild(createElement("dt", "print-meta-label", entry.label));
+            wrapper.appendChild(createElement("dd", "print-meta-value", entry.value));
+            metaList.appendChild(wrapper);
+        });
+        profileInfo.appendChild(metaList);
+    }
+
+    const profilePhoto = createElement("div", "print-profile-photo");
+    const photo = document.createElement("img");
+    photo.src = minister.photo || "assets/placeholder-minister.svg";
+    photo.alt = minister.photoAlt || (minister.name ? `Portrait de ${minister.name}` : "Portrait du ministre");
+    profilePhoto.appendChild(photo);
+
+    profile.appendChild(profileInfo);
+    profile.appendChild(profilePhoto);
+    fragment.appendChild(profile);
+
+    const hasDelegates = delegates.some((delegate) => DELEGATE_ROLES.has(delegate.role));
+    if (hasDelegates) {
+        const delegateSection = createElement(
+            "section",
+            "print-sheet-section print-delegates-section"
+        );
+        delegateSection.appendChild(
+            createElement(
+                "h2",
+                "print-section-title",
+                "Ministres délégués & secrétaires d'État rattachés"
+            )
+        );
+        const delegateGrid = createElement("div", "print-delegates-grid");
+        delegates
+            .filter((delegate) => DELEGATE_ROLES.has(delegate.role))
+            .forEach((delegate) => {
+                const card = createElement("article", "print-delegate-card");
+                card.appendChild(
+                    createElement(
+                        "p",
+                        "print-delegate-role",
+                        ensureText(formatRole(delegate.role), "Ministre délégué")
+                    )
+                );
+                card.appendChild(
+                    createElement(
+                        "h3",
+                        "print-delegate-name",
+                        ensureText(delegate.name, "Nom à préciser")
+                    )
+                );
+                const delegatePortfolio = ensureText(getPortfolioLabel(delegate));
+                if (delegatePortfolio) {
+                    card.appendChild(
+                        createElement("p", "print-delegate-portfolio", delegatePortfolio)
+                    );
+                }
+                const delegatePartyRaw = delegate.party == null ? "" : String(delegate.party).trim();
+                const delegateParty = delegatePartyRaw
+                    ? mapPartyLabel(delegatePartyRaw) || delegatePartyRaw
+                    : "";
+                if (delegateParty) {
+                    card.appendChild(
+                        createElement("p", "print-delegate-party", delegateParty)
+                    );
+                }
+                delegateGrid.appendChild(card);
+            });
+        delegateSection.appendChild(delegateGrid);
+        fragment.appendChild(delegateSection);
+    }
+
+    const hasCollaborators = Array.isArray(collaborators) && collaborators.length;
+    if (hasCollaborators) {
+        const collabSection = createElement(
+            "section",
+            "print-sheet-section print-collaborators-section"
+        );
+        collabSection.appendChild(createElement("h2", "print-section-title", "Cabinet"));
+        collabSection.appendChild(
+            createElement(
+                "p",
+                "print-section-text",
+                "Liste indicative des collaborateur·rices rattaché·es"
+            )
+        );
+        const collabGrid = createElement("div", "print-collaborators-grid");
+        collaborators.forEach((collab) => {
+            const card = createElement("article", "print-collaborator-card");
+            const collabPhotoWrapper = createElement("div", "print-collaborator-photo");
+            const collabImg = document.createElement("img");
+            collabImg.src = collab.photo_url || "assets/placeholder-minister.svg";
+            collabImg.alt = collab.full_name
+                ? `Portrait de ${collab.full_name}`
+                : "Portrait collaborateur";
+            collabPhotoWrapper.appendChild(collabImg);
+            card.appendChild(collabPhotoWrapper);
+
+            const details = createElement("div", "print-collaborator-details");
+            details.appendChild(
+                createElement(
+                    "p",
+                    "print-collaborator-name",
+                    ensureText(collab.full_name, "Collaborateur·rice")
+                )
+            );
+            details.appendChild(
+                createElement(
+                    "p",
+                    "print-collaborator-role",
+                    ensureText(collab.cabinet_role, "Collaborateur")
+                )
+            );
+            if (collab.collab_grade) {
+                details.appendChild(
+                    createElement("p", "print-collaborator-grade", ensureText(collab.collab_grade))
+                );
+            }
+            card.appendChild(details);
+            collabGrid.appendChild(card);
+        });
+        collabSection.appendChild(collabGrid);
+        fragment.appendChild(collabSection);
+    }
+
+    if (allMinisters.length) {
+        const governmentSection = createElement("section", "print-government-section");
+        governmentSection.appendChild(
+            createElement("h2", "print-section-title", "Composition complète du gouvernement")
+        );
+        governmentSection.appendChild(
+            createElement(
+                "p",
+                "print-section-text",
+                "Inclut les ministres, ministres délégués et secrétaires d'État en exercice."
+            )
+        );
+
+        const buildGovernmentCard = (person) => {
+            const card = createElement("article", "print-government-card");
+            const isDelegate = DELEGATE_ROLES.has(person.role);
+            if (isDelegate) card.classList.add("is-delegate");
+
+            const sameId =
+                minister.id != null && person.id != null
+                    ? String(minister.id) === String(person.id)
+                    : false;
+            const sameFallback =
+                !sameId && !person.id && !minister.id
+                    ? normalise(person.name) === normalise(minister.name) &&
+                      normalise(person.role) === normalise(minister.role)
+                    : false;
+            if (sameId || sameFallback) {
+                card.classList.add("is-active");
+            }
+
+            card.appendChild(
+                createElement(
+                    "p",
+                    "print-government-role",
+                    ensureText(formatRole(person.role), "Membre du gouvernement")
+                )
+            );
+            card.appendChild(
+                createElement("h4", "print-government-name", ensureText(person.name, "Nom à confirmer"))
+            );
+            const portfolio = ensureText(getPortfolioLabel(person));
+            if (portfolio) {
+                card.appendChild(
+                    createElement("p", "print-government-portfolio", portfolio)
+                );
+            }
+            const partyRaw = person.party == null ? "" : String(person.party).trim();
+            const partyLabel = partyRaw ? mapPartyLabel(partyRaw) || partyRaw : "";
+            if (partyLabel) {
+                card.appendChild(createElement("p", "print-government-party", partyLabel));
+            }
+            return card;
+        };
+
+        const grouped = {
+            core: allMinisters.filter((person) => !DELEGATE_ROLES.has(person.role)),
+            delegates: allMinisters.filter((person) => DELEGATE_ROLES.has(person.role))
+        };
+
+        const buildGroup = (title, items) => {
+            if (!items.length) return null;
+            const group = createElement("div", "print-government-group");
+            group.appendChild(createElement("h3", "print-government-heading", title));
+            const grid = createElement("div", "print-government-grid");
+            items.forEach((person) => grid.appendChild(buildGovernmentCard(person)));
+            group.appendChild(grid);
+            return group;
+        };
+
+        const coreGroup = buildGroup("Premier ministre & ministres", grouped.core);
+        if (coreGroup) governmentSection.appendChild(coreGroup);
+        const delegateGroup = buildGroup(
+            "Ministres délégués & secrétaires d'État",
+            grouped.delegates
+        );
+        if (delegateGroup) governmentSection.appendChild(delegateGroup);
+
+        fragment.appendChild(governmentSection);
+    }
+
+    const footer = createElement("footer", "print-sheet-footer");
+    const now = new Date();
+    footer.appendChild(
+        createElement(
+            "p",
+            "print-footer-note",
+            `Mise à jour générée le ${now.toLocaleDateString("fr-FR")}`
+        )
+    );
+    fragment.appendChild(footer);
+
+    printSheet.appendChild(fragment);
+
+    document.body.appendChild(printSheet);
+    document.body.classList.add("print-single");
+
+    const cleanup = () => {
+        document.body.classList.remove("print-single");
+        if (printSheet.parentElement) {
+            printSheet.parentElement.removeChild(printSheet);
+        } else {
+            printSheet.innerHTML = "";
+        }
+        window.removeEventListener("afterprint", cleanup);
+    };
+
+    window.addEventListener("afterprint", cleanup);
+    window.print();
+
+    window.setTimeout(() => {
+        if (document.body.classList.contains("print-single")) {
+            cleanup();
+        }
+    }, 1000);
+};
+
 const openModal = (minister) => {
     if (!modal) return;
+    activeMinister = minister;
     const modalBody = modal.querySelector(".modal-body");
     modalElements.photo.src = minister.photo ?? "assets/placeholder-minister.svg";
     modalElements.photo.alt = minister.photoAlt ?? `Portrait de ${minister.name ?? "ministre"}`;
     modalElements.role.textContent = formatRole(minister.role);
     modalElements.title.textContent = minister.name ?? "Nom du ministre";
 
-    const ministriesLabel = minister.ministries?.length
-        ? minister.ministries
-              .map((entry) => entry.label)
-              .filter(Boolean)
-              .join(" • ")
-        : null;
-    modalElements.portfolio.textContent = ministriesLabel || minister.portfolio || "Portefeuille à préciser";
+    const portfolioLabel = getPortfolioLabel(minister);
+    modalElements.portfolio.textContent = portfolioLabel || "Portefeuille à préciser";
 
     modalElements.description.textContent = minister.description ?? "Ajoutez ici une biographie synthétique.";
 
@@ -663,6 +1078,19 @@ const openModal = (minister) => {
         }
     }
 
+    if (exportButton && !exportButton.dataset.bound) {
+        exportButton.addEventListener("click", async () => {
+            if (!activeMinister) return;
+            exportButton.disabled = true;
+            try {
+                await printMinisterSheet(activeMinister);
+            } finally {
+                exportButton.disabled = false;
+            }
+        });
+        exportButton.dataset.bound = "true";
+    }
+
     modal.hidden = false;
     document.body.style.overflow = "hidden";
 };
@@ -671,6 +1099,7 @@ const closeModal = () => {
     if (!modal) return;
     modal.hidden = true;
     document.body.style.overflow = "";
+    activeMinister = null;
 };
 
 const highlightFilter = (role) => {
