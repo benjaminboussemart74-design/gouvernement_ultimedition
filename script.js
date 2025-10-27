@@ -103,6 +103,10 @@ const PARTY_MAP = new Map([
     ["regionalistes", "Regionalistes"]
 ]);
 
+const KNOWN_PARTIES = Array.from(new Set(PARTY_MAP.values())).sort((a, b) =>
+    a.localeCompare(b, "fr", { sensitivity: "base" })
+);
+
 const mapPartyLabel = (raw) => {
     if (!raw) return null;
     const k = normalise(raw).replace(/[\s\u00A0]+/g, " ");
@@ -131,6 +135,7 @@ const createPartyBadge = (partyName) => {
 const grid = document.getElementById("ministers-grid");
 const emptyState = document.getElementById("ministers-empty");
 const searchInput = document.getElementById("minister-search");
+const partyFilter = document.getElementById("party-filter");
 const filterButtons = Array.from(document.querySelectorAll(".filter-btn"));
 const exportPageButton = document.getElementById("export-page-pdf");
 const modal = document.getElementById("minister-modal");
@@ -147,12 +152,127 @@ const modalElements = {
     contact: document.getElementById("modal-contact")
 };
 
+const updatePartyFilterOptions = (pool = []) => {
+    if (!partyFilter) return;
+
+    const parties = new Set(KNOWN_PARTIES);
+    if (Array.isArray(pool)) {
+        pool.forEach((entry) => {
+            const mapped = mapPartyLabel(entry?.party);
+            if (mapped) parties.add(mapped);
+        });
+    }
+
+    const sortedParties = Array.from(parties).sort((a, b) => a.localeCompare(b, "fr", { sensitivity: "base" }));
+    const previousValue = partyFilter.value || "";
+
+    partyFilter.innerHTML = "";
+
+    const allOption = document.createElement("option");
+    allOption.value = "";
+    allOption.textContent = "Tous partis";
+    partyFilter.appendChild(allOption);
+
+    sortedParties.forEach((label) => {
+        const option = document.createElement("option");
+        option.value = label;
+        option.textContent = label;
+        partyFilter.appendChild(option);
+    });
+
+    if (previousValue && sortedParties.includes(previousValue)) {
+        partyFilter.value = previousValue;
+        currentParty = previousValue;
+    } else {
+        partyFilter.value = "";
+        currentParty = "";
+    }
+};
+
 let ministers = [];
 let coreMinisters = [];
 let delegateMinisters = [];
 let currentRole = "all";
 let currentQuery = "";
+let currentQueryInput = "";
+let currentParty = "";
+let currentSort = "role";
+let onlyWithDelegates = false;
+let onlyWithBio = false;
 let lastFetchError = null; // store last fetch error for debug UI
+
+updatePartyFilterOptions();
+
+const hasDelegates = (minister) => Array.isArray(minister?.delegates) && minister.delegates.length > 0;
+const hasBiography = (minister) => Boolean((minister?.description ?? "").trim());
+
+const updateResultsSummary = (visible, total) => {
+    if (resultsCurrentEl) {
+        resultsCurrentEl.textContent = String(visible);
+    }
+    if (resultsTotalEl) {
+        resultsTotalEl.textContent = String(total);
+    }
+    if (resultsLabelEl) {
+        resultsLabelEl.textContent = visible > 1 || visible === 0 ? "résultats" : "résultat";
+    }
+};
+
+const updateActiveFiltersHint = (visible, total) => {
+    if (!activeFiltersHint) return;
+    const summaries = [];
+    if (currentRole !== "all") {
+        const roleButton = filterButtons.find((btn) => btn.dataset.role === currentRole);
+        if (roleButton) summaries.push(roleButton.textContent.trim());
+    }
+    if (currentParty) {
+        summaries.push(`Parti : ${currentParty}`);
+    }
+    if (onlyWithDelegates) {
+        summaries.push("Cabinet renseigné");
+    }
+    if (onlyWithBio) {
+        summaries.push("Bio disponible");
+    }
+    if (currentQueryInput.trim()) {
+        summaries.push(`Recherche « ${currentQueryInput.trim()} »`);
+    }
+
+    if (!summaries.length) {
+        activeFiltersHint.textContent = visible || total === 0 ? "Tous les profils sont affichés." : "Les profils disponibles sont affichés.";
+        return;
+    }
+
+    const text = summaries.join(" • ");
+    activeFiltersHint.textContent = visible ? text : `${text} — aucun résultat`;
+};
+
+const sortMinisters = (items) => {
+    const list = items.slice();
+    switch (currentSort) {
+        case "alpha":
+            return list.sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr", { sensitivity: "base" }));
+        case "portfolio":
+            return list.sort((a, b) => {
+                const byPortfolio = (a.portfolio || "").localeCompare(b.portfolio || "", "fr", { sensitivity: "base" });
+                if (byPortfolio !== 0) return byPortfolio;
+                return (a.name || "").localeCompare(b.name || "", "fr", { sensitivity: "base" });
+            });
+        case "role":
+        default:
+            return list.sort((a, b) => {
+                const ra = ROLE_PRIORITY[a.role] ?? Number.MAX_SAFE_INTEGER;
+                const rb = ROLE_PRIORITY[b.role] ?? Number.MAX_SAFE_INTEGER;
+                if (ra !== rb) return ra - rb;
+                const ia = MINISTRY_ORDER_MAP.get(normalise(a.portfolio || a.ministry || ""));
+                const ib = MINISTRY_ORDER_MAP.get(normalise(b.portfolio || b.ministry || ""));
+                const va = typeof ia === "number" ? ia : Number.MAX_SAFE_INTEGER;
+                const vb = typeof ib === "number" ? ib : Number.MAX_SAFE_INTEGER;
+                if (va !== vb) return va - vb;
+                return (a.name || "").localeCompare(b.name || "", "fr", { sensitivity: "base" });
+            });
+    }
+};
 
 const debounce = (fn, wait = 220) => {
     let timeout;
@@ -366,6 +486,7 @@ const buildCard = (minister) => {
 };
 
 const renderGrid = (items) => {
+    grid.setAttribute("aria-busy", "true");
     grid.innerHTML = "";
 
     if (!items.length) {
@@ -377,21 +498,7 @@ const renderGrid = (items) => {
     emptyState.hidden = true;
     const fragment = document.createDocumentFragment();
 
-    const sorted = items
-        .slice()
-        .sort((a, b) => {
-            const ra = ROLE_PRIORITY[a.role] ?? Number.MAX_SAFE_INTEGER;
-            const rb = ROLE_PRIORITY[b.role] ?? Number.MAX_SAFE_INTEGER;
-            if (ra !== rb) return ra - rb;
-            const ia = MINISTRY_ORDER_MAP.get(normalise(a.portfolio || a.ministry || ""));
-            const ib = MINISTRY_ORDER_MAP.get(normalise(b.portfolio || b.ministry || ""));
-            const va = typeof ia === "number" ? ia : Number.MAX_SAFE_INTEGER;
-            const vb = typeof ib === "number" ? ib : Number.MAX_SAFE_INTEGER;
-            if (va !== vb) return va - vb;
-            return (a.name || "").localeCompare(b.name || "");
-        });
-
-    sorted.forEach((minister) => {
+    items.forEach((minister) => {
         fragment.appendChild(buildCard(minister));
     });
 
@@ -465,26 +572,43 @@ const attachDelegatesToCore = () => {
 };
 
 const applyFilters = () => {
-    let source;
+    let basePool;
     if (currentRole === "all") {
-        source = coreMinisters.slice();
+        basePool = coreMinisters.slice();
     } else if (currentRole === "secretary") {
-        source = delegateMinisters.filter((minister) => DELEGATE_ROLES.has(minister.role));
+        basePool = delegateMinisters.filter((minister) => DELEGATE_ROLES.has(minister.role));
     } else {
-        source = coreMinisters.filter((minister) => minister.role === currentRole);
+        basePool = coreMinisters.filter((minister) => minister.role === currentRole);
     }
 
-    const query = currentQuery;
-    if (query) {
-        source = source.filter((minister) => {
+    const totalAvailable = basePool.length;
+    let filtered = basePool;
+
+    if (currentQuery) {
+        filtered = filtered.filter((minister) => {
             const haystack = normalise(
                 `${minister.name ?? ""} ${minister.portfolio ?? ""} ${minister.mission ?? ""} ${minister.searchIndex ?? ""}`
             );
-            return haystack.includes(query);
+            return haystack.includes(currentQuery);
         });
     }
 
-    renderGrid(source);
+    if (currentParty) {
+        filtered = filtered.filter((minister) => mapPartyLabel(minister.party) === currentParty);
+    }
+
+    if (onlyWithDelegates) {
+        filtered = filtered.filter((minister) => hasDelegates(minister));
+    }
+
+    if (onlyWithBio) {
+        filtered = filtered.filter((minister) => hasBiography(minister));
+    }
+
+    const sorted = sortMinisters(filtered);
+    renderGrid(sorted);
+    updateResultsSummary(sorted.length, totalAvailable);
+    updateActiveFiltersHint(sorted.length, totalAvailable);
 };
 
 // ===============================
@@ -708,7 +832,9 @@ const printAllMinisters = () => {
 
 const highlightFilter = (role) => {
     filterButtons.forEach((btn) => {
-        btn.classList.toggle("is-active", btn.dataset.role === role);
+        const isActive = btn.dataset.role === role;
+        btn.classList.toggle("is-active", isActive);
+        btn.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
 };
 
@@ -916,6 +1042,7 @@ const loadMinisters = async () => {
         if (supabaseMinisters.length) {
             attachDelegatesToCore();
             dataLoaded = true;
+            updatePartyFilterOptions(ministers);
         }
     } catch (error) {
         lastFetchError = error;
@@ -931,6 +1058,7 @@ const loadMinisters = async () => {
                 delegateMinisters = fallbackMinisters.filter((m) => DELEGATE_ROLES.has(m.role));
                 attachDelegatesToCore();
                 dataLoaded = true;
+                updatePartyFilterOptions(ministers);
             }
         } catch (error) {
             lastFetchError = error;
@@ -959,11 +1087,14 @@ const loadMinisters = async () => {
     } else {
         ministers = [];
         coreMinisters = [];
+        delegateMinisters = [];
         grid.innerHTML = "";
         grid.setAttribute("aria-busy", "false");
         emptyState.hidden = false;
         emptyState.textContent =
             "Aucune donnée disponible. Vérifiez la configuration Supabase ou ajoutez un fichier data/ministers.json.";
+        updateResultsSummary(0, 0);
+        updateActiveFiltersHint(0, 0);
     }
 };
 
@@ -975,13 +1106,70 @@ filterButtons.forEach((button) => {
     });
 });
 
+partyFilter?.addEventListener("change", () => {
+    currentParty = partyFilter.value || "";
+    applyFilters();
+});
+
 searchInput?.addEventListener(
     "input",
     debounce((event) => {
-        currentQuery = normalise(event.target.value);
+        const value = event.target.value || "";
+        currentQueryInput = value;
+        currentQuery = normalise(value);
         applyFilters();
     }, 180)
 );
+
+sortSelect?.addEventListener("change", () => {
+    const value = sortSelect.value || "role";
+    currentSort = ["role", "alpha", "portfolio"].includes(value) ? value : "role";
+    applyFilters();
+});
+
+delegatesToggle?.addEventListener("change", () => {
+    onlyWithDelegates = Boolean(delegatesToggle.checked);
+    applyFilters();
+});
+
+bioToggle?.addEventListener("change", () => {
+    onlyWithBio = Boolean(bioToggle.checked);
+    applyFilters();
+});
+
+resetButton?.addEventListener("click", () => {
+    currentRole = "all";
+    currentQuery = "";
+    currentQueryInput = "";
+    currentParty = "";
+    currentSort = "role";
+    onlyWithDelegates = false;
+    onlyWithBio = false;
+
+    highlightFilter(currentRole);
+
+    if (searchInput) {
+        searchInput.value = "";
+    }
+    if (partyFilter) {
+        partyFilter.value = "";
+    }
+    if (sortSelect) {
+        sortSelect.value = "role";
+    }
+    if (delegatesToggle) {
+        delegatesToggle.checked = false;
+    }
+    if (bioToggle) {
+        bioToggle.checked = false;
+    }
+
+    applyFilters();
+});
+
+highlightFilter(currentRole);
+updateResultsSummary(0, 0);
+updateActiveFiltersHint(0, 0);
 
 // Safe bootstrap after DOM is ready to avoid null elements
 let __appInitialized = false;
