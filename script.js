@@ -931,6 +931,12 @@ const printMinisterSheet = async (minister) => {
     );
     const missionText = ensureText(minister.mission);
     const contactText = ensureText(minister.contact, "Contact prochainement disponible.");
+    const partyLabel = typeof minister.party === "string" ? minister.party.trim() : minister.party;
+    const printDate = new Date().toLocaleDateString("fr-FR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+    });
 
     const header = createElement("header", "print-sheet-header");
     const brand = createElement("div", "print-sheet-brand");
@@ -938,6 +944,13 @@ const printMinisterSheet = async (minister) => {
     brand.appendChild(createElement("h1", "print-sheet-name", nameLabel));
     if (roleLabel) brand.appendChild(createElement("p", "print-sheet-role", roleLabel));
     if (portfolioLabel) brand.appendChild(createElement("p", "print-sheet-portfolio", portfolioLabel));
+    brand.appendChild(createElement("p", "print-sheet-date", `Édité le ${printDate}`));
+
+    const partyBadge = createPartyBadge(partyLabel == null ? "" : String(partyLabel).trim());
+    if (partyBadge) {
+        partyBadge.classList.add("print-sheet-party");
+        brand.appendChild(partyBadge);
+    }
 
     const photoWrapper = createElement("div", "print-sheet-photo");
     const photo = document.createElement("img");
@@ -949,34 +962,45 @@ const printMinisterSheet = async (minister) => {
     header.appendChild(photoWrapper);
     printSheet.appendChild(header);
 
-    const summarySection = createElement("section", "print-sheet-section");
-    summarySection.appendChild(createElement("h2", "print-section-title", "Présentation"));
-    summarySection.appendChild(createElement("p", "print-section-text", descriptionText));
-    printSheet.appendChild(summarySection);
+    const ministerSection = createElement("section", "print-sheet-section print-sheet-minister");
+    ministerSection.appendChild(createElement("h2", "print-section-title", "Ministre"));
+    const ministerBody = createElement("div", "print-section-body");
+    ministerBody.appendChild(createElement("p", "print-section-text", descriptionText));
 
-    const metaItems = [];
+    if (contactText) {
+        const contactList = createElement("dl", "print-sheet-meta");
+        const contactWrapper = createElement("div", "print-meta-item");
+        contactWrapper.appendChild(createElement("dt", "print-meta-label", "Contact"));
+        contactWrapper.appendChild(createElement("dd", "print-meta-value", contactText));
+        contactList.appendChild(contactWrapper);
+        ministerBody.appendChild(contactList);
+    }
+
+    ministerSection.appendChild(ministerBody);
+    printSheet.appendChild(ministerSection);
+
+    const missionItems = [];
     if (missionText) {
-        metaItems.push({ label: "Mission", value: missionText });
+        missionItems.push({ label: "Mission principale", value: missionText });
     }
     if (portfolioLabel) {
-        metaItems.push({ label: "Responsabilités", value: portfolioLabel });
-    }
-    if (contactText) {
-        metaItems.push({ label: "Contact", value: contactText });
+        missionItems.push({ label: "Portefeuille", value: portfolioLabel });
     }
 
-    if (metaItems.length) {
-        const metaSection = createElement("section", "print-sheet-section");
-        metaSection.appendChild(createElement("h2", "print-section-title", "Informations clés"));
+    if (missionItems.length) {
+        const missionsSection = createElement("section", "print-sheet-section print-sheet-missions");
+        missionsSection.appendChild(createElement("h2", "print-section-title", "Missions"));
+        const missionsBody = createElement("div", "print-section-body");
         const metaList = createElement("dl", "print-sheet-meta");
-        metaItems.forEach((entry) => {
+        missionItems.forEach((entry) => {
             const wrapper = createElement("div", "print-meta-item");
             wrapper.appendChild(createElement("dt", "print-meta-label", entry.label));
             wrapper.appendChild(createElement("dd", "print-meta-value", entry.value));
             metaList.appendChild(wrapper);
         });
-        metaSection.appendChild(metaList);
-        printSheet.appendChild(metaSection);
+        missionsBody.appendChild(metaList);
+        missionsSection.appendChild(missionsBody);
+        printSheet.appendChild(missionsSection);
     }
 
     let collaborators = [];
@@ -987,8 +1011,12 @@ const printMinisterSheet = async (minister) => {
     }
     const hasCollaborators = Array.isArray(collaborators) && collaborators.length;
     if (hasCollaborators) {
-        const collabSection = createElement("section", "print-sheet-section print-collaborators-section");
-        collabSection.appendChild(createElement("h2", "print-section-title", "Collaborateurs"));
+        const collabSection = createElement(
+            "section",
+            "print-sheet-section print-sheet-cabinet print-collaborators-section"
+        );
+        collabSection.appendChild(createElement("h2", "print-section-title", "Cabinet"));
+        const collabBody = createElement("div", "print-section-body");
         const collabGrid = createElement("div", "print-collaborators-grid");
         collaborators.forEach((collab) => {
             const card = createElement("div", "print-collaborator-card");
@@ -1016,7 +1044,8 @@ const printMinisterSheet = async (minister) => {
             card.appendChild(details);
             collabGrid.appendChild(card);
         });
-        collabSection.appendChild(collabGrid);
+        collabBody.appendChild(collabGrid);
+        collabSection.appendChild(collabBody);
         printSheet.appendChild(collabSection);
     }
 
@@ -1239,6 +1268,9 @@ const printAllMinisters = () => {
 
     const cleanup = () => {
         document.body.classList.remove("print-all");
+        if (siteHeader) {
+            siteHeader.removeAttribute("data-print-date");
+        }
         window.removeEventListener("afterprint", cleanup);
         window.removeEventListener("beforeprint", applyPrintClass);
     };
