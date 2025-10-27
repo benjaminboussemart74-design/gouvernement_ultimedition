@@ -451,8 +451,30 @@ const fetchCollaboratorsForMinister = async (ministerId) => {
     }
 };
 
+const collaboratorsCache = new Map();
+
+const renderCollaboratorsTemplate = (collaborators) => `
+      <h4>Collaborateurs</h4>
+      <div class="collaborators-list">
+        ${collaborators
+            .map(
+                (c) => `
+          <div class="collaborator-card">
+            <img src="${c.photo_url || 'assets/placeholder-minister.svg'}" class="collaborator-photo" alt="${c.full_name ? `Portrait de ${c.full_name}` : 'Portrait collaborateur'}">
+            <div>
+              <p class="collab-name">${c.full_name ?? 'Collaborateur·rice'}</p>
+              <p class="collab-role">${c.cabinet_role || 'Collaborateur'}</p>
+              ${c.collab_grade ? `<p class="collab-grade">${c.collab_grade}</p>` : ''}
+            </div>
+          </div>
+        `
+            )
+            .join("")}
+      </div>`;
+
 const openModal = (minister) => {
     if (!modal) return;
+    const modalBody = modal.querySelector(".modal-body");
     modalElements.photo.src = minister.photo ?? "assets/placeholder-minister.svg";
     modalElements.photo.alt = minister.photoAlt ?? `Portrait de ${minister.name ?? "ministre"}`;
     modalElements.role.textContent = formatRole(minister.role);
@@ -470,42 +492,104 @@ const openModal = (minister) => {
     modalElements.mission.textContent = minister.mission ?? "Mission principale à renseigner.";
     modalElements.contact.textContent = minister.contact ?? "Contact prochainement disponible.";
 
-    // Nettoie la section collaborateurs si elle existe
-    try {
-        const oldCollabSection = modal.querySelector(".modal-collaborators");
+    if (modalBody) {
+        const oldCollabSection = modalBody.querySelector(".modal-collaborators");
         if (oldCollabSection) oldCollabSection.remove();
-    } catch (e) {
-        /* noop */
+        const oldToggle = modalBody.querySelector(".modal-collaborators-toggle");
+        if (oldToggle) oldToggle.remove();
     }
 
-    // Récupère et affiche les collaborateurs (si Supabase présent)
-    if (minister.id) {
-        fetchCollaboratorsForMinister(minister.id).then((collabs) => {
-            if (!Array.isArray(collabs) || collabs.length === 0) return;
-            const section = document.createElement("div");
-            section.className = "modal-collaborators";
-            section.innerHTML = `
-      <h4>Collaborateurs</h4>
-      <div class="collaborators-list">
-        ${collabs
-            .map(
-                (c) => `
-          <div class="collaborator-card">
-            <img src="${c.photo_url || 'assets/placeholder-minister.svg'}" class="collaborator-photo" alt="">
-            <div>
-              <p class="collab-name">${c.full_name}</p>
-              <p class="collab-role">${c.cabinet_role || 'Collaborateur'}</p>
-              ${c.collab_grade ? `<p class="collab-grade">${c.collab_grade}</p>` : ''}
-            </div>
-          </div>
-        `
-            )
-            .join("")}
-      </div>`;
-            modal.querySelector(".modal-body").appendChild(section);
-        }).catch((error) => {
-            console.warn("[onepage] Impossible de charger les collaborateurs", error);
-        });
+    if (modalBody) {
+        const toggleButton = document.createElement("button");
+        toggleButton.type = "button";
+        toggleButton.className = "btn btn-ghost modal-collaborators-toggle";
+        toggleButton.textContent = minister.id ? "Voir le cabinet" : "Cabinet non disponible";
+        toggleButton.setAttribute("aria-expanded", "false");
+
+        if (!minister.id) {
+            toggleButton.disabled = true;
+            toggleButton.setAttribute("aria-disabled", "true");
+        }
+
+        const metaSection = modalBody.querySelector(".modal-meta");
+        if (metaSection) {
+            metaSection.insertAdjacentElement("afterend", toggleButton);
+        } else {
+            modalBody.appendChild(toggleButton);
+        }
+
+        if (minister.id) {
+            let collaboratorsSection = null;
+            let isExpanded = false;
+            let isLoadingCollaborators = false;
+            const collabSectionId = `modal-collaborators-${minister.id}`;
+            toggleButton.setAttribute("aria-controls", collabSectionId);
+
+            const ensureCollaboratorsSection = () => {
+                const cachedCollabs = collaboratorsCache.get(minister.id);
+                if (!cachedCollabs || cachedCollabs.length === 0) {
+                    return null;
+                }
+
+                if (!collaboratorsSection || !modalBody.contains(collaboratorsSection)) {
+                    collaboratorsSection = document.createElement("div");
+                    collaboratorsSection.className = "modal-collaborators is-hidden";
+                    collaboratorsSection.id = collabSectionId;
+                    modalBody.appendChild(collaboratorsSection);
+                }
+
+                collaboratorsSection.innerHTML = renderCollaboratorsTemplate(cachedCollabs);
+                return collaboratorsSection;
+            };
+
+            toggleButton.addEventListener("click", async () => {
+                if (isLoadingCollaborators) return;
+
+                if (!collaboratorsCache.has(minister.id)) {
+                    isLoadingCollaborators = true;
+                    toggleButton.disabled = true;
+                    toggleButton.textContent = "Chargement...";
+
+                    const collabs = await fetchCollaboratorsForMinister(minister.id);
+                    collaboratorsCache.set(minister.id, Array.isArray(collabs) ? collabs : []);
+
+                    isLoadingCollaborators = false;
+                    const cachedCollabs = collaboratorsCache.get(minister.id) || [];
+
+                    if (!cachedCollabs.length) {
+                        toggleButton.textContent = "Aucun collaborateur renseigné";
+                        toggleButton.disabled = true;
+                        toggleButton.setAttribute("aria-expanded", "false");
+                        toggleButton.setAttribute("aria-disabled", "true");
+                        return;
+                    }
+
+                    toggleButton.disabled = false;
+                    toggleButton.removeAttribute("aria-disabled");
+                    ensureCollaboratorsSection();
+                    isExpanded = true;
+                    collaboratorsSection?.classList.remove("is-hidden");
+                    toggleButton.textContent = "Masquer le cabinet";
+                    toggleButton.setAttribute("aria-expanded", "true");
+                    return;
+                }
+
+                const cachedCollabs = collaboratorsCache.get(minister.id) || [];
+                if (!cachedCollabs.length) {
+                    toggleButton.textContent = "Aucun collaborateur renseigné";
+                    toggleButton.disabled = true;
+                    toggleButton.setAttribute("aria-expanded", "false");
+                    toggleButton.setAttribute("aria-disabled", "true");
+                    return;
+                }
+
+                ensureCollaboratorsSection();
+                isExpanded = !isExpanded;
+                collaboratorsSection?.classList.toggle("is-hidden", !isExpanded);
+                toggleButton.textContent = isExpanded ? "Masquer le cabinet" : "Voir le cabinet";
+                toggleButton.setAttribute("aria-expanded", String(isExpanded));
+            });
+        }
     }
 
     modal.hidden = false;
