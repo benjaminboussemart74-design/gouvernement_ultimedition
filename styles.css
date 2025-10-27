@@ -231,6 +231,48 @@ a:focus {
     .header-logo-panel img { max-width: 260px; }
 }
 
+/* --- Large hero backdrop logo (bleu) --- */
+.hero-bg-logo {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 0; /* behind header content (brand-block is z-index:2) */
+}
+.hero-bg-logo::before {
+    content: "";
+    display: block;
+    width: min(1200px, 92vw);
+    height: min(60vh, 720px);
+    background-image: url("LOGOS/Logo RP tete/LogoRP_Tete logo RP bleu.png");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: contain;
+    opacity: 0.06; /* very subtle */
+    filter: blur(0.8px) saturate(120%);
+    transform: translateY(6vh);
+    will-change: opacity, transform;
+}
+
+/* Ensure hero content stays above the backdrop */
+.hero,
+.brand-block {
+    position: relative;
+    z-index: 2;
+}
+
+@media (max-width: 900px) {
+    .hero-bg-logo::before {
+        height: min(40vh, 420px);
+        width: min(900px, 92vw);
+        opacity: 0.04;
+        transform: translateY(4vh);
+    }
+}
+
+
 /* Header quick search (discrete) */
 .header-search {
     display: inline-flex;
