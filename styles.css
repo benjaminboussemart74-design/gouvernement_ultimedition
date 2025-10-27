@@ -106,6 +106,40 @@ a:focus {
     overflow: hidden;
 }
 
+/* Decorative centered logo panel in header background */
+.header-logo-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 0;
+}
+.header-logo-panel {
+    background: rgba(255,255,255,0.85);
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(17,23,39,0.06);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 640px;
+    width: min(80%, 640px);
+    opacity: 0.95;
+}
+.header-logo-panel img {
+    display: block;
+    max-width: 420px;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    opacity: 0.95;
+}
+
+/* keep header content above the decorative logo */
+.brand-block { z-index: 1; }
+
 .site-header::after {
     content: "";
     position: absolute;
@@ -138,6 +172,15 @@ a:focus {
     text-transform: uppercase;
     letter-spacing: 0.12em;
 }
+
+/* Small utilities for displaying repository LOGOS */
+.rp-logo {
+    display:inline-block;
+    vertical-align:middle;
+}
+.rp-logo--header { width:120px; height:auto; margin-right:1rem; }
+.rp-logo--small { width:36px; height:auto; }
+.rp-logo--card { width:56px; height:auto; margin-left:0.5rem; }
 
 .brand-title h1 {
     font-size: clamp(2.25rem, 4vw, 3.4rem);
