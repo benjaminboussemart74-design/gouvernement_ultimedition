@@ -413,12 +413,50 @@ main {
     gap: 0.8rem;
 }
 
+.toolbar-search-group {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.toolbar-search-group #export-page-pdf {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.1rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
 @media (min-width: 720px) {
     .toolbar-primary {
         grid-template-columns: minmax(260px, 2fr) minmax(200px, 1fr);
         align-items: end;
         gap: 1.2rem;
     }
+
+    .toolbar-search-group {
+        grid-template-columns: minmax(240px, 1fr) auto;
+        align-items: end;
+    }
+
+    .toolbar-search-group #export-page-pdf {
+        justify-self: start;
+    }
+}
+
+@media (max-width: 600px) {
+    .toolbar-search-group #export-page-pdf {
+        width: 100%;
+    }
+}
+
+body.print-all {
+    background: #ffffff;
+}
+
+body.print-all .toolbar {
+    visibility: hidden;
 }
 
 .search {

@@ -1192,19 +1192,25 @@ const refreshGridForPrint = () => {
 const printAllMinisters = () => {
     if (!document?.body) return;
 
-    refreshGridForPrint();
-
     if (modal && !modal.hidden) {
         closeModal();
     }
 
+    refreshGridForPrint();
+
+    const applyPrintClass = () => {
+        document.body.classList.add("print-all");
+    };
+
     const cleanup = () => {
         document.body.classList.remove("print-all");
         window.removeEventListener("afterprint", cleanup);
+        window.removeEventListener("beforeprint", applyPrintClass);
     };
 
-    document.body.classList.add("print-all");
-    window.addEventListener("afterprint", cleanup, { once: true });
+    applyPrintClass();
+    window.addEventListener("beforeprint", applyPrintClass);
+    window.addEventListener("afterprint", cleanup);
 
     window.requestAnimationFrame(() => {
         window.print();
