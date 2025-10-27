@@ -141,6 +141,7 @@ const exportPageButton = document.getElementById("export-page-pdf");
 const modal = document.getElementById("minister-modal");
 const modalBackdrop = modal?.querySelector("[data-dismiss]");
 const modalClose = modal?.querySelector(".modal-close");
+const exportButton = document.getElementById("export-minister-pdf");
 
 const modalElements = {
     photo: document.getElementById("modal-photo"),
@@ -200,6 +201,7 @@ let currentSort = "role";
 let onlyWithDelegates = false;
 let onlyWithBio = false;
 let lastFetchError = null; // store last fetch error for debug UI
+let activeMinister = null;
 
 updatePartyFilterOptions();
 
@@ -659,8 +661,174 @@ const renderCollaboratorsTemplate = (collaborators) => `
             .join("")}
       </div>`;
 
+const ensureCollaboratorsForPrint = async (minister) => {
+    if (!minister?.id) return [];
+
+    if (!collaboratorsCache.has(minister.id)) {
+        const collabs = await fetchCollaboratorsForMinister(minister.id);
+        collaboratorsCache.set(minister.id, Array.isArray(collabs) ? collabs : []);
+    }
+
+    return collaboratorsCache.get(minister.id) || [];
+};
+
+const printMinisterSheet = async (minister) => {
+    if (!minister) return;
+
+    let printSheet = document.getElementById("print-sheet");
+    if (!printSheet) {
+        printSheet = document.createElement("div");
+        printSheet.id = "print-sheet";
+    } else {
+        printSheet.innerHTML = "";
+    }
+
+    const ensureText = (value, fallback = "") => {
+        if (typeof value !== "string") {
+            return value != null ? String(value) : fallback;
+        }
+        const trimmed = value.trim();
+        return trimmed || fallback;
+    };
+
+    const createElement = (tag, className, text) => {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        if (text != null) element.textContent = text;
+        return element;
+    };
+
+    const ministriesLabel = minister.ministries?.length
+        ? minister.ministries
+              .map((entry) => entry?.label)
+              .filter(Boolean)
+              .join(" • ")
+        : null;
+
+    const roleLabel = ensureText(formatRole(minister.role));
+    const nameLabel = ensureText(minister.name, "Nom du ministre");
+    const portfolioLabel = ensureText(ministriesLabel || minister.portfolio);
+    const descriptionText = ensureText(
+        minister.description,
+        "Ajoutez ici une biographie synthétique."
+    );
+    const missionText = ensureText(minister.mission);
+    const contactText = ensureText(minister.contact, "Contact prochainement disponible.");
+
+    const header = createElement("header", "print-sheet-header");
+    const brand = createElement("div", "print-sheet-brand");
+    brand.appendChild(createElement("p", "print-sheet-eyebrow", "RumeurLAB • Gouvernement Lecornu II"));
+    brand.appendChild(createElement("h1", "print-sheet-name", nameLabel));
+    if (roleLabel) brand.appendChild(createElement("p", "print-sheet-role", roleLabel));
+    if (portfolioLabel) brand.appendChild(createElement("p", "print-sheet-portfolio", portfolioLabel));
+
+    const photoWrapper = createElement("div", "print-sheet-photo");
+    const photo = document.createElement("img");
+    photo.src = minister.photo || "assets/placeholder-minister.svg";
+    photo.alt = minister.photoAlt || (minister.name ? `Portrait de ${minister.name}` : "Portrait du ministre");
+    photoWrapper.appendChild(photo);
+
+    header.appendChild(brand);
+    header.appendChild(photoWrapper);
+    printSheet.appendChild(header);
+
+    const summarySection = createElement("section", "print-sheet-section");
+    summarySection.appendChild(createElement("h2", "print-section-title", "Présentation"));
+    summarySection.appendChild(createElement("p", "print-section-text", descriptionText));
+    printSheet.appendChild(summarySection);
+
+    const metaItems = [];
+    if (missionText) {
+        metaItems.push({ label: "Mission", value: missionText });
+    }
+    if (portfolioLabel) {
+        metaItems.push({ label: "Responsabilités", value: portfolioLabel });
+    }
+    if (contactText) {
+        metaItems.push({ label: "Contact", value: contactText });
+    }
+
+    if (metaItems.length) {
+        const metaSection = createElement("section", "print-sheet-section");
+        metaSection.appendChild(createElement("h2", "print-section-title", "Informations clés"));
+        const metaList = createElement("dl", "print-sheet-meta");
+        metaItems.forEach((entry) => {
+            const wrapper = createElement("div", "print-meta-item");
+            wrapper.appendChild(createElement("dt", "print-meta-label", entry.label));
+            wrapper.appendChild(createElement("dd", "print-meta-value", entry.value));
+            metaList.appendChild(wrapper);
+        });
+        metaSection.appendChild(metaList);
+        printSheet.appendChild(metaSection);
+    }
+
+    let collaborators = [];
+    try {
+        collaborators = await ensureCollaboratorsForPrint(minister);
+    } catch (error) {
+        console.warn("[onepage] Impossible de préparer les collaborateurs pour l'impression", error);
+    }
+    const hasCollaborators = Array.isArray(collaborators) && collaborators.length;
+    if (hasCollaborators) {
+        const collabSection = createElement("section", "print-sheet-section print-collaborators-section");
+        collabSection.appendChild(createElement("h2", "print-section-title", "Collaborateurs"));
+        const collabGrid = createElement("div", "print-collaborators-grid");
+        collaborators.forEach((collab) => {
+            const card = createElement("div", "print-collaborator-card");
+            const collabPhotoWrapper = createElement("div", "print-collaborator-photo");
+            const collabImg = document.createElement("img");
+            collabImg.src = collab.photo_url || "assets/placeholder-minister.svg";
+            collabImg.alt = collab.full_name
+                ? `Portrait de ${collab.full_name}`
+                : "Portrait collaborateur";
+            collabPhotoWrapper.appendChild(collabImg);
+            card.appendChild(collabPhotoWrapper);
+
+            const details = createElement("div", "print-collaborator-details");
+            details.appendChild(
+                createElement("p", "print-collaborator-name", ensureText(collab.full_name, "Collaborateur·rice"))
+            );
+            details.appendChild(
+                createElement("p", "print-collaborator-role", ensureText(collab.cabinet_role, "Collaborateur"))
+            );
+            if (collab.collab_grade) {
+                details.appendChild(
+                    createElement("p", "print-collaborator-grade", ensureText(collab.collab_grade))
+                );
+            }
+            card.appendChild(details);
+            collabGrid.appendChild(card);
+        });
+        collabSection.appendChild(collabGrid);
+        printSheet.appendChild(collabSection);
+    }
+
+    document.body.appendChild(printSheet);
+    document.body.classList.add("print-single");
+
+    const cleanup = () => {
+        document.body.classList.remove("print-single");
+        if (printSheet.parentElement) {
+            printSheet.parentElement.removeChild(printSheet);
+        } else {
+            printSheet.innerHTML = "";
+        }
+        window.removeEventListener("afterprint", cleanup);
+    };
+
+    window.addEventListener("afterprint", cleanup);
+    window.print();
+
+    window.setTimeout(() => {
+        if (document.body.classList.contains("print-single")) {
+            cleanup();
+        }
+    }, 1000);
+};
+
 const openModal = (minister) => {
     if (!modal) return;
+    activeMinister = minister;
     const modalBody = modal.querySelector(".modal-body");
     modalElements.photo.src = minister.photo ?? "assets/placeholder-minister.svg";
     modalElements.photo.alt = minister.photoAlt ?? `Portrait de ${minister.name ?? "ministre"}`;
@@ -788,6 +956,19 @@ const openModal = (minister) => {
         }
     }
 
+    if (exportButton && !exportButton.dataset.bound) {
+        exportButton.addEventListener("click", async () => {
+            if (!activeMinister) return;
+            exportButton.disabled = true;
+            try {
+                await printMinisterSheet(activeMinister);
+            } finally {
+                exportButton.disabled = false;
+            }
+        });
+        exportButton.dataset.bound = "true";
+    }
+
     modal.hidden = false;
     document.body.style.overflow = "hidden";
 };
@@ -796,6 +977,7 @@ const closeModal = () => {
     if (!modal) return;
     modal.hidden = true;
     document.body.style.overflow = "";
+    activeMinister = null;
 };
 
 const refreshGridForPrint = () => {
