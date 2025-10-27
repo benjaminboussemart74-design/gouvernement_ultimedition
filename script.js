@@ -210,6 +210,60 @@ const buildCard = (minister) => {
     portfolio.textContent = minister.portfolio ?? "Portefeuille à préciser";
     left.appendChild(portfolio);
 
+    const ministriesEntries = Array.isArray(minister.ministries) ? minister.ministries : [];
+    const normalizedPortfolio = normalise(minister.portfolio || "");
+    const seenMinistries = new Set();
+    const ministriesBadges = ministriesEntries
+        .map((entry) => {
+            const label = (entry?.label || "").trim();
+            const roleLabel = (entry?.roleLabel || "").trim();
+            const displayLabel = label || roleLabel;
+            if (!displayLabel) return null;
+
+            const normalizedLabel = normalise(label || roleLabel);
+            if (normalizedLabel && normalizedLabel === normalizedPortfolio) {
+                return null;
+            }
+
+            const normalizedRole = normalise(roleLabel);
+            const dedupeKey = `${normalizedLabel}::${normalizedRole}`;
+            if (seenMinistries.has(dedupeKey)) {
+                return null;
+            }
+            seenMinistries.add(dedupeKey);
+
+            return {
+                label,
+                roleLabel,
+                displayLabel,
+                isPrimary: Boolean(entry?.isPrimary)
+            };
+        })
+        .filter(Boolean);
+
+    if (ministriesBadges.length) {
+        const ministriesContainer = document.createElement("div");
+        ministriesContainer.className = "mc-ministries";
+
+        ministriesBadges.forEach((entry) => {
+            const badge = document.createElement("span");
+            badge.className = "mc-ministry-badge";
+            if (entry.isPrimary) {
+                badge.classList.add("is-primary");
+            }
+            if (entry.label && entry.roleLabel) {
+                badge.textContent = `${entry.label} • ${entry.roleLabel}`;
+            } else if (entry.roleLabel) {
+                badge.textContent = entry.roleLabel;
+            } else {
+                badge.textContent = entry.displayLabel;
+            }
+            ministriesContainer.appendChild(badge);
+        });
+
+        left.appendChild(ministriesContainer);
+    }
+
     const name = document.createElement("h3");
     name.textContent = minister.name ?? "Nom du ministre";
     left.appendChild(name);
