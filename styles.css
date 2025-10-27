@@ -1032,6 +1032,10 @@ main {
     gap: 1.5rem;
 }
 
+.modal-export {
+    justify-self: start;
+}
+
 .modal-header {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -1164,3 +1168,171 @@ main {
 .u-separator { display: block; height: 1px; width: 100%; background: currentColor; opacity: 0.35; border: 0; }
 .u-separator--thin { height: 0.5px; }
 .u-separator--wide { width: 150%; max-width: 150%; }
+
+#print-sheet {
+    display: none;
+}
+
+body.print-single #print-sheet {
+    display: block;
+}
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 1.5cm;
+    }
+
+    body.print-single {
+        background: #fff;
+        color: var(--color-encre);
+        font-family: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-weight: 400;
+    }
+
+    body.print-single > *:not(#print-sheet) {
+        display: none !important;
+    }
+
+    body.print-single #print-sheet {
+        display: flex;
+        flex-direction: column;
+        gap: 1.2cm;
+        padding: 0;
+    }
+
+    body.print-single #print-sheet .print-sheet-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1.5cm;
+    }
+
+    body.print-single #print-sheet .print-sheet-brand {
+        flex: 1 1 auto;
+    }
+
+    body.print-single #print-sheet .print-sheet-eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 0.9rem;
+        color: var(--color-sesame);
+        margin: 0 0 0.5cm;
+    }
+
+    body.print-single #print-sheet .print-sheet-name {
+        font-size: 2.6rem;
+        margin: 0 0 0.35cm;
+        color: var(--color-encre);
+    }
+
+    body.print-single #print-sheet .print-sheet-role {
+        font-size: 1.1rem;
+        margin: 0 0 0.3cm;
+        color: var(--color-poivre);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    body.print-single #print-sheet .print-sheet-portfolio {
+        margin: 0;
+        font-size: 1.05rem;
+        color: var(--color-poivre);
+    }
+
+    body.print-single #print-sheet .print-sheet-photo img {
+        width: 6.5cm;
+        height: 8.5cm;
+        object-fit: cover;
+        border-radius: 1cm;
+        background: var(--color-guimauve);
+    }
+
+    body.print-single #print-sheet .print-sheet-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35cm;
+        page-break-inside: avoid;
+    }
+
+    body.print-single #print-sheet .print-section-title {
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--color-sesame);
+        margin: 0;
+    }
+
+    body.print-single #print-sheet .print-section-text {
+        font-size: 1rem;
+        line-height: 1.5;
+        color: var(--color-poivre);
+        margin: 0;
+    }
+
+    body.print-single #print-sheet .print-sheet-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(6cm, 1fr));
+        gap: 0.6cm;
+        margin: 0;
+    }
+
+    body.print-single #print-sheet .print-meta-item {
+        border: 1px solid rgba(17, 23, 39, 0.12);
+        border-radius: 0.4cm;
+        padding: 0.6cm;
+        background: #f7f7f9;
+        min-height: 0;
+    }
+
+    body.print-single #print-sheet .print-meta-label {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--color-sesame);
+        margin: 0 0 0.2cm;
+    }
+
+    body.print-single #print-sheet .print-meta-value {
+        font-size: 1rem;
+        color: var(--color-encre);
+        margin: 0;
+    }
+
+    body.print-single #print-sheet .print-collaborators-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(6.5cm, 1fr));
+        gap: 0.6cm;
+    }
+
+    body.print-single #print-sheet .print-collaborator-card {
+        display: flex;
+        align-items: center;
+        gap: 0.45cm;
+        border: 1px solid rgba(17, 23, 39, 0.12);
+        border-radius: 0.4cm;
+        padding: 0.5cm;
+        background: #fff;
+    }
+
+    body.print-single #print-sheet .print-collaborator-photo img {
+        width: 2.6cm;
+        height: 2.6cm;
+        border-radius: 50%;
+        object-fit: cover;
+        background: var(--color-guimauve);
+    }
+
+    body.print-single #print-sheet .print-collaborator-name {
+        font-weight: 600;
+        margin: 0 0 0.1cm;
+        color: var(--color-encre);
+    }
+
+    body.print-single #print-sheet .print-collaborator-role,
+    body.print-single #print-sheet .print-collaborator-grade {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--color-poivre);
+    }
+}
