@@ -887,10 +887,34 @@ main {
     border: 1px solid rgba(62, 62, 61, 0.08);
     box-shadow: var(--shadow-soft);
 }
+.modal-body .modal-collaborators-toggle {
+    justify-self: start;
+    align-self: start;
+    margin-top: -0.25rem;
+    color: var(--color-encre);
+    background: rgba(17, 23, 39, 0.06);
+    border: 1px solid rgba(17, 23, 39, 0.12);
+}
+
+.modal-body .modal-collaborators-toggle:hover,
+.modal-body .modal-collaborators-toggle:focus {
+    color: var(--color-encre);
+    background: rgba(17, 23, 39, 0.12);
+}
+
+.modal-collaborators-toggle[disabled] {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
 .modal-collaborators {
     margin-top: 1.5rem;
     border-top: 1px solid rgba(62,62,61,0.1);
     padding-top: 1.25rem;
+}
+
+.modal-collaborators.is-hidden {
+    display: none;
 }
 
 .modal-collaborators h4 {
