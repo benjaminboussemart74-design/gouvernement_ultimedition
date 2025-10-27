@@ -1142,6 +1142,95 @@ main {
     .mc-right { justify-items: start; }
 }
 
+@media print {
+    body.print-all {
+        background: #ffffff;
+        color: #000000;
+    }
+
+    body.print-all *,
+    body.print-all *::before,
+    body.print-all *::after {
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+
+    body.print-all .site-header,
+    body.print-all main,
+    body.print-all .section,
+    body.print-all .contact-card,
+    body.print-all .minister-card,
+    body.print-all .timeline-item {
+        background: #ffffff !important;
+        box-shadow: none !important;
+    }
+
+    body.print-all main {
+        padding: 1.2cm 1.5cm;
+    }
+
+    body.print-all .section {
+        gap: 1.2rem;
+    }
+
+    body.print-all .site-header::after,
+    body.print-all .modal {
+        display: none !important;
+    }
+
+    body.print-all .site-nav,
+    body.print-all .header-search,
+    body.print-all .hero-actions,
+    body.print-all .toolbar,
+    body.print-all #export-page-pdf,
+    body.print-all .minister-cta,
+    body.print-all .modal-collaborators-toggle,
+    body.print-all .site-footer .btn {
+        display: none !important;
+    }
+
+    body.print-all .ministers-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 0.75rem;
+    }
+
+    body.print-all .minister-card,
+    body.print-all .minister-card * {
+        pointer-events: none !important;
+    }
+
+    body.print-all .minister-card {
+        transform: none !important;
+        border-color: rgba(0, 0, 0, 0.1);
+        border-left-color: rgba(0, 0, 0, 0.18);
+    }
+
+    body.print-all .minister-card:hover,
+    body.print-all .minister-card:focus {
+        transform: none;
+        box-shadow: none;
+    }
+
+    body.print-all .btn {
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: inherit !important;
+        padding: 0 !important;
+    }
+
+    body.print-all .contact-card a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    body.print-all .site-footer {
+        background: #ffffff;
+        box-shadow: none;
+        color: inherit;
+    }
+}
+
 /* ===== Utilities (charte) ===== */
 .text-encre { color: var(--color-encre); }
 .text-poivre { color: var(--color-poivre); }
