@@ -142,6 +142,14 @@ const modal = document.getElementById("minister-modal");
 const modalBackdrop = modal?.querySelector("[data-dismiss]");
 const modalClose = modal?.querySelector(".modal-close");
 const exportButton = document.getElementById("export-minister-pdf");
+const sortSelect = document.getElementById("sort-order");
+const delegatesToggle = document.getElementById("filter-delegates");
+const bioToggle = document.getElementById("filter-bio");
+const resetButton = document.getElementById("filters-reset");
+const resultsCurrentEl = document.getElementById("results-count-current");
+const resultsTotalEl = document.getElementById("results-count-total");
+const resultsLabelEl = document.getElementById("results-count-label");
+const activeFiltersHint = document.getElementById("active-filters-hint");
 
 const modalElements = {
     photo: document.getElementById("modal-photo"),
