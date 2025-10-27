@@ -142,6 +142,10 @@ const modal = document.getElementById("minister-modal");
 const modalBackdrop = modal?.querySelector("[data-dismiss]");
 const modalClose = modal?.querySelector(".modal-close");
 const exportButton = document.getElementById("export-minister-pdf");
+if (exportButton) {
+    exportButton.disabled = true;
+    exportButton.setAttribute("aria-disabled", "true");
+}
 const sortSelect = document.getElementById("sort-order");
 const delegatesToggle = document.getElementById("filter-delegates");
 const bioToggle = document.getElementById("filter-bio");
@@ -210,6 +214,30 @@ let onlyWithDelegates = false;
 let onlyWithBio = false;
 let lastFetchError = null; // store last fetch error for debug UI
 let activeMinister = null;
+let printSheetContainer = null;
+
+const ensurePrintSheetContainer = () => {
+    if (typeof document === "undefined") return null;
+    if (!printSheetContainer) {
+        printSheetContainer = document.createElement("div");
+        printSheetContainer.id = "print-sheet";
+    }
+    return printSheetContainer;
+};
+
+const cleanupPrintSheet = () => {
+    if (typeof document === "undefined" || !document.body) return;
+    document.body.classList.remove("print-single");
+    if (!printSheetContainer) return;
+    if (printSheetContainer.parentElement) {
+        printSheetContainer.parentElement.removeChild(printSheetContainer);
+    }
+    printSheetContainer.innerHTML = "";
+};
+
+if (typeof window !== "undefined") {
+    window.addEventListener("afterprint", cleanupPrintSheet);
+}
 
 updatePartyFilterOptions();
 
@@ -865,15 +893,12 @@ const ensureCollaboratorsForPrint = async (minister) => {
 };
 
 const printMinisterSheet = async (minister) => {
-    if (!minister) return;
+    if (!minister || typeof document === "undefined" || !document.body) return;
 
-    let printSheet = document.getElementById("print-sheet");
-    if (!printSheet) {
-        printSheet = document.createElement("div");
-        printSheet.id = "print-sheet";
-    } else {
-        printSheet.innerHTML = "";
-    }
+    const printSheet = ensurePrintSheetContainer();
+    if (!printSheet) return;
+
+    printSheet.innerHTML = "";
 
     const ensureText = (value, fallback = "") => {
         if (typeof value !== "string") {
@@ -1027,30 +1052,47 @@ const printMinisterSheet = async (minister) => {
     document.body.appendChild(printSheet);
     document.body.classList.add("print-single");
 
-    const cleanup = () => {
-        document.body.classList.remove("print-single");
-        if (printSheet.parentElement) {
-            printSheet.parentElement.removeChild(printSheet);
-        } else {
-            printSheet.innerHTML = "";
-        }
-        window.removeEventListener("afterprint", cleanup);
-    };
-
-    window.addEventListener("afterprint", cleanup);
     window.print();
 
     window.setTimeout(() => {
         if (document.body.classList.contains("print-single")) {
-            cleanup();
+            cleanupPrintSheet();
         }
     }, 1000);
 };
+
+const handleExportMinisterClick = async () => {
+    if (!exportButton || !activeMinister) return;
+
+    exportButton.disabled = true;
+    exportButton.setAttribute("aria-busy", "true");
+
+    try {
+        await printMinisterSheet(activeMinister);
+    } finally {
+        exportButton.disabled = false;
+        exportButton.removeAttribute("aria-busy");
+    }
+};
+
+if (exportButton) {
+    exportButton.addEventListener("click", handleExportMinisterClick);
+}
 
 const openModal = (minister) => {
     if (!modal) return;
     activeMinister = minister;
     const modalBody = modal.querySelector(".modal-body");
+    if (exportButton) {
+        if (minister) {
+            exportButton.disabled = false;
+            exportButton.removeAttribute("aria-disabled");
+            exportButton.removeAttribute("aria-busy");
+        } else {
+            exportButton.disabled = true;
+            exportButton.setAttribute("aria-disabled", "true");
+        }
+    }
     modalElements.photo.src = minister.photo ?? "assets/placeholder-minister.svg";
     modalElements.photo.alt = minister.photoAlt ?? `Portrait de ${minister.name ?? "ministre"}`;
     modalElements.role.textContent = formatRole(minister.role);
@@ -1088,8 +1130,14 @@ const openModal = (minister) => {
         const toggleButton = document.createElement("button");
         toggleButton.type = "button";
         toggleButton.className = "btn btn-ghost modal-collaborators-toggle";
-        toggleButton.textContent = minister.id ? "Voir le cabinet" : "Cabinet non disponible";
+        // include pictogram/icon and a label span so we can update text without removing the icon
+    toggleButton.innerHTML = `<img src="assets/organigramme.svg" class="icon-org" alt="" style="width:20px;height:20px;margin-right:0.5rem;vertical-align:middle"> <span class="toggle-label"></span>`;
         toggleButton.setAttribute("aria-expanded", "false");
+        const setToggleLabel = (txt) => {
+            const lbl = toggleButton.querySelector('.toggle-label');
+            if (lbl) lbl.textContent = String(txt || '');
+        };
+        setToggleLabel(minister.id ? "Voir le cabinet" : "Cabinet non disponible");
 
         if (!minister.id) {
             toggleButton.disabled = true;
@@ -1133,7 +1181,7 @@ const openModal = (minister) => {
                 if (!collaboratorsCache.has(minister.id)) {
                     isLoadingCollaborators = true;
                     toggleButton.disabled = true;
-                    toggleButton.textContent = "Chargement...";
+                    setToggleLabel("Chargement...");
 
                     const collabs = await fetchCollaboratorsForMinister(minister.id);
                     collaboratorsCache.set(minister.id, Array.isArray(collabs) ? collabs : []);
@@ -1142,7 +1190,7 @@ const openModal = (minister) => {
                     const cachedCollabs = collaboratorsCache.get(minister.id) || [];
 
                     if (!cachedCollabs.length) {
-                        toggleButton.textContent = "Aucun collaborateur renseigné";
+                        setToggleLabel("Aucun collaborateur renseigné");
                         toggleButton.disabled = true;
                         toggleButton.setAttribute("aria-expanded", "false");
                         toggleButton.setAttribute("aria-disabled", "true");
@@ -1154,14 +1202,14 @@ const openModal = (minister) => {
                     ensureCollaboratorsSection();
                     isExpanded = true;
                     collaboratorsSection?.classList.remove("is-hidden");
-                    toggleButton.textContent = "Masquer le cabinet";
+                    setToggleLabel("Masquer le cabinet");
                     toggleButton.setAttribute("aria-expanded", "true");
                     return;
                 }
 
                 const cachedCollabs = collaboratorsCache.get(minister.id) || [];
                 if (!cachedCollabs.length) {
-                    toggleButton.textContent = "Aucun collaborateur renseigné";
+                    setToggleLabel("Aucun collaborateur renseigné");
                     toggleButton.disabled = true;
                     toggleButton.setAttribute("aria-expanded", "false");
                     toggleButton.setAttribute("aria-disabled", "true");
@@ -1171,23 +1219,10 @@ const openModal = (minister) => {
                 ensureCollaboratorsSection();
                 isExpanded = !isExpanded;
                 collaboratorsSection?.classList.toggle("is-hidden", !isExpanded);
-                toggleButton.textContent = isExpanded ? "Masquer le cabinet" : "Voir le cabinet";
+                setToggleLabel(isExpanded ? "Masquer le cabinet" : "Voir le cabinet");
                 toggleButton.setAttribute("aria-expanded", String(isExpanded));
             });
         }
-    }
-
-    if (exportButton && !exportButton.dataset.bound) {
-        exportButton.addEventListener("click", async () => {
-            if (!activeMinister) return;
-            exportButton.disabled = true;
-            try {
-                await printMinisterSheet(activeMinister);
-            } finally {
-                exportButton.disabled = false;
-            }
-        });
-        exportButton.dataset.bound = "true";
     }
 
     modal.hidden = false;
@@ -1199,6 +1234,12 @@ const closeModal = () => {
     modal.hidden = true;
     modal.classList.remove("modal--cabinet-active");
     document.body.style.overflow = "";
+    cleanupPrintSheet();
+    if (exportButton) {
+        exportButton.disabled = true;
+        exportButton.removeAttribute("aria-busy");
+        exportButton.setAttribute("aria-disabled", "true");
+    }
     activeMinister = null;
 };
 
@@ -1215,21 +1256,15 @@ const refreshGridForPrint = () => {
 const printAllMinisters = () => {
     if (!document?.body) return;
 
-    const siteHeader = document.querySelector(".site-header");
-    const printDate = new Date().toLocaleDateString("fr-FR", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric"
-    });
-    if (siteHeader) {
-        siteHeader.setAttribute("data-print-date", `Édition du ${printDate}`);
+    if (modal && !modal.hidden) {
+        closeModal();
     }
 
     refreshGridForPrint();
 
-    if (modal && !modal.hidden) {
-        closeModal();
-    }
+    const applyPrintClass = () => {
+        document.body.classList.add("print-all");
+    };
 
     const cleanup = () => {
         document.body.classList.remove("print-all");
@@ -1237,10 +1272,12 @@ const printAllMinisters = () => {
             siteHeader.removeAttribute("data-print-date");
         }
         window.removeEventListener("afterprint", cleanup);
+        window.removeEventListener("beforeprint", applyPrintClass);
     };
 
-    document.body.classList.add("print-all");
-    window.addEventListener("afterprint", cleanup, { once: true });
+    applyPrintClass();
+    window.addEventListener("beforeprint", applyPrintClass);
+    window.addEventListener("afterprint", cleanup);
 
     window.requestAnimationFrame(() => {
         window.print();
