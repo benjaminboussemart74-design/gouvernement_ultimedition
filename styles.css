@@ -499,7 +499,7 @@ body.print-all {
 }
 
 body.print-all .toolbar {
-    visibility: hidden;
+    display: none;
 }
 
 .search {

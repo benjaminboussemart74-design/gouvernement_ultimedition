@@ -1256,26 +1256,15 @@ const printAllMinisters = () => {
 
     refreshGridForPrint();
 
-    const applyPrintClass = () => {
-        document.body.classList.add("print-all");
-    };
+    document.body.classList.add("print-all");
 
     const cleanup = () => {
         document.body.classList.remove("print-all");
-        if (siteHeader) {
-            siteHeader.removeAttribute("data-print-date");
-        }
         window.removeEventListener("afterprint", cleanup);
-        window.removeEventListener("beforeprint", applyPrintClass);
     };
 
-    applyPrintClass();
-    window.addEventListener("beforeprint", applyPrintClass);
     window.addEventListener("afterprint", cleanup);
-
-    window.requestAnimationFrame(() => {
-        window.print();
-    });
+    window.print();
 };
 
 const highlightFilter = (role) => {
