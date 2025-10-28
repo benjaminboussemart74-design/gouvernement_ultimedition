@@ -66,7 +66,7 @@ const MINISTER_ROLES = new Set([
 
 const DELEGATE_ROLES = new Set(["minister-delegate", "ministre-delegue", "secretary"]);
 const CORE_ROLES = new Set(["leader", "minister", "minister-state"]);
-const careerCache = new Map();
+const FALLBACK_DATA_URL = "data/ministers.json";
 
 const ensureImageSource = (value, fallback = "assets/placeholder-minister.svg") => {
     if (!value) return fallback;
@@ -609,52 +609,6 @@ const ensureSupabaseClient = () => {
         console.warn("[onepage] Impossible d'initialiser Supabase", error);
     }
     return null;
-};
-
-const fetchCareerTimeline = async (personId) => {
-    if (!personId) return [];
-
-    const cached = careerCache.get(personId);
-    if (cached) {
-        try {
-            return await cached;
-        } catch (error) {
-            careerCache.delete(personId);
-            throw error;
-        }
-    }
-
-    const client = ensureSupabaseClient();
-    if (!client) {
-        throw new Error("Client Supabase non initialisé");
-    }
-
-    const fetchPromise = (async () => {
-        const { data, error } = await client
-            .from("person_careers")
-            .select(CAREER_SELECT_COLUMNS.join(", "))
-            .eq("person_id", personId)
-            .order("start_date", { ascending: false })
-            .order("sort_index", { ascending: true });
-
-        if (error) {
-            throw error;
-        }
-
-        const normalized = normalizeCareerSteps(Array.isArray(data) ? data : []);
-        return normalized;
-    })();
-
-    careerCache.set(personId, fetchPromise);
-
-    try {
-        const steps = await fetchPromise;
-        careerCache.set(personId, steps);
-        return steps;
-    } catch (error) {
-        careerCache.delete(personId);
-        throw error;
-    }
 };
 
 const buildCard = (minister) => {
@@ -2087,68 +2041,6 @@ const toggleExecutiveCabinet = async (minister, toggleButton) => {
 };
 
 
-const populateCareerModule = async (minister) => {
-    const careerSection = modalElements.careerSection;
-    const careerList = modalElements.careerList;
-
-    if (!careerSection || !careerList) {
-        return;
-    }
-
-    careerSection.hidden = true;
-    careerList.innerHTML = "";
-
-    if (!minister?.id) {
-        careerSection.hidden = true;
-        minister.career = [];
-        return;
-    }
-
-    const applySteps = (steps) => {
-        const normalizedSteps = Array.isArray(steps) ? steps : [];
-        if (!normalizedSteps.length) {
-            careerSection.hidden = true;
-            careerList.innerHTML = "";
-            minister.career = [];
-            careerCache.set(minister.id, []);
-            return;
-        }
-
-        careerList.innerHTML = "";
-        careerList.appendChild(createCareerTimelineFragment(normalizedSteps));
-        careerSection.hidden = false;
-        minister.career = normalizedSteps;
-        careerCache.set(minister.id, normalizedSteps);
-    };
-
-    const cached = careerCache.get(minister.id);
-    if (Array.isArray(cached)) {
-        applySteps(cached);
-        return;
-    }
-
-    const placeholder = document.createElement("li");
-    placeholder.className = "modal-career-placeholder";
-    placeholder.textContent = "Chargement…";
-    careerList.appendChild(placeholder);
-    careerSection.hidden = false;
-
-    try {
-        const steps = await fetchCareerTimeline(minister.id);
-        applySteps(steps);
-    } catch (error) {
-        careerList.innerHTML = "";
-        const errorItem = document.createElement("li");
-        errorItem.className = "modal-career-error";
-        errorItem.textContent = "Impossible de charger la carrière pour le moment.";
-        careerList.appendChild(errorItem);
-        careerSection.hidden = false;
-        minister.career = [];
-        console.error("[onepage] Échec du chargement de la carrière", error);
-    }
-};
-
-
 const openModal = (minister) => {
     if (!modal) return;
     // Ensure any cabinet overlay is hidden/cleared when opening detail view
@@ -2446,24 +2338,11 @@ const fetchMinistersFromSupabase = async () => {
     const { data: persons, error: personsError } = await client
         .from("persons")
         .select(
-            `id, full_name, role, description, photo_url, email, party, superior_id, career,
+            `id, full_name, role, description, photo_url, email, party, superior_id,
              person_ministries(
                 role_label,
                 is_primary,
                 ministries(id, short_name, name, color, parent_ministry_id)
-             ),
-             person_careers(
-                id,
-                title,
-                organisation,
-                description,
-                location,
-                category,
-                category_color,
-                start_date,
-                end_date,
-                ongoing,
-                sort_index
              )`
         )
         .order("role", { ascending: true })
@@ -2685,6 +2564,24 @@ const loadMinisters = async () => {
         console.error("[onepage] Erreur lors du chargement des ministres depuis Supabase", error);
     }
 
+    const DISABLE_JSON_FALLBACK = true;
+    if (!dataLoaded && !DISABLE_JSON_FALLBACK) {
+        try {
+            const fallbackMinisters = await fetchMinistersFromFallback();
+            if (fallbackMinisters.length) {
+                ministers = fallbackMinisters;
+                coreMinisters = fallbackMinisters.filter((m) => CORE_ROLES.has(m.role));
+                delegateMinisters = fallbackMinisters.filter((m) => DELEGATE_ROLES.has(m.role));
+                attachDelegatesToCore();
+                dataLoaded = true;
+                updatePartyFilterOptions(ministers);
+            }
+        } catch (error) {
+            lastFetchError = error;
+            console.error("[onepage] Erreur lors du chargement du fichier de secours", error);
+        }
+    }
+
     if (dataLoaded) {
         applyFilters();
         // build header search index for autocomplete
@@ -2711,7 +2608,7 @@ const loadMinisters = async () => {
         grid.setAttribute("aria-busy", "false");
         emptyState.hidden = false;
         emptyState.textContent =
-            "Aucune donnée disponible. Vérifiez la configuration Supabase (URL, clé anon) et que les tables requises sont accessibles.";
+            "Aucune donnée disponible. Vérifiez la configuration Supabase ou ajoutez un fichier data/ministers.json.";
         updateResultsSummary(0, 0);
         updateActiveFiltersHint(0, 0);
     }
@@ -2812,7 +2709,7 @@ const initApp = () => {
         try {
             const banner = document.createElement('div');
             banner.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:rgba(209,0,123,0.1);border-top:1px solid rgba(209,0,123,0.35);color:#4B2579;padding:8px 12px;font:600 13px/1.4 \"Space Grotesk\",system-ui;backdrop-filter:saturate(120%) blur(2px)';
-            banner.textContent = 'Diagnostic: échec du chargement des données. Vérifiez Supabase (URL/KEY) ou les règles d\'accès (RLS).';
+            banner.textContent = 'Diagnostic: échec du chargement des données. Vérifiez Supabase (URL/KEY) ou data/ministers.json.';
             document.body.appendChild(banner);
             setTimeout(() => banner.remove(), 6000);
         } catch { /* no-op */ }
