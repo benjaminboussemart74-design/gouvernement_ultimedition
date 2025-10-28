@@ -2527,20 +2527,21 @@ body.print-all .toolbar {
 /* Header logo sizing - keep the header compact across breakpoints */
 .site-logo {
     display: block;
-    max-height: 7px; /* mobile default (half size) */
+    /* very small header logo as requested */
+    max-height: 30px;
     width: auto;
     height: auto;
 }
 
 @media (min-width: 768px) {
     .site-logo {
-        max-height: 9px; /* tablet and small desktop (half) */
+        max-height: 36px;
     }
 }
 
 @media (min-width: 1200px) {
     .site-logo {
-        max-height: 11px; /* large screens (half) */
+        max-height: 42px;
     }
 }
 
@@ -2554,7 +2555,68 @@ body.print-all .toolbar {
 
 /* Stronger rule to override other generic img rules if needed */
 .site-header .site-logo {
-    max-height: 7px !important; /* enforce half size in header */
+    max-height: 30px !important; /* enforce the reduced header logo size */
+    height: auto !important;
+    display: block;
+    margin: 0 auto; /* ensure image centered if container allows */
+}
+
+/* Center the brand block content in the header (logo only header) */
+.site-header .brand-block {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100%;
+}
+
+/* Compact header + hide decorative backdrops (requested) */
+.site-header {
+    padding: 0.75rem 0.75rem !important;
+    gap: 0.5rem !important;
+}
+
+/* Hide large background logo layers */
+.hero,
+.hero-bg-logo,
+.main-bg-logo,
+.header-logo-bg,
+.header-logo-panel {
+    display: none !important;
+}
+/* Nuke their pseudo-elements too, just in case */
+.hero-bg-logo::before,
+.main-bg-logo::before {
+    content: none !important;
+    background-image: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* Extra safety: keep header tiny and prevent unexpected growth */
+.site-header {
+    min-height: auto !important;
+    height: auto !important;
+    overflow: hidden !important;
+}
+
+/* Ensure only the small brand logo is visible in header */
+.site-header img:not(.site-logo) {
+    display: none !important;
+}
+
+/* Final kill-switch for any unexpected header backgrounds */
+.site-header,
+.site-header::before,
+.site-header::after,
+.site-header *::before,
+.site-header *::after {
+    background-image: none !important;
+}
+
+/* Constrain any header images no matter the class */
+.site-header img {
+    max-height: 24px !important;
+    width: auto !important;
     height: auto !important;
 }
 
