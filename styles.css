@@ -2574,6 +2574,14 @@ body.print-all .toolbar {
     width: 100%;
 }
 
+/* Force exact horizontal centering relative to the page viewport */
+.site-header .brand-block {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: none;
+}
+
 /* Ensure the anchor wrapping the logo doesn't stretch and remains centered */
 .brand-logo {
     display: inline-block;
