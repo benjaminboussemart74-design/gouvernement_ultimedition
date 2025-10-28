@@ -924,6 +924,7 @@ const printMinisterSheet = async (minister) => {
         fragment.appendChild(collabSection);
     }
 
+<<<<<<< Updated upstream
     if (allMinisters.length) {
         const governmentSection = createElement("section", "print-government-section");
         governmentSection.appendChild(
@@ -1016,9 +1017,31 @@ const printMinisterSheet = async (minister) => {
     );
     fragment.appendChild(footer);
 
-    printSheet.appendChild(fragment);
+    // --- print footer / contact CTA (discret) ---
+    try {
+        const printFooter = createElement("footer", "print-sheet-footer");
+        const logo = document.createElement("img");
+        // prefer provided SVG and fallback to previously bundled SVG
+        logo.src = "assets/LogoRP_Bloc logo RP bleu.svg";
+        logo.alt = "Logo RumeurPublique";
+        logo.onerror = function () {
+            this.onerror = null;
+            this.src = "assets/LogoRP_Bloc_logo_RP_bleu.svg";
+        };
+        logo.className = "print-footer-logo";
+        const text = createElement(
+            "p",
+            "print-footer-text",
+            "Vous souhaitez rentrer en contact avec un ministre et ses équipes ? Contactez nos équipes pour définir le plan d'influence qui s'adaptera à votre entreprise."
+        );
+        printFooter.appendChild(logo);
+        printFooter.appendChild(text);
+        fragment.appendChild(printFooter);
+    } catch (e) {
+        console.warn("[onepage] impossible d'ajouter le footer d'impression :", e);
+    }
 
-    document.body.appendChild(printSheet);
+    printSheet.appendChild(fragment);
     document.body.classList.add("print-single");
 
     const cleanup = () => {

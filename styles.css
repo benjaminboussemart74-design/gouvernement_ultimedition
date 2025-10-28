@@ -398,6 +398,52 @@ main > * { position: relative; z-index: 2; }
 .header-suggestion:last-child { border-bottom: none; }
 .header-suggestion .label { font-weight: 600; color: var(--color-encre); }
 .header-suggestion .meta { font-size: 0.85rem; color: var(--color-sesame); }
+
+/* ===== Modal / Print footer CTA (discreet) ===== */
+.modal-footer-cta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem 0.25rem;
+    color: rgba(17,23,39,0.72);
+}
+.modal-footer-cta .modal-footer-logo {
+    display: block;
+    width: 120px;
+    max-width: 40vw;
+    height: auto;
+    opacity: 0.92;
+    filter: grayscale(0.02) saturate(1.05);
+    margin: 0 auto 0.25rem;
+}
+.modal-footer-text {
+    font-size: 0.85rem;
+    color: rgba(62,62,61,0.86);
+    max-width: 60ch;
+    line-height: 1.2;
+}
+
+/* Print-sheet footer */
+.print-sheet-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed rgba(0,0,0,0.08);
+}
+.print-footer-logo { width: 140px; max-width: 36vw; height: auto; opacity: 0.95; }
+.print-footer-text { font-size: 0.82rem; color: rgba(0,0,0,0.7); max-width: 58ch; text-align: center; }
+
+@media print {
+    .modal-footer-cta { display: none; }
+    .print-sheet-footer { page-break-inside: avoid; }
+}
 .header-suggestion[aria-selected="true"], .header-suggestion:hover { background: rgba(100,215,205,0.06); }
 
 /* Avatar in suggestion */
