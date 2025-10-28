@@ -1,0 +1,6 @@
+# macOS system files
+.DS_Store
+
+# Node / editor folders (safe defaults)
+node_modules/
+.vscode/
