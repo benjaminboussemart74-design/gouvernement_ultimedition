@@ -1019,8 +1019,8 @@ const printMinisterSheet = async (minister) => {
     try {
         const printFooter = createElement("footer", "print-sheet-footer");
         const logo = document.createElement("img");
-        // prefer provided SVG and fallback to previously bundled SVG
-        logo.src = "assets/LogoRP_Bloc logo RP bleu.svg";
+    // prefer provided SVG (normalized filename) and fallback to alternate
+    logo.src = "assets/LogoRP_Bloc_logo_RP_bleu.svg";
         logo.alt = "Logo RumeurPublique";
         logo.onerror = function () {
             this.onerror = null;
