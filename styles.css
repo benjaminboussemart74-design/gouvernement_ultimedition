@@ -2347,6 +2347,118 @@ body.print-all .toolbar {
     color: var(--color-sesame);
 }
 
+.modal-module {
+    margin-top: 2rem;
+}
+
+.modal-module-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-panthere);
+}
+
+.modal-module--career {
+    background: #fff;
+    border-radius: var(--radius-base);
+    border: 1px solid rgba(17, 23, 39, 0.08);
+    padding: 1.6rem 1.5rem 1.4rem;
+    box-shadow: 0 12px 30px rgba(39, 8, 59, 0.08);
+}
+
+.modal-career-list {
+    list-style: none;
+    margin: 1.2rem 0 0;
+    padding: 0;
+    position: relative;
+}
+
+.modal-career-item {
+    position: relative;
+    padding-left: 2.75rem;
+    margin: 0 0 1.4rem;
+    --career-color: var(--accent-secondary);
+    --career-line-color: rgba(105, 135, 255, 0.2);
+    --career-shadow-color: rgba(105, 135, 255, 0.12);
+}
+
+.modal-career-item:last-child {
+    margin-bottom: 0;
+}
+
+.modal-career-item::before {
+    content: "";
+    position: absolute;
+    left: 0.7rem;
+    top: 0.35rem;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--career-color);
+    box-shadow: 0 0 0 4px var(--career-shadow-color);
+}
+
+.modal-career-item::after {
+    content: "";
+    position: absolute;
+    left: 1.05rem;
+    top: 1.4rem;
+    width: 2px;
+    height: calc(100% + 0.6rem);
+    background: var(--career-line-color);
+}
+
+.modal-career-item:last-child::after {
+    display: none;
+}
+
+.modal-career-period {
+    display: block;
+    font-weight: 600;
+    color: var(--color-panthere);
+    margin-bottom: 0.2rem;
+}
+
+.modal-career-title {
+    display: block;
+    font-weight: 600;
+    color: var(--color-panthere);
+    margin-bottom: 0.35rem;
+}
+
+.modal-career-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+}
+
+.modal-career-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.25rem 0.55rem;
+    border-radius: 999px;
+    background: var(--career-shadow-color);
+    color: var(--career-color);
+    text-transform: capitalize;
+}
+
+.modal-career-location {
+    font-size: 0.85rem;
+    color: var(--color-sesame);
+}
+
+.modal-career-description {
+    display: block;
+    color: var(--color-poivre);
+    line-height: 1.45;
+}
+
 @media (max-width: 900px) {
     .brand-block {
         flex-direction: column;
