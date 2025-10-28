@@ -206,9 +206,11 @@
                             </div>
                         </dl>
                     </div>
-                    <section class="modal-module modal-module--career" hidden>
-                        <h4 class="modal-module-title">Carrière</h4>
-                        <ul class="modal-career-list" id="modal-career-list"></ul>
+                    <section class="modal-module modal-module--career" hidden aria-labelledby="modal-career-title">
+                        <h4 class="modal-module-title" id="modal-career-title">Carrière</h4>
+                        <div class="modal-career-timeline" role="region" aria-labelledby="modal-career-title">
+                            <div class="timeline" id="modal-career-list" role="list"></div>
+                        </div>
                     </section>
                     <div class="modal-module modal-module--export">
                         <button id="export-minister-pdf" class="modal-export" type="button">Exporter cette fiche</button>
