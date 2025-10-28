@@ -78,6 +78,33 @@
     letter-spacing: 0.02em;
 }
 
+/* Havelock title for main header */
+.havelock-title {
+    font-family: 'HavelockInlineXO', 'XO Pretty Havelock', 'Space Grotesk', system-ui, -apple-system, sans-serif;
+    font-size: clamp(2.2rem, 4vw, 3.6rem);
+    line-height: 1;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    /* gradient text */
+    background: linear-gradient(90deg, #0D6EAF 0%, #64D7CD 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+    padding: 0 0.08rem;
+    margin: 0;
+}
+.havelock-title::after {
+    content: "";
+    display: block;
+    width: min(220px, 56%);
+    height: 6px;
+    margin-top: 0.45rem;
+    border-radius: 6px;
+    background: linear-gradient(90deg, rgba(13,110,175,0.95), rgba(100,215,205,0.9));
+    opacity: 0.95;
+}
+
 body {
     margin: 0;
     min-height: 100vh;
