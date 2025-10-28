@@ -175,6 +175,9 @@ const modalElements = {
     description: document.getElementById("modal-description"),
     mission: document.getElementById("modal-mission"),
 };
+const modalDelegatesContainer = document.getElementById("modal-delegates-container");
+const modalDelegatesTitle = document.getElementById("modal-delegates-title");
+const modalDelegatesList = document.getElementById("modal-delegates");
 
 const initializeAdvancedSearchToggle = () => {
     if (!advancedToggleButton || !advancedSearchPanel) return null;
@@ -1919,6 +1922,96 @@ const openModal = (minister) => {
         if (missionWrapper) missionWrapper.hidden = true;
     }
 
+    if (modalDelegatesList) {
+        modalDelegatesList.replaceChildren();
+        const delegates = Array.isArray(minister?.delegates)
+            ? minister.delegates.filter((entry) => entry && (entry.name || entry.portfolio || entry.role))
+            : [];
+
+        if (delegates.length > 0) {
+            delegates.forEach((delegate) => {
+                const entry = document.createElement("li");
+                entry.className = "modal-delegate-entry";
+
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "modal-delegate-item";
+                button.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    openModal(delegate);
+                });
+
+                const info = document.createElement("div");
+                info.className = "modal-delegate-info";
+
+                const name = document.createElement("span");
+                name.className = "modal-delegate-name";
+                name.textContent = delegate.name ?? "Ministre délégué";
+                info.appendChild(name);
+
+                let portfolioValue = delegate.portfolio ?? "";
+                if (!portfolioValue && Array.isArray(delegate.ministries)) {
+                    const labels = delegate.ministries
+                        .map((entry) => entry?.label)
+                        .filter((label) => Boolean(label && label.trim()));
+                    if (labels.length) {
+                        portfolioValue = labels.join(" • ");
+                    }
+                }
+                if (!portfolioValue && delegate.title) {
+                    portfolioValue = delegate.title;
+                }
+                if (!portfolioValue && delegate.function) {
+                    portfolioValue = delegate.function;
+                }
+                if (!portfolioValue && delegate.role) {
+                    portfolioValue = formatRole(delegate.role);
+                }
+
+                if (portfolioValue) {
+                    const portfolio = document.createElement("span");
+                    portfolio.className = "modal-delegate-portfolio";
+                    portfolio.textContent = portfolioValue;
+                    info.appendChild(portfolio);
+                }
+
+                button.appendChild(info);
+
+                const delegateParty = delegate.party == null ? "" : String(delegate.party).trim();
+                const partyBadge = createPartyBadge(delegateParty);
+                if (partyBadge) {
+                    partyBadge.classList.add("modal-delegate-badge");
+                    button.appendChild(partyBadge);
+                }
+
+                entry.appendChild(button);
+                modalDelegatesList.appendChild(entry);
+            });
+
+            modalDelegatesList.hidden = false;
+            modalDelegatesList.removeAttribute("hidden");
+            if (modalDelegatesContainer) {
+                modalDelegatesContainer.hidden = false;
+                modalDelegatesContainer.removeAttribute("hidden");
+            }
+            if (modalDelegatesTitle) {
+                modalDelegatesTitle.hidden = false;
+                modalDelegatesTitle.removeAttribute("hidden");
+            }
+        } else {
+            modalDelegatesList.hidden = true;
+            modalDelegatesList.setAttribute("hidden", "");
+            if (modalDelegatesContainer) {
+                modalDelegatesContainer.hidden = true;
+                modalDelegatesContainer.setAttribute("hidden", "");
+            }
+            if (modalDelegatesTitle) {
+                modalDelegatesTitle.hidden = true;
+                modalDelegatesTitle.setAttribute("hidden", "");
+            }
+        }
+    }
+
     if (modalBody) {
         const oldCollabSection = modalBody.querySelector(".modal-collaborators");
         if (oldCollabSection) oldCollabSection.remove();
@@ -1958,12 +2051,14 @@ const openModal = (minister) => {
     }
 
     modal.hidden = false;
+    modal.removeAttribute("hidden");
     document.body.style.overflow = "hidden";
 };
 
 const closeModal = () => {
     if (!modal) return;
     modal.hidden = true;
+    modal.setAttribute("hidden", "");
     modal.classList.remove("modal--cabinet-active", "modal--cabinet-mode");
     const modalBody = modal.querySelector('.modal-body');
     if (modalBody) {

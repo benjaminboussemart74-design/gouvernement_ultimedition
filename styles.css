@@ -2207,8 +2207,9 @@ body.print-all .toolbar {
 .modal-content {
     position: relative;
     z-index: 1;
-    width: min(680px, 96vw);
-    max-height: min(92vh, 960px);
+    width: clamp(320px, 92vw, 1400px);
+    min-height: clamp(520px, 85vh, 1200px);
+    max-height: min(96vh, 1500px);
     background: var(--color-perle);
     border-radius: var(--radius-base);
     box-shadow: 0 40px 80px rgba(17, 23, 39, 0.28);
@@ -2221,8 +2222,8 @@ body.print-all .toolbar {
 /* Cabinet-only view: make modal wider than the regular detail */
 .modal.modal--cabinet-mode .modal-content {
     /* increase maximum width for cabinet view so the lanes and cards have more room */
-    width: min(1220px, 96vw);
-    max-height: min(96vh, 1200px);
+    width: clamp(480px, 96vw, 1600px);
+    max-height: min(97vh, 1700px);
 }
 
 /* Cabinet overlay container sits above the detail body without altering it */
@@ -2295,8 +2296,31 @@ body.print-all .toolbar {
 .modal-header {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 1.25rem;
-    align-items: center;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.modal-identity {
+    display: grid;
+    gap: 0.65rem;
+    align-content: start;
+}
+
+.modal-identity .modal-delegates-section {
+    margin-top: 0.2rem;
+}
+
+.modal-delegates-section {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.modal-section-title {
+    margin: 0;
+    font-size: 0.92rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-sesame);
 }
 
 .modal-photo {
@@ -2345,6 +2369,73 @@ body.print-all .toolbar {
 .modal-meta dd {
     margin: 0;
     color: var(--color-sesame);
+}
+
+.modal-delegates {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 1.1rem 1.3rem;
+    list-style: none;
+    background: var(--color-guimauve);
+    border-radius: var(--radius-base);
+    border: 1px solid rgba(62, 62, 61, 0.1);
+}
+
+.modal-delegate-entry {
+    margin: 0;
+    padding: 0;
+}
+
+.modal-delegate-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: calc(var(--radius-base) - 4px);
+    background: rgba(255, 255, 255, 0.65);
+    border: 1px solid transparent;
+    box-shadow: 0 2px 4px rgba(17, 23, 39, 0.08);
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    font: inherit;
+}
+
+.modal-delegate-item:hover,
+.modal-delegate-item:focus-visible {
+    background: #fff;
+    transform: translateY(-1px);
+    border-color: rgba(62, 62, 61, 0.22);
+    box-shadow: 0 6px 14px rgba(17, 23, 39, 0.16);
+    outline: none;
+}
+
+.modal-delegate-item:focus-visible {
+    box-shadow: 0 0 0 3px rgba(105, 135, 255, 0.35), 0 6px 14px rgba(17, 23, 39, 0.16);
+}
+
+.modal-delegate-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.modal-delegate-name {
+    font-weight: 600;
+    color: var(--color-poivre);
+}
+
+.modal-delegate-portfolio {
+    color: var(--color-sesame);
+    font-size: 0.95rem;
+}
+
+.modal-delegate-badge {
+    margin-left: auto;
+    align-self: flex-start;
 }
 
 @media (max-width: 900px) {
