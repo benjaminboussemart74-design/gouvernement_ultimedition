@@ -761,7 +761,7 @@ const fetchCollaboratorsForMinister = async (ministerId) => {
             const { data, error } = await client
                 .from("persons")
                 .select(
-                    "id, superior_id, full_name, photo_url, cabinet_role, collab_grade, email, cabinet_order"
+                    "id, superior_id, full_name, photo_url, cabinet_role, job_title, collab_grade, email, cabinet_order"
                 )
                 .eq("role", "collaborator")
                 .eq("superior_id", parentId)
@@ -1534,7 +1534,7 @@ const EXECUTIVE_POLE_ACCENTS = [
     "executive-pole--accent-cyan"
 ];
 const EXECUTIVE_PM_SUMMARY =
-    "Les équipes stratégiques de Matignon sont présentées par directions et par pôles pour visualiser rapidement la chaîne hiérarchique.";
+    "Les équipes stratégiques de Matignon sont présentées par directions et par pôles.";
 
 const isExecutiveLeader = (minister) => {
     if (!minister) return false;
@@ -1726,7 +1726,16 @@ const buildExecutiveCabinetSection = (minister, collaborators, gradeLookup, opti
             poleArticle.className = "executive-pole";
             poleArticle.classList.add(EXECUTIVE_POLE_ACCENTS[index % EXECUTIVE_POLE_ACCENTS.length]);
 
-            let poleName = head.jobTitle || head.cabinetRole || head.name;
+            // Prefer `jobTitle` (Supabase `job_title`) when available, then `job_titles` array, then cabinetRole, then name
+            let poleNameSource = head.jobTitle ?? head.job_titles ?? head.cabinetRole ?? head.name;
+            let poleName = "";
+            if (Array.isArray(poleNameSource)) {
+                // join multiple job titles with a separator
+                poleName = poleNameSource.filter(Boolean).join(" • ");
+            } else {
+                poleName = poleNameSource || "";
+            }
+
             if (poleName && !/^p[oô]le\b/i.test(poleName)) {
                 poleName = `Pôle ${poleName}`;
             }
