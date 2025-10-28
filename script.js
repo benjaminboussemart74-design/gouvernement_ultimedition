@@ -452,7 +452,7 @@ function normalise(value) {
 const normalizeCareerSteps = (arr) => {
     const toDate = (v) => {
         if (!v) return null;
-        // Accept ISO date strings or YYYY-MM
+        // Accept ISO date strings or YYYY
         const d = new Date(v);
         return isNaN(d.getTime()) ? null : d;
     };
@@ -479,6 +479,41 @@ const normalizeCareerSteps = (arr) => {
         return bTime - aTime; // desc
     });
     return items;
+};
+
+// Format one career period as a compact label (used in the CSS timeline)
+const formatCareerPeriod = (it) => {
+    const sd = it.startRaw || "";
+    const ed = it.endRaw || "";
+    if (sd) return ed ? `${sd} → ${ed}` : `${sd} → présent`;
+    return ed ? `jusqu'à ${ed}` : "";
+};
+
+// Render a list of normalized career entries into a UL using timeline styles
+const renderCareerTimeline = (ul, entries) => {
+    if (!ul) return;
+    ul.innerHTML = "";
+    (Array.isArray(entries) ? entries : []).forEach((it) => {
+        const li = document.createElement('li');
+        const period = formatCareerPeriod(it);
+        if (period) {
+            const p = document.createElement('span');
+            p.className = 'career-period';
+            p.textContent = period;
+            li.appendChild(p);
+        }
+        const t = document.createElement('span');
+        t.className = 'career-title';
+        t.textContent = it.title || '';
+        li.appendChild(t);
+        if (it.org) {
+            const o = document.createElement('span');
+            o.className = 'career-org';
+            o.textContent = ` — ${it.org}`;
+            li.appendChild(o);
+        }
+        ul.appendChild(li);
+    });
 };
 
 const ensureSupabaseClient = () => {
@@ -2013,20 +2048,20 @@ const openModal = (minister) => {
         if (missionWrapper) missionWrapper.hidden = true;
     }
 
+    // Apply accent color to the career timeline (if available)
+    if (modalCareerSection) {
+        if (minister.accentColor) {
+            modalCareerSection.style.setProperty('--timeline-color', minister.accentColor);
+        } else {
+            modalCareerSection.style.removeProperty('--timeline-color');
+        }
+    }
+
     // Career timeline (best-effort)
     if (modalCareerSection && modalCareerList) {
-        modalCareerList.innerHTML = "";
         let careerItems = Array.isArray(minister.career) ? minister.career : [];
         if (careerItems.length) {
-            careerItems.forEach((it) => {
-                const sd = it.startRaw || "";
-                const ed = it.endRaw || "";
-                const period = sd ? (ed ? `${sd} → ${ed}` : `${sd} → présent`) : (ed ? `jusqu'à ${ed}` : "");
-                const parts = [period, it.title, it.org].filter(Boolean);
-                const li = document.createElement('li');
-                li.textContent = parts.join(' — ');
-                modalCareerList.appendChild(li);
-            });
+            renderCareerTimeline(modalCareerList, careerItems);
             modalCareerSection.hidden = false;
         } else {
             // Try lazy-load via REST if nested relation wasn't present
@@ -2040,15 +2075,7 @@ const openModal = (minister) => {
                     .then(({ data, error }) => {
                         if (!error && Array.isArray(data) && data.length) {
                             const normalized = normalizeCareerSteps(data);
-                            normalized.forEach((it) => {
-                                const sd = it.startRaw || "";
-                                const ed = it.endRaw || "";
-                                const period = sd ? (ed ? `${sd} → ${ed}` : `${sd} → présent`) : (ed ? `jusqu'à ${ed}` : "");
-                                const parts = [period, it.title, it.org].filter(Boolean);
-                                const li = document.createElement('li');
-                                li.textContent = parts.join(' — ');
-                                modalCareerList.appendChild(li);
-                            });
+                            renderCareerTimeline(modalCareerList, normalized);
                             modalCareerSection.hidden = false;
                             // Also store on the minister object for subsequent opens
                             minister.career = normalized;

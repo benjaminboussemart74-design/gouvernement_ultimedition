@@ -2396,6 +2396,62 @@ body.print-all .toolbar {
     grid-column: 1 / -1;
 }
 
+.modal-module--career .modal-module-title {
+    margin: 0 0 0.5rem 0;
+}
+
+.modal-career-list {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 1.25rem;
+    position: relative;
+}
+
+.modal-career-list::before {
+    content: "";
+    position: absolute;
+    left: 0.45rem;
+    top: 0.25rem;
+    bottom: 0.25rem;
+    width: 2px;
+    background: var(--timeline-color, rgba(62, 62, 61, 0.18));
+}
+
+.modal-career-list li {
+    position: relative;
+    padding: 0.6rem 0 0.6rem 0.5rem;
+}
+
+.modal-career-list li::before {
+    content: "";
+    position: absolute;
+    left: -0.65rem;
+    top: 1.05rem;
+    width: 10px;
+    height: 10px;
+    background: var(--timeline-color, var(--color-turquoise));
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(62, 62, 61, 0.25);
+}
+
+.career-period {
+    display: inline-block;
+    min-width: 9.5rem;
+    color: var(--color-sesame);
+    font-variant-numeric: tabular-nums;
+}
+
+.career-title {
+    font-weight: 600;
+    color: var(--color-poivre);
+    margin-left: 0.35rem;
+}
+
+.career-org {
+    color: var(--color-sesame);
+}
+
 .modal-module--mission {
     gap: 1.1rem;
 }
