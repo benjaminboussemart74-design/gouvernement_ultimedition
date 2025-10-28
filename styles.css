@@ -1420,18 +1420,23 @@ body.print-all .toolbar {
     box-shadow: var(--shadow-soft);
 }
 .modal-body .modal-collaborators-toggle {
-    justify-self: start;
-    align-self: start;
-    margin-top: -0.25rem;
-    color: var(--color-encre);
-    background: rgba(17, 23, 39, 0.06);
-    border: 1px solid rgba(17, 23, 39, 0.12);
+    justify-self: stretch;
+    width: 100%;
+    margin-top: 1.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: var(--shadow-soft);
 }
 
 .modal-body .modal-collaborators-toggle:hover,
 .modal-body .modal-collaborators-toggle:focus {
-    color: var(--color-encre);
-    background: rgba(17, 23, 39, 0.12);
+    box-shadow: var(--shadow-hover);
+}
+
+.modal-body .modal-collaborators-toggle:focus-visible {
+    outline: 3px solid var(--accent-secondary);
+    outline-offset: 2px;
 }
 
 .modal-collaborators-toggle[disabled] {
