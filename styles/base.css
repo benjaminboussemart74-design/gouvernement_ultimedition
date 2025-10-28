@@ -1,0 +1,44 @@
+@import url("../styles.css");
+
+:root {
+  --org-surface: #ffffff;
+  --org-muted: var(--color-sesame);
+  --org-ink: var(--color-encre);
+  --org-border: rgba(17, 23, 39, 0.08);
+  --org-shadow-soft: 0 14px 38px rgba(17, 23, 39, 0.08);
+  --org-shadow-card: 0 12px 28px rgba(17, 23, 39, 0.06);
+  --org-radius: 14px;
+  --org-radius-small: 10px;
+  --org-gradient-hero: linear-gradient(160deg, rgba(75, 37, 121, 0.75), rgba(209, 0, 123, 0.45));
+}
+
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-weight: 400;
+  color: var(--org-ink);
+  background: radial-gradient(circle at 14% 12%, rgba(100, 215, 205, 0.35), transparent 62%),
+              radial-gradient(circle at 84% 6%, rgba(105, 135, 255, 0.35), transparent 60%),
+              linear-gradient(180deg, rgba(242, 242, 242, 0.96) 0%, rgba(236, 234, 237, 0.94) 18%, rgba(242, 242, 242, 0.9) 100%);
+  background-attachment: fixed;
+}
+
+main {
+  display: block;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+button {
+  font-family: inherit;
+}
