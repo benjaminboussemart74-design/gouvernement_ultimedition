@@ -1547,101 +1547,6 @@ body.print-all .toolbar {
     gap: 1.25rem;
 }
 
-/* Scoped CodePen-like timeline inside the career module */
-.modal-module--career .timeline {
-    /* No forced background to keep modal look */
-    padding: 10px 5px;
-}
-
-.modal-module--career .timeline ul {
-    list-style: none;
-    margin: 0;
-    padding: 10px 5px 10px 20px;
-    border-left: 2px solid var(--timeline-color, rgba(62, 62, 61, 0.18));
-}
-
-.modal-module--career .timeline li[role="listitem"] {
-    padding: 14px 16px;
-    position: relative;
-    cursor: default;
-    transition: background-color .25s ease;
-}
-
-.modal-module--career .timeline li[role="listitem"]:before {
-    position: absolute;
-    content: '';
-    width: 10px;
-    height: 10px;
-    background-color: var(--timeline-color, var(--color-turquoise));
-    border-radius: 50%;
-    left: -16px;
-    top: 22px;
-    transition: box-shadow .25s ease, background-color .25s ease;
-    border: 2px solid #fff;
-    box-shadow: 0 0 0 1px rgba(62, 62, 61, 0.25);
-}
-
-.modal-module--career .timeline li[role="listitem"]:hover {
-    background-color: rgba(17, 23, 39, 0.04);
-}
-
-.modal-module--career .timeline li[role="listitem"]:hover:before {
-    box-shadow: 0 0 0 3px rgba(17, 23, 39, 0.10);
-}
-
-.modal-module--career .timeline .time-badge {
-    display: inline-block;
-    background-color: color-mix(in oklab, var(--timeline-color, var(--color-turquoise)) 24%, white);
-    border-radius: 999px;
-    padding: 2px 8px;
-    font-size: 0.875rem;
-    line-height: 1.2;
-    color: var(--color-encre);
-}
-
-.modal-module--career .timeline .content h3 {
-    color: var(--color-poivre);
-    font-size: 1rem;
-    margin: 6px 0 0 0;
-}
-
-.modal-module--career .timeline .content p {
-    margin: 6px 0 0 0;
-    color: var(--color-sesame);
-    font-size: 0.95rem;
-}
-
-/* Legend for timeline colors */
-.modal-module--career .timeline-legend {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-top: 0.75rem;
-}
-
-.modal-module--career .timeline-legend__item {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 999px;
-    background: rgba(236, 234, 237, 0.45);
-}
-
-.modal-module--career .timeline-legend__dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 1px solid rgba(62, 62, 61, 0.25);
-    display: inline-block;
-}
-
-.modal-module--career .timeline-legend__label {
-    font-size: 0.9rem;
-    color: var(--color-poivre);
-}
-
 .cabinet-panel-header {
     display: grid;
     gap: 0.5rem;
@@ -2497,57 +2402,71 @@ body.print-all .toolbar {
 }
 
 .modal-module--career .modal-module-title {
-    margin: 0 0 0.75rem 0;
+    margin: 0;
 }
 
 .modal-career-timeline {
-    position: relative;
-    padding: 0.25rem 0 0.75rem 0;
+    display: grid;
+    gap: 1.25rem;
 }
 
-.modal-career-timeline .timeline {
+.modal-career-timeline__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.modal-career-timeline__body {
     position: relative;
+    padding-block: 0.5rem;
+}
+
+.modal-career-timeline__track {
+    position: absolute;
+    inset-block: 0.75rem;
+    inset-inline-start: 1.1rem;
+    width: 2px;
+    background: var(--timeline-track-color);
+    border-radius: 999px;
+    pointer-events: none;
+}
+
+.modal-career-timeline__list {
     display: grid;
-    gap: 1.75rem;
+    gap: 1.5rem;
     margin: 0;
     padding: 0;
 }
 
-.modal-career-timeline .timeline::before {
-    content: "";
-    position: absolute;
-    inset-block: 0.35rem 0.35rem;
-    inset-inline-start: 1rem;
-    width: 2px;
-    background: var(--timeline-track-color);
-    border-radius: 999px;
-}
-
-.modal-career-timeline .timeline__item {
+.modal-career-timeline__entry {
     position: relative;
-    padding-inline-start: 2.75rem;
     display: grid;
     gap: 0.75rem;
+    padding-inline-start: 2.75rem;
     list-style: none;
 }
 
-.modal-career-timeline .timeline__item:last-child {
-    padding-block-end: 0;
+.modal-career-timeline__entry--current .modal-career-timeline__card {
+    border-color: color-mix(in oklab, var(--timeline-entry-color, var(--timeline-default-color)) 45%, rgba(62, 62, 61, 0.12));
+    box-shadow: 0 16px 32px rgba(17, 23, 39, 0.12);
 }
 
-.modal-career-timeline .timeline__point {
+.modal-career-timeline__point {
     position: absolute;
-    inset-block-start: 0.5rem;
-    inset-inline-start: 0.65rem;
+    inset-inline-start: 0.7rem;
+    inset-block-start: 1rem;
     width: 0.85rem;
     height: 0.85rem;
     border-radius: 50%;
-    background: var(--timeline-item-color, var(--timeline-default-color));
+    background: var(--timeline-entry-color, var(--timeline-default-color));
     border: 2px solid #fff;
     box-shadow: 0 0 0 2px rgba(62, 62, 61, 0.25);
+    transition: box-shadow 0.25s ease;
 }
 
-.modal-career-timeline .timeline__content {
+.modal-career-timeline__card {
     background: rgba(236, 234, 237, 0.65);
     border-radius: 18px;
     border: 1px solid rgba(62, 62, 61, 0.12);
@@ -2555,9 +2474,22 @@ body.print-all .toolbar {
     padding: 1rem 1.25rem;
     display: grid;
     gap: 0.5rem;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-.modal-career-timeline .timeline__header {
+.modal-career-timeline__entry:hover .modal-career-timeline__card,
+.modal-career-timeline__entry:focus-within .modal-career-timeline__card {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(17, 23, 39, 0.12);
+    border-color: color-mix(in oklab, var(--timeline-entry-color, var(--timeline-default-color)) 35%, rgba(62, 62, 61, 0.12));
+}
+
+.modal-career-timeline__entry:hover .modal-career-timeline__point,
+.modal-career-timeline__entry:focus-within .modal-career-timeline__point {
+    box-shadow: 0 0 0 3px rgba(17, 23, 39, 0.1);
+}
+
+.modal-career-timeline__meta {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -2565,35 +2497,35 @@ body.print-all .toolbar {
     flex-wrap: wrap;
 }
 
-.modal-career-timeline .timeline__period {
+.modal-career-timeline__period {
     margin: 0;
     color: var(--color-sesame);
     font-size: 0.95rem;
     font-variant-numeric: tabular-nums;
 }
 
-.modal-career-timeline .timeline__title {
+.modal-career-timeline__title {
     margin: 0;
     color: var(--color-poivre);
     font-size: 1.05rem;
     font-weight: 600;
 }
 
-.modal-career-timeline .timeline__organisation {
+.modal-career-timeline__organisation {
     margin: 0;
     color: var(--color-sesame);
     font-size: 0.95rem;
 }
 
-.modal-career-timeline .timeline__description {
+.modal-career-timeline__description {
     margin: 0;
     color: var(--color-poivre);
     line-height: 1.5;
     font-size: 0.95rem;
 }
 
-.modal-career-timeline .timeline__category {
-    --badge-color: var(--timeline-item-color, var(--timeline-default-color));
+.modal-career-timeline__category {
+    --badge-color: var(--timeline-entry-color, var(--timeline-default-color));
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -2608,7 +2540,7 @@ body.print-all .toolbar {
     background-color: rgba(255, 255, 255, 0.92);
 }
 
-.modal-career-timeline .timeline__category::before {
+.modal-career-timeline__category::before {
     content: "";
     width: 0.45rem;
     height: 0.45rem;
@@ -2617,45 +2549,76 @@ body.print-all .toolbar {
     box-shadow: 0 0 0 1px rgba(62, 62, 61, 0.1);
 }
 
+.modal-career-timeline .timeline-legend {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 0;
+}
+
+.modal-career-timeline .timeline-legend__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(236, 234, 237, 0.45);
+}
+
+.modal-career-timeline .timeline-legend__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(62, 62, 61, 0.25);
+    display: inline-block;
+    background: var(--legend-color, var(--color-turquoise));
+}
+
+.modal-career-timeline .timeline-legend__label {
+    font-size: 0.9rem;
+    color: var(--color-poivre);
+}
+
 @media (min-width: 768px) {
-    .modal-career-timeline {
+    .modal-career-timeline__body {
         padding-inline: 1.5rem;
     }
 
-    .modal-career-timeline .timeline {
+    .modal-career-timeline__track {
+        inset-inline-start: calc(50% - 1px);
+    }
+
+    .modal-career-timeline__list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 2.25rem 2rem;
     }
 
-    .modal-career-timeline .timeline::before {
-        inset-inline-start: calc(50% - 1px);
-    }
-
-    .modal-career-timeline .timeline__item {
+    .modal-career-timeline__entry {
         padding-inline: 2.75rem;
     }
 
-    .modal-career-timeline .timeline__item--left {
+    .modal-career-timeline__entry--left {
         grid-column: 1;
-        justify-self: end;
+        justify-items: end;
         text-align: right;
     }
 
-    .modal-career-timeline .timeline__item--left .timeline__content {
+    .modal-career-timeline__entry--left .modal-career-timeline__card {
         text-align: left;
     }
 
-    .modal-career-timeline .timeline__item--left .timeline__point {
+    .modal-career-timeline__entry--left .modal-career-timeline__point {
         inset-inline-start: auto;
         inset-inline-end: -0.9rem;
     }
 
-    .modal-career-timeline .timeline__item--right {
+    .modal-career-timeline__entry--right {
         grid-column: 2;
-        justify-self: start;
+        justify-items: start;
     }
 
-    .modal-career-timeline .timeline__item--right .timeline__point {
+    .modal-career-timeline__entry--right .modal-career-timeline__point {
         inset-inline-start: -0.9rem;
     }
 }
