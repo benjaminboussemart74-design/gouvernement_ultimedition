@@ -139,7 +139,7 @@
             </div>
             <!-- Grille des ministres -->
             <div id="ministers-grid" class="ministers-grid" role="list" aria-live="polite"></div>
-            <p id="ministers-empty" class="empty-state" hidden>Ajoutez vos données dans <code>data/ministers.json</code> pour alimenter cette section.</p>
+            <p id="ministers-empty" class="empty-state" hidden>Les données Supabase ne sont pas disponibles pour le moment. Vérifiez votre configuration.</p>
         </section>
 
         
@@ -199,6 +199,10 @@
                         <dd id="modal-mission"></dd>
                     </div>
                 </dl>
+                <section class="modal-module modal-module--career" hidden>
+                    <h4 class="modal-module-title">Carrière</h4>
+                    <ul class="modal-career-list" id="modal-career-list"></ul>
+                </section>
                 <button id="export-minister-pdf" class="modal-export" type="button">Exporter cette fiche</button>
                 <!-- Disclaimer & contact prompt -->
                 <div class="modal-footer-cta" aria-hidden="true">

@@ -66,7 +66,25 @@ const MINISTER_ROLES = new Set([
 
 const DELEGATE_ROLES = new Set(["minister-delegate", "ministre-delegue", "secretary"]);
 const CORE_ROLES = new Set(["leader", "minister", "minister-state"]);
-const FALLBACK_DATA_URL = "data/ministers.json";
+const careerCache = new Map();
+
+const readGlobalString = (key, fallback) => {
+    if (typeof window !== "undefined" && window && typeof window[key] === "string") {
+        const trimmed = window[key].trim();
+        if (trimmed) {
+            return trimmed;
+        }
+    }
+    return fallback;
+};
+
+const SUPABASE_SOURCES = {
+    ministers: readGlobalString("SUPABASE_MINISTERS_TABLE", "persons"),
+    ministersView: readGlobalString("SUPABASE_MINISTERS_VIEW", "vw_ministernode"),
+    careers: readGlobalString("SUPABASE_CAREERS_TABLE", "person_careers"),
+    collaborators: readGlobalString("SUPABASE_COLLABORATORS_TABLE", "persons"),
+    ministries: readGlobalString("SUPABASE_MINISTRIES_TABLE", "ministries"),
+};
 
 const ensureImageSource = (value, fallback = "assets/placeholder-minister.svg") => {
     if (!value) return fallback;
@@ -75,6 +93,272 @@ const ensureImageSource = (value, fallback = "assets/placeholder-minister.svg") 
         return trimmed ? trimmed : fallback;
     }
     return value || fallback;
+};
+
+const CAREER_CATEGORY_LABELS = {
+    academic: "Formation",
+    professional: "Carrière professionnelle",
+    "civil-society": "Société civile",
+    political: "Carrière politique"
+};
+
+const CAREER_CATEGORY_COLORS = {
+    academic: "#4361ee",
+    professional: "#f97316",
+    "civil-society": "#10b981",
+    political: "#ec4899"
+};
+
+const CAREER_SELECT_COLUMNS = [
+    "id",
+    "title",
+    "organisation",
+    "description",
+    "location",
+    "category",
+    "category_color",
+    "start_date",
+    "end_date",
+    "ongoing",
+    "sort_index"
+];
+const CAREER_SELECT_QUERY = CAREER_SELECT_COLUMNS.join(",");
+
+const DEFAULT_CAREER_COLOR = "#475569";
+const CAREER_DATE_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
+    month: "long",
+    year: "numeric"
+});
+
+const capitalise = (value) => {
+    if (typeof value !== "string" || !value) return "";
+    return value.charAt(0).toUpperCase() + value.slice(1);
+};
+
+const normalizeHexColor = (value) => {
+    if (typeof value !== "string") return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(trimmed);
+    if (!match) return null;
+    if (trimmed.length === 4) {
+        return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`.toLowerCase();
+    }
+    return trimmed.toLowerCase();
+};
+
+const createTransparentColor = (hex, alpha = 0.2) => {
+    const normalized = normalizeHexColor(hex);
+    if (!normalized) return null;
+    const value = normalized.slice(1);
+    const r = parseInt(value.slice(0, 2), 16);
+    const g = parseInt(value.slice(2, 4), 16);
+    const b = parseInt(value.slice(4, 6), 16);
+    if ([r, g, b].some((component) => Number.isNaN(component))) {
+        return null;
+    }
+    const safeAlpha = Math.min(Math.max(Number(alpha) || 0, 0), 1);
+    return `rgba(${r}, ${g}, ${b}, ${safeAlpha.toFixed(3)})`;
+};
+
+const parseCareerDate = (value) => {
+    if (!value) return null;
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const parseCareerBoolean = (value, fallback = false) => {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") return value !== 0;
+    if (typeof value === "string") {
+        const lowered = value.trim().toLowerCase();
+        if (["true", "1", "oui", "yes"].includes(lowered)) return true;
+        if (["false", "0", "non", "no"].includes(lowered)) return false;
+    }
+    return fallback;
+};
+
+const formatCareerDate = (value) => {
+    const date = parseCareerDate(value);
+    if (!date) return "";
+    const formatted = CAREER_DATE_FORMATTER.format(date);
+    return capitalise(formatted);
+};
+
+const formatCareerPeriod = ({ startDate, endDate, ongoing, fallback }) => {
+    const startLabel = formatCareerDate(startDate);
+    const endLabel = formatCareerDate(endDate);
+    if (startLabel && (endLabel || ongoing)) {
+        const ending = ongoing ? "Aujourd'hui" : endLabel;
+        if (ending) return `${startLabel} — ${ending}`;
+        return startLabel;
+    }
+    if (startLabel) {
+        return ongoing ? `Depuis ${startLabel}` : startLabel;
+    }
+    if (endLabel) {
+        return endLabel;
+    }
+    return typeof fallback === "string" ? fallback.trim() : "";
+};
+
+const normalizeCareerSteps = (rawSteps) => {
+    if (!Array.isArray(rawSteps)) return [];
+
+    const steps = rawSteps
+        .map((entry, index) => {
+            if (!entry || typeof entry !== "object") return null;
+
+            const periodFallback = typeof entry.period === "string" ? entry.period.trim() : "";
+            const startDateRaw = entry.startDate ?? entry.start_date ?? null;
+            const endDateRaw = entry.endDate ?? entry.end_date ?? null;
+            const ongoing = parseCareerBoolean(entry.ongoing ?? entry.isCurrent, false);
+            const startDate = parseCareerDate(startDateRaw);
+            const endDate = parseCareerDate(endDateRaw);
+            const rawSortIndex = entry.sortIndex ?? entry.sort_index;
+            const parsedSortIndex = Number.parseInt(rawSortIndex, 10);
+            const sortIndex = Number.isFinite(parsedSortIndex) ? parsedSortIndex : 0;
+            const categoryRaw = typeof entry.category === "string"
+                ? entry.category.trim().toLowerCase()
+                : typeof entry.category === "number"
+                ? String(entry.category)
+                : typeof entry.type === "string"
+                ? entry.type.trim().toLowerCase()
+                : "";
+
+            const explicitColor = normalizeHexColor(entry.categoryColor ?? entry.category_color ?? entry.color);
+            const baseColor = explicitColor || CAREER_CATEGORY_COLORS[categoryRaw] || DEFAULT_CAREER_COLOR;
+            const lineColor = createTransparentColor(baseColor, 0.24) || "rgba(71, 85, 105, 0.24)";
+            const shadowColor = createTransparentColor(baseColor, 0.18) || "rgba(71, 85, 105, 0.18)";
+
+            const period = formatCareerPeriod({
+                startDate,
+                endDate,
+                ongoing,
+                fallback: periodFallback
+            });
+
+            const title = typeof entry.title === "string" ? entry.title.trim() : "";
+            const organisation = typeof entry.organisation === "string" ? entry.organisation.trim() : "";
+            const description = typeof entry.description === "string" ? entry.description.trim() : "";
+            const location = typeof entry.location === "string" ? entry.location.trim() : "";
+            const categoryLabel = typeof entry.categoryLabel === "string"
+                ? entry.categoryLabel.trim()
+                : CAREER_CATEGORY_LABELS[categoryRaw] || "";
+
+            if (!period && !title && !organisation && !description) {
+                return null;
+            }
+
+            return {
+                id: entry.id ?? null,
+                period,
+                startDate: startDate ? startDate.toISOString().slice(0, 10) : null,
+                endDate: endDate ? endDate.toISOString().slice(0, 10) : null,
+                ongoing,
+                title,
+                organisation,
+                description,
+                location,
+                category: categoryRaw || null,
+                categoryLabel,
+                categoryColor: baseColor,
+                categoryLineColor: lineColor,
+                categoryShadowColor: shadowColor,
+                sortIndex,
+                startDateMs: startDate ? startDate.getTime() : null,
+                originalIndex: index,
+            };
+        })
+        .filter(Boolean);
+
+    steps.sort((a, b) => {
+        const aMs = typeof a.startDateMs === "number" ? a.startDateMs : Number.NEGATIVE_INFINITY;
+        const bMs = typeof b.startDateMs === "number" ? b.startDateMs : Number.NEGATIVE_INFINITY;
+        if (aMs !== bMs) return bMs - aMs;
+        if (a.sortIndex !== b.sortIndex) return a.sortIndex - b.sortIndex;
+        if (a.originalIndex !== b.originalIndex) return a.originalIndex - b.originalIndex;
+        return (b.period || "").localeCompare(a.period || "");
+    });
+
+    return steps.map(({ startDateMs, originalIndex, ...rest }) => rest);
+};
+
+const createCareerTimelineFragment = (steps) => {
+    const fragment = document.createDocumentFragment();
+    steps.forEach((step) => {
+        if (!step || typeof step !== "object") return;
+
+        const item = document.createElement("li");
+        item.className = "modal-career-item";
+
+        if (step.categoryColor) {
+            item.style.setProperty("--career-color", step.categoryColor);
+        }
+        if (step.categoryLineColor) {
+            item.style.setProperty("--career-line-color", step.categoryLineColor);
+        }
+        if (step.categoryShadowColor) {
+            item.style.setProperty("--career-shadow-color", step.categoryShadowColor);
+        }
+
+        if (step.period) {
+            const periodEl = document.createElement("span");
+            periodEl.className = "modal-career-period";
+            periodEl.textContent = step.period;
+            item.appendChild(periodEl);
+        }
+
+        const headlineParts = [];
+        if (step.title) headlineParts.push(step.title);
+        if (step.organisation) headlineParts.push(step.organisation);
+        if (headlineParts.length) {
+            const headlineEl = document.createElement("span");
+            headlineEl.className = "modal-career-title";
+            headlineEl.textContent = headlineParts.join(" • ");
+            item.appendChild(headlineEl);
+        }
+
+        const metaRow = document.createElement("div");
+        metaRow.className = "modal-career-meta";
+
+        if (step.categoryLabel) {
+            const categoryEl = document.createElement("span");
+            categoryEl.className = "modal-career-category";
+            categoryEl.textContent = step.categoryLabel;
+            if (step.category) {
+                categoryEl.dataset.careerCategory = step.category;
+                item.dataset.careerCategory = step.category;
+            }
+            metaRow.appendChild(categoryEl);
+        }
+
+        if (step.location) {
+            const locationEl = document.createElement("span");
+            locationEl.className = "modal-career-location";
+            locationEl.textContent = step.location;
+            metaRow.appendChild(locationEl);
+        }
+
+        if (step.category && !item.dataset.careerCategory) {
+            item.dataset.careerCategory = step.category;
+        }
+
+        if (metaRow.childElementCount) {
+            item.appendChild(metaRow);
+        }
+
+        if (step.description) {
+            const descriptionEl = document.createElement("span");
+            descriptionEl.className = "modal-career-description";
+            descriptionEl.textContent = step.description;
+            item.appendChild(descriptionEl);
+        }
+
+        fragment.appendChild(item);
+    });
+
+    return fragment;
 };
 
 // Mapping des valeurs `party` (valeurs possibles depuis Supabase) vers
@@ -174,6 +458,8 @@ const modalElements = {
     portfolio: document.getElementById("modal-portfolio"),
     description: document.getElementById("modal-description"),
     mission: document.getElementById("modal-mission"),
+    careerSection: document.querySelector(".modal-module--career"),
+    careerList: document.getElementById("modal-career-list"),
 };
 
 const initializeAdvancedSearchToggle = () => {
@@ -432,6 +718,52 @@ const ensureSupabaseClient = () => {
         console.warn("[onepage] Impossible d'initialiser Supabase", error);
     }
     return null;
+};
+
+const fetchCareerTimeline = async (personId) => {
+    if (!personId) return [];
+
+    const cached = careerCache.get(personId);
+    if (cached) {
+        try {
+            return await cached;
+        } catch (error) {
+            careerCache.delete(personId);
+            throw error;
+        }
+    }
+
+    const client = ensureSupabaseClient();
+    if (!client) {
+        throw new Error("Client Supabase non initialisé");
+    }
+
+    const fetchPromise = (async () => {
+        const { data, error } = await client
+            .from(SUPABASE_SOURCES.careers)
+            .select(CAREER_SELECT_QUERY)
+            .eq("person_id", personId)
+            .order("start_date", { ascending: false })
+            .order("sort_index", { ascending: true });
+
+        if (error) {
+            throw error;
+        }
+
+        const normalized = normalizeCareerSteps(Array.isArray(data) ? data : []);
+        return normalized;
+    })();
+
+    careerCache.set(personId, fetchPromise);
+
+    try {
+        const steps = await fetchPromise;
+        careerCache.set(personId, steps);
+        return steps;
+    } catch (error) {
+        careerCache.delete(personId);
+        throw error;
+    }
 };
 
 const buildCard = (minister) => {
@@ -758,7 +1090,7 @@ const fetchCollaboratorsForMinister = async (ministerId) => {
         const parentId = queue.shift();
         try {
             const { data, error } = await client
-                .from("persons")
+                .from(SUPABASE_SOURCES.collaborators)
                 .select(
                     "id, superior_id, full_name, photo_url, cabinet_role, job_title, collab_grade, email, cabinet_order"
                 )
@@ -1864,6 +2196,68 @@ const toggleExecutiveCabinet = async (minister, toggleButton) => {
 };
 
 
+const populateCareerModule = async (minister) => {
+    const careerSection = modalElements.careerSection;
+    const careerList = modalElements.careerList;
+
+    if (!careerSection || !careerList) {
+        return;
+    }
+
+    careerSection.hidden = true;
+    careerList.innerHTML = "";
+
+    if (!minister?.id) {
+        careerSection.hidden = true;
+        minister.career = [];
+        return;
+    }
+
+    const applySteps = (steps) => {
+        const normalizedSteps = Array.isArray(steps) ? steps : [];
+        if (!normalizedSteps.length) {
+            careerSection.hidden = true;
+            careerList.innerHTML = "";
+            minister.career = [];
+            careerCache.set(minister.id, []);
+            return;
+        }
+
+        careerList.innerHTML = "";
+        careerList.appendChild(createCareerTimelineFragment(normalizedSteps));
+        careerSection.hidden = false;
+        minister.career = normalizedSteps;
+        careerCache.set(minister.id, normalizedSteps);
+    };
+
+    const cached = careerCache.get(minister.id);
+    if (Array.isArray(cached)) {
+        applySteps(cached);
+        return;
+    }
+
+    const placeholder = document.createElement("li");
+    placeholder.className = "modal-career-placeholder";
+    placeholder.textContent = "Chargement…";
+    careerList.appendChild(placeholder);
+    careerSection.hidden = false;
+
+    try {
+        const steps = await fetchCareerTimeline(minister.id);
+        applySteps(steps);
+    } catch (error) {
+        careerList.innerHTML = "";
+        const errorItem = document.createElement("li");
+        errorItem.className = "modal-career-error";
+        errorItem.textContent = "Impossible de charger la carrière pour le moment.";
+        careerList.appendChild(errorItem);
+        careerSection.hidden = false;
+        minister.career = [];
+        console.error("[onepage] Échec du chargement de la carrière", error);
+    }
+};
+
+
 const openModal = (minister) => {
     if (!modal) return;
     // Ensure any cabinet overlay is hidden/cleared when opening detail view
@@ -1918,6 +2312,8 @@ const openModal = (minister) => {
         modalElements.mission.textContent = "";
         if (missionWrapper) missionWrapper.hidden = true;
     }
+
+    populateCareerModule(minister);
 
     if (modalBody) {
         const oldCollabSection = modalBody.querySelector(".modal-collaborators");
@@ -2103,8 +2499,10 @@ const fetchMinistersFromSupabase = async () => {
         throw new Error("Client Supabase non initialisé");
     }
 
+    const ministersTable = SUPABASE_SOURCES.ministers;
+
     const { data: persons, error: personsError } = await client
-        .from("persons")
+        .from(ministersTable)
         .select(
             `id, full_name, role, description, photo_url, email, party, superior_id,
              person_ministries(
@@ -2176,7 +2574,8 @@ const fetchMinistersFromSupabase = async () => {
             superiorId: person.superior_id || null,
             primaryMinistryId: primaryMinistry?.id || null,
             primaryParentMinistryId: primaryMinistry?.parent_ministry_id || null,
-            searchIndex: searchIndexParts.filter(Boolean).join(" ")
+            searchIndex: searchIndexParts.filter(Boolean).join(" "),
+            career: []
         };
     });
 };
@@ -2185,8 +2584,10 @@ const fetchMinistersFromView = async () => {
     const client = ensureSupabaseClient();
     if (!client) throw new Error("Client Supabase non initialisé");
 
+    const viewName = SUPABASE_SOURCES.ministersView;
+
     const { data, error } = await client
-        .from("vw_ministernode")
+        .from(viewName)
         .select("person_id, full_name, is_leader, ministry_name, color, photo_url, party")
         .order("is_leader", { ascending: false })
         .order("full_name", { ascending: true });
@@ -2197,11 +2598,11 @@ const fetchMinistersFromView = async () => {
         // This commonly means the DB view `public.vw_ministernode` has not been created in the project
         // or is in a different schema. Useful message for debugging in the browser console.
         if (error.code === "PGRST205" || (error.message && error.message.includes("Could not find the table"))) {
-            console.warn("[onepage] La view 'public.vw_ministernode' est introuvable côté Supabase (404).\n" +
-                "Vérifiez que vous avez exécuté sql/vw_ministernode.sql dans l'éditeur SQL Supabase et que la view appartient au schema 'public'.\n" +
-                "Si la view existe dans un autre schema, adaptez l'endpoint PostgREST ou créez la view dans 'public'.");
+            console.warn(`[onepage] La view '${viewName}' est introuvable côté Supabase (404).\n` +
+                "Assurez-vous qu'elle existe dans le schéma 'public' ou ajustez SUPABASE_MINISTERS_VIEW dans config/supabase.js.\n" +
+                "Vous pouvez aussi exécuter le script SQL fourni par l'équipe (ex: sql/vw_ministernode.sql).");
         } else {
-            console.warn("[onepage] Erreur lors de l'appel à vw_ministernode :", error);
+            console.warn(`[onepage] Erreur lors de l'appel à ${viewName} :`, error);
         }
         throw error;
     }
@@ -2214,7 +2615,7 @@ const fetchMinistersFromView = async () => {
     if (leaderIds.length) {
         try {
             const { data: persons } = await client
-                .from("persons")
+                .from(SUPABASE_SOURCES.ministers)
                 .select("id, description")
                 .in("id", leaderIds);
             leaderDescriptions = new Map((persons ?? []).map((p) => [p.id, p.description || ""]));
@@ -2229,8 +2630,9 @@ const fetchMinistersFromView = async () => {
     if (ministryNames.length) {
         try {
             // 1) Match sur short_name
+            const ministriesTable = SUPABASE_SOURCES.ministries;
             const { data: byShort } = await client
-                .from("ministries")
+                .from(ministriesTable)
                 .select("id, short_name")
                 .in("short_name", ministryNames);
             (byShort || []).forEach((m) => ministryIdByName.set(m.short_name, m.id));
@@ -2238,7 +2640,7 @@ const fetchMinistersFromView = async () => {
             const remaining = ministryNames.filter((n) => !ministryIdByName.has(n));
             if (remaining.length) {
                 const { data: byName } = await client
-                    .from("ministries")
+                    .from(ministriesTable)
                     .select("id, name")
                     .in("name", remaining);
                 (byName || []).forEach((m) => ministryIdByName.set(m.name, m.id));
@@ -2260,16 +2662,8 @@ const fetchMinistersFromView = async () => {
         description: leaderDescriptions.get(row.person_id) || "",
         primaryMinistryId: row.ministry_name ? (ministryIdByName.get(row.ministry_name) || null) : null,
         ministries: row.ministry_name ? [{ label: row.ministry_name, isPrimary: true }] : [],
+        career: [],
     }));
-};
-
-const fetchMinistersFromFallback = async () => {
-    const response = await fetch(FALLBACK_DATA_URL, { cache: "no-store" });
-    if (!response.ok) {
-        throw new Error(`Impossible de charger les données (${response.status})`);
-    }
-    const payload = await response.json();
-    return Array.isArray(payload) ? payload : [];
 };
 
 const loadMinisters = async () => {
@@ -2287,7 +2681,8 @@ const loadMinisters = async () => {
             delegateMinisters = supabaseMinisters.filter((m) => DELEGATE_ROLES.has(m.role));
         } catch (firstErr) {
             lastFetchError = firstErr;
-            console.warn('[onepage] fetchMinistersFromSupabase failed, attempting vw_ministernode as fallback', firstErr);
+            const fallbackView = SUPABASE_SOURCES.ministersView;
+            console.warn(`[onepage] fetchMinistersFromSupabase failed, attempting ${fallbackView} as fallback`, firstErr);
             try {
                 supabaseMinisters = await fetchMinistersFromView();
                 ministers = supabaseMinisters;
@@ -2306,23 +2701,6 @@ const loadMinisters = async () => {
     } catch (error) {
         lastFetchError = error;
         console.error("[onepage] Erreur lors du chargement des ministres depuis Supabase", error);
-    }
-
-    if (!dataLoaded) {
-        try {
-            const fallbackMinisters = await fetchMinistersFromFallback();
-            if (fallbackMinisters.length) {
-                ministers = fallbackMinisters;
-                coreMinisters = fallbackMinisters.filter((m) => CORE_ROLES.has(m.role));
-                delegateMinisters = fallbackMinisters.filter((m) => DELEGATE_ROLES.has(m.role));
-                attachDelegatesToCore();
-                dataLoaded = true;
-                updatePartyFilterOptions(ministers);
-            }
-        } catch (error) {
-            lastFetchError = error;
-            console.error("[onepage] Erreur lors du chargement du fichier de secours", error);
-        }
     }
 
     if (dataLoaded) {
@@ -2351,7 +2729,7 @@ const loadMinisters = async () => {
         grid.setAttribute("aria-busy", "false");
         emptyState.hidden = false;
         emptyState.textContent =
-            "Aucune donnée disponible. Vérifiez la configuration Supabase ou ajoutez un fichier data/ministers.json.";
+            "Aucune donnée disponible. Vérifiez la configuration Supabase (URL, clé anon) et que les tables requises sont accessibles.";
         updateResultsSummary(0, 0);
         updateActiveFiltersHint(0, 0);
     }
@@ -2452,7 +2830,7 @@ const initApp = () => {
         try {
             const banner = document.createElement('div');
             banner.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:rgba(209,0,123,0.1);border-top:1px solid rgba(209,0,123,0.35);color:#4B2579;padding:8px 12px;font:600 13px/1.4 \"Space Grotesk\",system-ui;backdrop-filter:saturate(120%) blur(2px)';
-            banner.textContent = 'Diagnostic: échec du chargement des données. Vérifiez Supabase (URL/KEY) ou data/ministers.json.';
+            banner.textContent = 'Diagnostic: échec du chargement des données. Vérifiez Supabase (URL/KEY) ou les règles d\'accès (RLS).';
             document.body.appendChild(banner);
             setTimeout(() => banner.remove(), 6000);
         } catch { /* no-op */ }
