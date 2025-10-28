@@ -1095,10 +1095,18 @@ const CABINET_GRADE_ALIASES = [
     ["chefdecabinet", "chefcab"],
     ["direcabadj", "direcab-adj"],
     ["directeuradjointdecabinet", "direcab-adj"],
+    ["diradj", "direcab-adj"],
     ["chefcabadj", "chefcabadj"],
     ["adjointaucheffedecabinet", "chefcabadj"],
+    ["chefadj", "chefcabadj"],
+    ["chefpole", "chefpole"],
+    ["chefdepole", "chefpole"],
     ["conseiller", "conseiller"],
     ["conseillere", "conseiller"],
+    ["conseillerspecial", "conseiller"],
+    ["conseillerspeciale", "conseiller"],
+    ["conseillertechnique", "conseiller"],
+    ["conseilleretechnique", "conseiller"],
 ];
 
 const FALLBACK_COLLAB_GRADES = [
@@ -1106,6 +1114,7 @@ const FALLBACK_COLLAB_GRADES = [
     { key: "direcab-adj", code: "DIRECAB-ADJ", label: "Adjoint·e au directeur de cabinet", rank: 2 },
     { key: "chefcab", code: "CHEFCAB", label: "Chef·fe de cabinet", rank: 3 },
     { key: "chefcabadj", code: "CHEFCAB-ADJ", label: "Adjoint·e au·à la chef·fe de cabinet", rank: 4 },
+    { key: "chefpole", code: "CHEFPOLE", label: "Chef·fe de pôle", rank: 5 },
     { key: "conseiller", code: "CONSEILLER", label: "Conseiller·ère", rank: 10 },
 ];
 
@@ -1513,6 +1522,339 @@ const renderCabinetSection = (minister, collaborators, gradeLookup) => {
     return section;
 };
 
+const EXECUTIVE_DIRECTION_KEYS = new Set(["direcab", "direcab-adj", "chefcab", "chefcabadj", "conseiller"]);
+const EXECUTIVE_DIRECTION_LEADERS = new Set(["direcab", "direcab-adj", "chefcab", "chefcabadj"]);
+const EXECUTIVE_POLE_KEYS = new Set(["chefpole"]);
+const EXECUTIVE_POLE_ACCENTS = [
+    "executive-pole--accent-blue",
+    "executive-pole--accent-rose",
+    "executive-pole--accent-emerald",
+    "executive-pole--accent-amber",
+    "executive-pole--accent-violet",
+    "executive-pole--accent-cyan"
+];
+const EXECUTIVE_PM_SUMMARY =
+    "Les équipes stratégiques de Matignon sont présentées par directions et par pôles pour visualiser rapidement la chaîne hiérarchique.";
+
+const isExecutiveLeader = (minister) => {
+    if (!minister) return false;
+    if ((minister.role || "").toLowerCase() === "leader") return true;
+    const portfolio = normalise(
+        `${minister.portfolio ?? ""} ${minister.mission ?? ""} ${(minister.ministries || [])
+            .map((entry) => entry?.label ?? "")
+            .join(" ")}`
+    );
+    return portfolio.includes("premier ministre") || portfolio.includes("matignon");
+};
+
+const createExecutiveCard = (member, options = {}) => {
+    const card = document.createElement("article");
+    card.className = "executive-card";
+    const { head = false, compact = false, context = null } = options;
+    if (head) {
+        card.classList.add("executive-card--head");
+    }
+    if (compact) {
+        card.classList.add("executive-card--compact");
+    }
+    if (member?.id != null) {
+        card.dataset.personId = String(member.id);
+    }
+
+    const avatar = document.createElement("div");
+    avatar.className = "executive-card__avatar";
+    const img = document.createElement("img");
+    img.src = ensureImageSource(member?.photo);
+    img.alt = member?.name ? `Portrait de ${member.name}` : "Portrait";
+    avatar.appendChild(img);
+    card.appendChild(avatar);
+
+    const meta = document.createElement("div");
+    meta.className = "executive-card__meta";
+
+    const name = document.createElement("h4");
+    name.className = "executive-card__name";
+    name.textContent = member?.name || "Collaborateur·rice";
+    meta.appendChild(name);
+
+    const roleLine = member?.cabinetRole || member?.gradeLabel || null;
+    if (roleLine) {
+        const role = document.createElement("p");
+        role.className = "executive-card__role";
+        role.textContent = roleLine;
+        meta.appendChild(role);
+    }
+
+    const jobLine = member?.jobTitle;
+    if (jobLine && jobLine !== roleLine) {
+        const detail = document.createElement("p");
+        detail.className = "executive-card__detail";
+        detail.textContent = jobLine;
+        meta.appendChild(detail);
+    }
+
+    if (context) {
+        const contextLine = document.createElement("p");
+        contextLine.className = "executive-card__context";
+        contextLine.textContent = context;
+        meta.appendChild(contextLine);
+    }
+
+    if (member?.email) {
+        const contact = document.createElement("a");
+        contact.className = "executive-card__contact";
+        contact.href = `mailto:${member.email}`;
+        contact.textContent = member.email;
+        contact.rel = "noopener";
+        meta.appendChild(contact);
+    }
+
+    card.appendChild(meta);
+    return card;
+};
+
+const buildExecutiveCabinetSection = (minister, collaborators, gradeLookup, options = {}) => {
+    const section = document.createElement("section");
+    section.className = "executive-cabinet";
+    section.setAttribute("role", "region");
+    section.setAttribute("aria-label", "Cabinet du Premier ministre");
+
+    const hero = document.createElement("header");
+    hero.className = "executive-cabinet__hero";
+
+    const portrait = document.createElement("img");
+    portrait.className = "executive-cabinet__hero-portrait";
+    portrait.src = ensureImageSource(minister?.photo);
+    portrait.alt = minister?.name ? `Portrait de ${minister.name}` : "Portrait du Premier ministre";
+    hero.appendChild(portrait);
+
+    const heroMeta = document.createElement("div");
+    heroMeta.className = "executive-cabinet__hero-meta";
+
+    const heroTitle = document.createElement("h2");
+    heroTitle.className = "executive-cabinet__title";
+    heroTitle.textContent = "Cabinet du Premier ministre";
+    heroMeta.appendChild(heroTitle);
+
+    const heroSubtitle = document.createElement("p");
+    heroSubtitle.className = "executive-cabinet__subtitle";
+    heroSubtitle.textContent = EXECUTIVE_PM_SUMMARY;
+    heroMeta.appendChild(heroSubtitle);
+
+    hero.appendChild(heroMeta);
+
+    const members = normaliseCabinetMembers(collaborators, gradeLookup);
+    const totalMembers = members.length;
+    const count = document.createElement("span");
+    count.className = "executive-cabinet__count";
+    count.textContent = totalMembers
+        ? `${totalMembers} membre${totalMembers > 1 ? "s" : ""}`
+        : "Aucun collaborateur renseigné";
+    hero.appendChild(count);
+
+    section.appendChild(hero);
+
+    if (!members.length) {
+        const placeholder = document.createElement("p");
+        placeholder.className = "executive-placeholder";
+        placeholder.textContent = options?.error
+            ? "Impossible de charger le cabinet du Premier ministre pour le moment."
+            : "Aucun collaborateur n'est encore renseigné pour le cabinet du Premier ministre.";
+        section.appendChild(placeholder);
+        return section;
+    }
+
+    const directReports = members.filter((member) => member.superiorId === String(minister.id));
+    const sortedDirectReports = directReports.slice().sort(compareCabinetMembers);
+    const directionMembers = sortedDirectReports.filter((member) => EXECUTIVE_DIRECTION_KEYS.has(member.gradeKey));
+    const poleHeads = sortedDirectReports.filter((member) => EXECUTIVE_POLE_KEYS.has(member.gradeKey));
+
+    const usedIds = new Set();
+    const membersById = new Map(members.map((member) => [member.id, member]));
+
+    const directionSection = document.createElement("section");
+    directionSection.className = "executive-cabinet__band";
+
+    const directionTitle = document.createElement("h3");
+    directionTitle.className = "executive-cabinet__band-title";
+    directionTitle.textContent = "Direction du cabinet";
+    directionSection.appendChild(directionTitle);
+
+    if (!directionMembers.length) {
+        const empty = document.createElement("p");
+        empty.className = "executive-placeholder";
+        empty.textContent = "Les postes de direction ne sont pas encore renseignés.";
+        directionSection.appendChild(empty);
+    } else {
+        const directionGrid = document.createElement("div");
+        directionGrid.className = "executive-card-grid";
+        directionMembers.forEach((member) => {
+            directionGrid.appendChild(
+                createExecutiveCard(member, {
+                    head: EXECUTIVE_DIRECTION_LEADERS.has(member.gradeKey),
+                    context: EXECUTIVE_DIRECTION_LEADERS.has(member.gradeKey)
+                        ? null
+                        : "Rattaché·e directement au Premier ministre"
+                })
+            );
+            usedIds.add(member.id);
+        });
+        directionSection.appendChild(directionGrid);
+    }
+
+    section.appendChild(directionSection);
+
+    const polesSection = document.createElement("section");
+    polesSection.className = "executive-cabinet__poles";
+
+    const polesTitle = document.createElement("h3");
+    polesTitle.className = "executive-cabinet__poles-title";
+    polesTitle.textContent = "Pôles stratégiques";
+    polesSection.appendChild(polesTitle);
+
+    if (!poleHeads.length) {
+        const empty = document.createElement("p");
+        empty.className = "executive-placeholder";
+        empty.textContent = "Aucun pôle rattaché au Premier ministre n'est encore affiché.";
+        polesSection.appendChild(empty);
+    } else {
+        poleHeads.forEach((head, index) => {
+            const poleMembers = members
+                .filter((member) => member.superiorId === head.id)
+                .sort(compareCabinetMembers);
+            const poleArticle = document.createElement("article");
+            poleArticle.className = "executive-pole";
+            poleArticle.classList.add(EXECUTIVE_POLE_ACCENTS[index % EXECUTIVE_POLE_ACCENTS.length]);
+
+            let poleName = head.jobTitle || head.cabinetRole || head.name;
+            if (poleName && !/^p[oô]le\b/i.test(poleName)) {
+                poleName = `Pôle ${poleName}`;
+            }
+
+            const poleHeader = document.createElement("h4");
+            poleHeader.className = "executive-pole__title";
+            poleHeader.textContent = poleName || "Pôle";
+            poleArticle.appendChild(poleHeader);
+
+            const poleLayout = document.createElement("div");
+            poleLayout.className = "executive-pole__layout";
+
+            const headWrapper = document.createElement("div");
+            headWrapper.className = "executive-pole__head";
+            headWrapper.appendChild(createExecutiveCard(head, { head: true }));
+            poleLayout.appendChild(headWrapper);
+            usedIds.add(head.id);
+
+            const membersGrid = document.createElement("div");
+            membersGrid.className = "executive-pole__members executive-card-grid";
+
+            if (!poleMembers.length) {
+                const emptyMembers = document.createElement("p");
+                emptyMembers.className = "executive-placeholder";
+                emptyMembers.textContent = "Les conseillers du pôle seront bientôt ajoutés.";
+                membersGrid.appendChild(emptyMembers);
+            } else {
+                poleMembers.forEach((member) => {
+                    membersGrid.appendChild(createExecutiveCard(member, { compact: true }));
+                    usedIds.add(member.id);
+                });
+            }
+
+            poleLayout.appendChild(membersGrid);
+            poleArticle.appendChild(poleLayout);
+            polesSection.appendChild(poleArticle);
+        });
+    }
+
+    section.appendChild(polesSection);
+
+    const remainingMembers = members.filter((member) => !usedIds.has(member.id));
+    if (remainingMembers.length) {
+        const othersSection = document.createElement("section");
+        othersSection.className = "executive-cabinet__others";
+
+        const othersTitle = document.createElement("h3");
+        othersTitle.className = "executive-cabinet__others-title";
+        othersTitle.textContent = "Autres collaborateurs rattachés";
+        othersSection.appendChild(othersTitle);
+
+        const othersGrid = document.createElement("div");
+        othersGrid.className = "executive-card-grid executive-card-grid--compact";
+
+        remainingMembers.sort(compareCabinetMembers).forEach((member) => {
+            const parent = membersById.get(member.superiorId);
+            const context = parent?.name
+                ? `Rattaché·e à ${parent.name}`
+                : "Rattaché·e à Matignon";
+            othersGrid.appendChild(createExecutiveCard(member, { compact: true, context }));
+            usedIds.add(member.id);
+        });
+
+        othersSection.appendChild(othersGrid);
+        section.appendChild(othersSection);
+    }
+
+    return section;
+};
+
+const toggleExecutiveCabinet = async (minister, toggleButton) => {
+    if (!modal || !minister) return;
+    const modalBody = modal.querySelector(".modal-body");
+    const modalContent = modal.querySelector(".modal-content");
+    if (!modalBody || !modalContent) return;
+
+    modal.classList.remove("modal--cabinet-active", "modal--cabinet-mode");
+
+    const overlay = modalContent.querySelector(".cabinet-overlay");
+    if (overlay) {
+        overlay.remove();
+    }
+
+    const existingSection = modalBody.querySelector(".executive-cabinet");
+    if (existingSection) {
+        existingSection.remove();
+        if (toggleButton) {
+            toggleButton.textContent = "Voir le cabinet";
+            toggleButton.setAttribute("aria-expanded", "false");
+            toggleButton.dataset.cabinetState = "closed";
+        }
+        return;
+    }
+
+    let collabs = collaboratorsCache.get(minister.id);
+    let fetchError = false;
+    if (!collabs) {
+        try {
+            collabs = await fetchCollaboratorsForMinister(minister.id);
+        } catch (error) {
+            collabs = null;
+        }
+        fetchError = !Array.isArray(collabs);
+        collaboratorsCache.set(minister.id, Array.isArray(collabs) ? collabs : []);
+    }
+
+    const gradeLookup = await getCollaboratorGradeLookup();
+    const section = buildExecutiveCabinetSection(
+        minister,
+        Array.isArray(collabs) ? collabs : [],
+        gradeLookup,
+        { error: fetchError }
+    );
+
+    modalBody.insertBefore(section, modalBody.firstChild);
+    if (toggleButton) {
+        toggleButton.textContent = "Masquer le cabinet";
+        toggleButton.setAttribute("aria-expanded", "true");
+        toggleButton.dataset.cabinetState = "open";
+    }
+
+    if (typeof modalContent.scrollTo === "function") {
+        modalContent.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+        modalContent.scrollTop = 0;
+    }
+};
+
 
 const openModal = (minister) => {
     if (!modal) return;
@@ -1525,7 +1867,13 @@ const openModal = (minister) => {
     modal.classList.remove('modal--cabinet-mode', 'modal--cabinet-active');
     activeMinister = minister;
     const modalBody = modal.querySelector(".modal-body");
-    if (modalBody) modalBody.hidden = false;
+    if (modalBody) {
+        modalBody.hidden = false;
+        const executiveSection = modalBody.querySelector(".executive-cabinet");
+        if (executiveSection) {
+            executiveSection.remove();
+        }
+    }
     if (exportButton) {
         if (minister) {
             exportButton.disabled = false;
@@ -1577,6 +1925,7 @@ const openModal = (minister) => {
         toggleButton.className = "btn btn-ghost modal-collaborators-toggle";
         toggleButton.textContent = minister.id ? "Voir le cabinet" : "Cabinet non disponible";
         toggleButton.setAttribute("aria-expanded", "false");
+        toggleButton.dataset.cabinetState = "closed";
 
         if (!minister.id) {
             toggleButton.disabled = true;
@@ -1592,7 +1941,11 @@ const openModal = (minister) => {
 
         if (minister.id) {
             toggleButton.addEventListener("click", async () => {
-                await switchToCabinetView(minister);
+                if (isExecutiveLeader(minister)) {
+                    await toggleExecutiveCabinet(minister, toggleButton);
+                } else {
+                    await switchToCabinetView(minister);
+                }
             });
         }
     }
@@ -1606,11 +1959,23 @@ const closeModal = () => {
     modal.hidden = true;
     modal.classList.remove("modal--cabinet-active", "modal--cabinet-mode");
     const modalBody = modal.querySelector('.modal-body');
-    if (modalBody) modalBody.hidden = false;
+    if (modalBody) {
+        modalBody.hidden = false;
+        const executiveSection = modalBody.querySelector('.executive-cabinet');
+        if (executiveSection) {
+            executiveSection.remove();
+        }
+    }
     const modalContent = modal.querySelector('.modal-content');
     const overlay = modalContent?.querySelector('.cabinet-overlay');
     if (overlay) {
         overlay.remove();
+    }
+    const toggleButton = modal.querySelector('.modal-collaborators-toggle');
+    if (toggleButton) {
+        toggleButton.textContent = 'Voir le cabinet';
+        toggleButton.setAttribute('aria-expanded', 'false');
+        toggleButton.dataset.cabinetState = 'closed';
     }
     document.body.style.overflow = "";
     cleanupPrintSheet();
