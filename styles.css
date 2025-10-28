@@ -2207,8 +2207,9 @@ body.print-all .toolbar {
 .modal-content {
     position: relative;
     z-index: 1;
-    width: min(680px, 96vw);
-    max-height: min(92vh, 960px);
+    width: clamp(320px, 92vw, 1400px);
+    min-height: clamp(520px, 85vh, 1200px);
+    max-height: min(96vh, 1500px);
     background: var(--color-perle);
     border-radius: var(--radius-base);
     box-shadow: 0 40px 80px rgba(17, 23, 39, 0.28);
@@ -2221,8 +2222,8 @@ body.print-all .toolbar {
 /* Cabinet-only view: make modal wider than the regular detail */
 .modal.modal--cabinet-mode .modal-content {
     /* increase maximum width for cabinet view so the lanes and cards have more room */
-    width: min(1220px, 96vw);
-    max-height: min(96vh, 1200px);
+    width: clamp(480px, 96vw, 1600px);
+    max-height: min(97vh, 1700px);
 }
 
 /* Cabinet overlay container sits above the detail body without altering it */
@@ -2253,12 +2254,52 @@ body.print-all .toolbar {
 }
 
 .modal-body {
-    padding: clamp(1.5rem, 4vw, 2.5rem);
-    display: grid;
-    gap: 1.5rem;
+    padding: clamp(1.5rem, 4vw, 2.75rem);
     overflow-y: auto;
     flex: 1;
     width: 100%;
+}
+
+.modal-layout {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1.25rem, 3vw, 2rem);
+    align-items: start;
+}
+
+.modal-module {
+    position: relative;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 18px;
+    padding: clamp(1.25rem, 3vw, 1.8rem);
+    border: 1px solid rgba(62, 62, 61, 0.08);
+    box-shadow: 0 26px 54px rgba(17, 23, 39, 0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    grid-column: 1 / -1;
+}
+
+.modal-module--photo,
+.modal-module--identity {
+    grid-column: span 1;
+}
+
+.modal-module--photo {
+    align-items: center;
+    justify-content: center;
+    padding: clamp(1rem, 2.8vw, 1.5rem);
+    background: linear-gradient(135deg, rgba(17, 23, 39, 0.08), rgba(100, 215, 205, 0.18));
+}
+
+.modal-photo-frame {
+    width: clamp(160px, 22vw, 220px);
+    aspect-ratio: 1 / 1;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px rgba(17, 23, 39, 0.18);
+    border: 2px solid rgba(255, 255, 255, 0.65);
+    background: var(--color-guimauve);
 }
 
 .modal-export {
@@ -2292,17 +2333,10 @@ body.print-all .toolbar {
     transform: none;
 }
 
-.modal-header {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 1.25rem;
-    align-items: center;
-}
-
 .modal-photo {
-    width: 120px;
-    height: 120px;
-    border-radius: var(--radius-base);
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
     object-fit: cover;
     background: var(--color-guimauve);
 }
@@ -2312,15 +2346,51 @@ body.print-all .toolbar {
     letter-spacing: 0.12em;
     font-size: 0.85rem;
     color: var(--color-sesame);
+    margin: 0;
 }
 
 .modal-portfolio {
     color: var(--color-sesame);
     font-size: 1.05rem;
+    letter-spacing: 0.18em;
+    font-weight: 500;
+    margin: 0;
+}
+
+.modal-identity-title {
+    font-family: 'HavelockInlineXO', 'XO Pretty Havelock', 'Space Grotesk', system-ui, -apple-system, sans-serif;
+    font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+    line-height: 1.05;
+    text-align: center;
+    margin: 0;
+    color: var(--color-encre);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.modal-module--identity {
+    text-align: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.modal-module--description {
+    color: var(--color-poivre);
 }
 
 .modal-description {
-    color: var(--color-poivre);
+    margin: 0;
+    line-height: 1.55;
+}
+
+.modal-module--mission,
+.modal-module--export,
+.modal-module--footer {
+    grid-column: 1 / -1;
+}
+
+.modal-module--mission {
+    gap: 1.1rem;
 }
 
 .modal-meta {
@@ -2329,17 +2399,20 @@ body.print-all .toolbar {
     margin: 0;
 }
 
-.modal-meta div {
-    background: var(--color-guimauve);
-    padding: 1.1rem 1.3rem;
-    border-radius: var(--radius-base);
+.modal-meta-item {
+    background: rgba(236, 234, 237, 0.6);
+    padding: 1.2rem 1.4rem;
+    border-radius: 16px;
     border: 1px solid rgba(62, 62, 61, 0.1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .modal-meta dt {
     font-weight: 600;
     color: var(--color-poivre);
     margin-bottom: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
 }
 
 .modal-meta dd {
@@ -2347,116 +2420,58 @@ body.print-all .toolbar {
     color: var(--color-sesame);
 }
 
-.modal-module {
-    margin-top: 2rem;
-}
-
-.modal-module-title {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--color-panthere);
-}
-
-.modal-module--career {
-    background: #fff;
-    border-radius: var(--radius-base);
-    border: 1px solid rgba(17, 23, 39, 0.08);
-    padding: 1.6rem 1.5rem 1.4rem;
-    box-shadow: 0 12px 30px rgba(39, 8, 59, 0.08);
-}
-
-.modal-career-list {
-    list-style: none;
-    margin: 1.2rem 0 0;
-    padding: 0;
-    position: relative;
-}
-
-.modal-career-item {
-    position: relative;
-    padding-left: 2.75rem;
-    margin: 0 0 1.4rem;
-    --career-color: var(--accent-secondary);
-    --career-line-color: rgba(105, 135, 255, 0.2);
-    --career-shadow-color: rgba(105, 135, 255, 0.12);
-}
-
-.modal-career-item:last-child {
-    margin-bottom: 0;
-}
-
-.modal-career-item::before {
-    content: "";
-    position: absolute;
-    left: 0.7rem;
-    top: 0.35rem;
-    width: 0.8rem;
-    height: 0.8rem;
-    border-radius: 50%;
-    background: #fff;
-    border: 3px solid var(--career-color);
-    box-shadow: 0 0 0 4px var(--career-shadow-color);
-}
-
-.modal-career-item::after {
-    content: "";
-    position: absolute;
-    left: 1.05rem;
-    top: 1.4rem;
-    width: 2px;
-    height: calc(100% + 0.6rem);
-    background: var(--career-line-color);
-}
-
-.modal-career-item:last-child::after {
-    display: none;
-}
-
-.modal-career-period {
-    display: block;
-    font-weight: 600;
-    color: var(--color-panthere);
-    margin-bottom: 0.2rem;
-}
-
-.modal-career-title {
-    display: block;
-    font-weight: 600;
-    color: var(--color-panthere);
-    margin-bottom: 0.35rem;
-}
-
-.modal-career-meta {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.4rem;
-}
-
-.modal-career-category {
+.modal-module--mission .modal-collaborators-toggle {
+    width: 100%;
     display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.85rem;
+    justify-content: center;
+    padding: 1.1rem 1.5rem;
+    font-size: 1.05rem;
     font-weight: 600;
-    padding: 0.25rem 0.55rem;
-    border-radius: 999px;
-    background: var(--career-shadow-color);
-    color: var(--career-color);
-    text-transform: capitalize;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-radius: 14px;
+    box-shadow: 0 22px 46px rgba(75, 37, 121, 0.22);
 }
 
-.modal-career-location {
-    font-size: 0.85rem;
-    color: var(--color-sesame);
+.modal-module--export {
+    align-items: center;
+    justify-content: center;
 }
 
-.modal-career-description {
-    display: block;
-    color: var(--color-poivre);
-    line-height: 1.45;
+.modal-module--export .modal-export {
+    width: 100%;
+    max-width: 320px;
+}
+
+.modal-module--footer {
+    background: rgba(17, 23, 39, 0.04);
+    box-shadow: none;
+    padding: clamp(1.25rem, 3vw, 1.8rem) clamp(1rem, 2.6vw, 1.6rem);
+}
+
+.modal-footer-cta {
+    margin-top: 0;
+}
+
+.modal-module--footer .modal-footer-text {
+    line-height: 1.35;
+}
+
+@media (max-width: 920px) {
+    .modal-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-module--photo,
+    .modal-module--identity {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 600px) {
+    .modal-module {
+        padding: clamp(1rem, 6vw, 1.4rem);
+    }
 }
 
 @media (max-width: 900px) {
@@ -2468,15 +2483,6 @@ body.print-all .toolbar {
     .site-nav ul {
         flex-wrap: wrap;
         justify-content: flex-start;
-    }
-
-    .modal-header {
-        grid-template-columns: 1fr;
-        text-align: center;
-    }
-
-    .modal-header .modal-photo {
-        margin: 0 auto;
     }
 }
 

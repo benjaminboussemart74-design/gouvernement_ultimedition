@@ -351,6 +351,7 @@ const modalElements = {
     careerSection: document.querySelector(".modal-module--career"),
     careerList: document.getElementById("modal-career-list"),
 };
+const modalDelegatesList = document.getElementById("modal-delegates");
 
 const initializeAdvancedSearchToggle = () => {
     if (!advancedToggleButton || !advancedSearchPanel) return null;
@@ -2095,88 +2096,56 @@ const openModal = (minister) => {
         if (missionWrapper) missionWrapper.hidden = true;
     }
 
-    const careerSection = modalElements.careerSection;
-    const careerList = modalElements.careerList;
-    if (careerSection && careerList) {
-        careerList.innerHTML = "";
-        const careerSteps = normalizeCareerSteps(minister.career);
+    if (modalDelegatesList) {
+        modalDelegatesList.replaceChildren();
+        const delegates = Array.isArray(minister?.delegates)
+            ? minister.delegates.filter((entry) => entry && (entry.name || entry.portfolio || entry.role))
+            : [];
 
-        if (careerSteps.length) {
-            const fragment = document.createDocumentFragment();
-            careerSteps.forEach((step) => {
+        if (delegates.length > 0) {
+            delegates.forEach((delegate) => {
                 const item = document.createElement("li");
-                item.className = "modal-career-item";
+                item.className = "modal-delegate-item";
 
-                if (step.categoryColor) {
-                    item.style.setProperty("--career-color", step.categoryColor);
-                }
-                if (step.categoryLineColor) {
-                    item.style.setProperty("--career-line-color", step.categoryLineColor);
-                }
-                if (step.categoryShadowColor) {
-                    item.style.setProperty("--career-shadow-color", step.categoryShadowColor);
-                }
+                const name = document.createElement("span");
+                name.className = "modal-delegate-name";
+                name.textContent = delegate.name ?? "Ministre délégué";
+                item.appendChild(name);
 
-                if (step.period) {
-                    const periodEl = document.createElement("span");
-                    periodEl.className = "modal-career-period";
-                    periodEl.textContent = step.period;
-                    item.appendChild(periodEl);
-                }
-
-                const headlineParts = [];
-                if (step.title) headlineParts.push(step.title);
-                if (step.organisation) headlineParts.push(step.organisation);
-                if (headlineParts.length) {
-                    const headlineEl = document.createElement("span");
-                    headlineEl.className = "modal-career-title";
-                    headlineEl.textContent = headlineParts.join(" • ");
-                    item.appendChild(headlineEl);
-                }
-
-                const metaRow = document.createElement("div");
-                metaRow.className = "modal-career-meta";
-
-                if (step.categoryLabel) {
-                    const categoryEl = document.createElement("span");
-                    categoryEl.className = "modal-career-category";
-                    categoryEl.textContent = step.categoryLabel;
-                    if (step.category) {
-                        categoryEl.dataset.careerCategory = step.category;
-                        item.dataset.careerCategory = step.category;
+                let portfolioValue = delegate.portfolio ?? "";
+                if (!portfolioValue && Array.isArray(delegate.ministries)) {
+                    const labels = delegate.ministries
+                        .map((entry) => entry?.label)
+                        .filter((label) => Boolean(label && label.trim()));
+                    if (labels.length) {
+                        portfolioValue = labels.join(" • ");
                     }
-                    metaRow.appendChild(categoryEl);
+                }
+                if (!portfolioValue && delegate.title) {
+                    portfolioValue = delegate.title;
+                }
+                if (!portfolioValue && delegate.function) {
+                    portfolioValue = delegate.function;
+                }
+                if (!portfolioValue && delegate.role) {
+                    portfolioValue = formatRole(delegate.role);
                 }
 
-                if (step.location) {
-                    const locationEl = document.createElement("span");
-                    locationEl.className = "modal-career-location";
-                    locationEl.textContent = step.location;
-                    metaRow.appendChild(locationEl);
+                if (portfolioValue) {
+                    const portfolio = document.createElement("span");
+                    portfolio.className = "modal-delegate-portfolio";
+                    portfolio.textContent = portfolioValue;
+                    item.appendChild(portfolio);
                 }
 
-                if (step.category && !item.dataset.careerCategory) {
-                    item.dataset.careerCategory = step.category;
-                }
-
-                if (metaRow.childElementCount) {
-                    item.appendChild(metaRow);
-                }
-
-                if (step.description) {
-                    const descriptionEl = document.createElement("span");
-                    descriptionEl.className = "modal-career-description";
-                    descriptionEl.textContent = step.description;
-                    item.appendChild(descriptionEl);
-                }
-
-                fragment.appendChild(item);
+                modalDelegatesList.appendChild(item);
             });
 
-            careerList.appendChild(fragment);
-            careerSection.hidden = false;
+            modalDelegatesList.hidden = false;
+            modalDelegatesList.removeAttribute("hidden");
         } else {
-            careerSection.hidden = true;
+            modalDelegatesList.hidden = true;
+            modalDelegatesList.setAttribute("hidden", "");
         }
     }
 
@@ -2219,12 +2188,14 @@ const openModal = (minister) => {
     }
 
     modal.hidden = false;
+    modal.removeAttribute("hidden");
     document.body.style.overflow = "hidden";
 };
 
 const closeModal = () => {
     if (!modal) return;
     modal.hidden = true;
+    modal.setAttribute("hidden", "");
     modal.classList.remove("modal--cabinet-active", "modal--cabinet-mode");
     const modalBody = modal.querySelector('.modal-body');
     if (modalBody) {
