@@ -104,50 +104,12 @@
   padding: 1.1rem 1.25rem 1.35rem;
 }
 
-.pole-article {
-  border-color: rgba(37, 99, 235, 0.18);
-  border-color: color-mix(in srgb, var(--pole-accent, #2563eb) 28%, rgba(17, 23, 39, 0.08));
-  background: linear-gradient(170deg, rgba(37, 99, 235, 0.08) 0%, rgba(255, 255, 255, 0.94) 48%, rgba(255, 255, 255, 0.88) 100%);
-  background:
-    linear-gradient(170deg, color-mix(in srgb, var(--pole-accent, #2563eb) 18%, #ffffff) 0%, rgba(255, 255, 255, 0.94) 48%, rgba(255, 255, 255, 0.88) 100%);
-}
-
-.pole-article::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(180deg,
-      color-mix(in srgb, var(--pole-accent, #2563eb) 32%, rgba(255, 255, 255, 0)) 0%,
-      rgba(255, 255, 255, 0) 52%,
-      color-mix(in srgb, var(--pole-accent, #2563eb) 12%, rgba(17, 23, 39, 0.05)) 100%);
-  mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
-  -webkit-mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
-  mask-composite: exclude;
-  -webkit-mask-composite: xor;
-  pointer-events: none;
-}
-
 .pole-title {
-  position: relative;
   font-family: 'HavelockInlineXO', 'Space Grotesk', system-ui, -apple-system, sans-serif;
   font-size: 1.3rem;
   font-weight: 700;
-  color: color-mix(in srgb, var(--pole-accent, #2563eb) 65%, var(--color-encre));
+  color: var(--color-encre);
   margin-bottom: 1rem;
-  padding-left: 0.9rem;
-}
-
-.pole-title::before {
-  content: "";
-  position: absolute;
-  inset-inline-start: 0;
-  top: 0.3rem;
-  bottom: 0.3rem;
-  width: 0.35rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--pole-accent, #2563eb) 86%, transparent);
 }
 
 .pole-body {

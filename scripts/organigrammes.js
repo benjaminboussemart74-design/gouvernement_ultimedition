@@ -256,16 +256,9 @@
       chefsDePole.forEach((head, index) => {
         const accent = polePalette[index % polePalette.length];
         const members = collabs.filter(p => p.collab_grade === 'conseiller' && String(p.superior_id) === String(head.id)).sort(byRankOrderThenName);
-        let poleName;
-        if (head.job_title){
-          const cleaned = head.job_title.replace(/^p[oô]le\s+/i, '').trim();
-          poleName = `Pôle ${cleaned}`;
-        } else if (head.cabinet_role){
-          const cleaned = head.cabinet_role.replace(/^p[oô]le\s+/i, '').trim();
-          poleName = `Pôle ${cleaned}`;
-        } else {
-          const fallback = head.full_name ? head.full_name.replace(/^p[oô]le\s+/i, '').trim() : '';
-          poleName = `Pôle ${fallback}`.trim();
+        let poleName = head.job_title || head.cabinet_role || head.full_name;
+        if (poleName && !/^p[oô]le\b/i.test(poleName)){
+          poleName = `Pôle ${poleName}`;
         }
         html += `<article class="pole-article" style="--pole-accent:${accent}">`;
         html += `<div class="pole-title">${escapeHTML(poleName)}</div>`;

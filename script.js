@@ -146,6 +146,9 @@ const emptyState = document.getElementById("ministers-empty");
 const searchInput = document.getElementById("minister-search");
 const partyFilter = document.getElementById("party-filter");
 const filterButtons = Array.from(document.querySelectorAll(".filter-btn"));
+const advancedToggleButton = document.getElementById("advanced-search-toggle");
+const advancedSearchPanel = document.getElementById("advanced-search-panel");
+const toolbarContainer = document.querySelector(".toolbar");
 const exportPageButton = document.getElementById("export-page-pdf");
 const modal = document.getElementById("minister-modal");
 const modalBackdrop = modal?.querySelector("[data-dismiss]");
@@ -173,6 +176,61 @@ const modalElements = {
     mission: document.getElementById("modal-mission"),
     contact: document.getElementById("modal-contact")
 };
+
+const initializeAdvancedSearchToggle = () => {
+    if (!advancedToggleButton || !advancedSearchPanel) return null;
+
+    const labelElement = advancedToggleButton.querySelector(".toggle-label");
+    const openLabel = advancedToggleButton.dataset.openLabel?.trim() || "Ouvrir la recherche avancée";
+    const closeLabel = advancedToggleButton.dataset.closeLabel?.trim() || "Fermer la recherche avancée";
+    let hasUserInteracted = false;
+
+    const applyExpandedState = (expanded) => {
+        const isExpanded = Boolean(expanded);
+        advancedToggleButton.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+        advancedSearchPanel.hidden = !isExpanded;
+        advancedToggleButton.classList.toggle("is-active", isExpanded);
+        toolbarContainer?.classList.toggle("is-expanded", isExpanded);
+        if (labelElement) {
+            labelElement.textContent = isExpanded ? closeLabel : openLabel;
+        } else {
+            advancedToggleButton.textContent = isExpanded ? closeLabel : openLabel;
+        }
+    };
+
+    const focusFirstControl = () => {
+        const focusTarget = advancedSearchPanel.querySelector("input, select, button, textarea");
+        if (focusTarget instanceof HTMLElement) {
+            focusTarget.focus();
+        }
+    };
+
+    applyExpandedState(false);
+
+    advancedToggleButton.addEventListener("click", () => {
+        const isExpanded = advancedToggleButton.getAttribute("aria-expanded") === "true";
+        hasUserInteracted = true;
+        applyExpandedState(!isExpanded);
+        if (!isExpanded) {
+            window.requestAnimationFrame(() => focusFirstControl());
+        }
+    });
+
+    return {
+        open() {
+            applyExpandedState(true);
+        },
+        close() {
+            applyExpandedState(false);
+        },
+        ensureOpen() {
+            if (hasUserInteracted) return;
+            applyExpandedState(true);
+        }
+    };
+};
+
+const advancedSearchControls = initializeAdvancedSearchToggle();
 
 const updatePartyFilterOptions = (pool = []) => {
     if (!partyFilter) return;
@@ -264,6 +322,17 @@ const updateResultsSummary = (visible, total) => {
 const updateActiveFiltersHint = (visible, total) => {
     if (!activeFiltersHint) return;
     const summaries = [];
+    const hasAdvancedFilters =
+        currentRole !== "all" ||
+        Boolean(currentParty) ||
+        onlyWithDelegates ||
+        onlyWithBio ||
+        currentSort !== "role";
+
+    if (hasAdvancedFilters) {
+        advancedSearchControls?.ensureOpen?.();
+    }
+
     if (currentRole !== "all") {
         const roleButton = filterButtons.find((btn) => btn.dataset.role === currentRole);
         if (roleButton) summaries.push(roleButton.textContent.trim());
@@ -324,6 +393,22 @@ const debounce = (fn, wait = 220) => {
         timeout = window.setTimeout(() => fn(...args), wait);
     };
 };
+
+const updateMinistersGridLayout = () => {
+    if (!grid) return;
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    let columns = 1;
+    if (viewportWidth >= 1280) {
+        columns = 5;
+    } else if (viewportWidth >= 768) {
+        columns = 3;
+    }
+    grid.dataset.columns = String(columns);
+};
+
+const debouncedGridLayoutUpdate = debounce(updateMinistersGridLayout, 160);
+window.addEventListener("resize", debouncedGridLayoutUpdate);
+updateMinistersGridLayout();
 
 const formatRole = (role) => ROLE_LABELS[role] ?? role ?? "";
 
@@ -549,6 +634,7 @@ const renderGrid = (items) => {
     });
 
     grid.appendChild(fragment);
+    updateMinistersGridLayout();
     grid.setAttribute("aria-busy", "false");
 };
 
