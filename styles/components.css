@@ -1,0 +1,186 @@
+.background-logo {
+  position: fixed;
+  inset: 0;
+  background-image: url("../assets/LogoRP_Tete_logo_RP_bleu.svg");
+  background-repeat: no-repeat;
+  background-position: 88% 10%;
+  background-size: 320px;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.site-header {
+  position: relative;
+  margin: 0 auto;
+  padding: 2.5rem clamp(1.5rem, 3vw, 3rem) 1.8rem;
+  max-width: 1200px;
+  width: 100%;
+  text-align: center;
+  background: var(--gradient-header);
+  color: var(--color-guimauve);
+  border-radius: var(--org-radius);
+  box-shadow: var(--org-shadow-soft);
+  overflow: hidden;
+}
+
+.site-header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 12% 0%, rgba(100, 215, 205, 0.35), transparent 58%),
+              radial-gradient(circle at 88% 12%, rgba(105, 135, 255, 0.25), transparent 62%);
+}
+
+.site-header .header-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--org-radius-small);
+  background: rgba(17, 23, 39, 0.18);
+}
+
+.brand-mark {
+  width: min(320px, 42vw);
+  height: auto;
+}
+
+.header-tabs {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.15rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  color: var(--color-guimauve);
+  font-weight: 600;
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+  transition: background 180ms ease, transform 180ms ease, color 180ms ease;
+}
+
+.tab:hover,
+.tab:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--color-perle);
+  text-decoration: none;
+}
+
+.tab.is-active {
+  background: var(--color-curacao);
+  color: var(--color-encre);
+  box-shadow: 0 12px 24px rgba(100, 215, 205, 0.25);
+}
+
+.page-container {
+  margin: 0 auto;
+  max-width: 1180px;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.section-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(17, 23, 39, 0.08);
+  color: var(--color-encre);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.btn-organigramme,
+.btn-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(17, 23, 39, 0.12);
+  background: #fff;
+  color: var(--color-encre);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border 160ms ease, background 160ms ease;
+}
+
+.btn-organigramme:hover,
+.btn-organigramme:focus-visible,
+.btn-refresh:hover,
+.btn-refresh:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(17, 23, 39, 0.1);
+  border-color: rgba(17, 23, 39, 0.18);
+}
+
+.btn-organigramme.is-active {
+  background: var(--color-curacao);
+  color: var(--color-encre);
+  border-color: transparent;
+  box-shadow: 0 14px 28px rgba(100, 215, 205, 0.35);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--org-radius-small);
+  background: rgba(17, 23, 39, 0.05);
+  color: var(--org-ink);
+  font-size: 0.85rem;
+}
+
+.status.ok {
+  background: rgba(76, 207, 120, 0.15);
+  color: #065f46;
+}
+
+.status.err {
+  background: rgba(209, 0, 123, 0.15);
+  color: #7f1d1d;
+}
+
+@media (max-width: 720px) {
+  .site-header {
+    border-radius: 0;
+  }
+  .brand {
+    background: rgba(17, 23, 39, 0.28);
+  }
+  .brand-mark {
+    width: min(240px, 62vw);
+  }
+}
