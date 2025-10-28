@@ -184,34 +184,43 @@
         <div class="modal-content" role="document">
             <button class="modal-close" type="button" aria-label="Fermer" data-dismiss>&times;</button>
             <div class="modal-body">
-                <div class="modal-header">
-                    <img class="modal-photo" id="modal-photo" src="" alt="" />
-                    <div>
+                <div class="modal-layout">
+                    <div class="modal-module modal-module--photo">
+                        <div class="modal-photo-frame">
+                            <img class="modal-photo" id="modal-photo" src="" alt="" />
+                        </div>
+                    </div>
+                    <div class="modal-module modal-module--identity">
                         <p class="modal-role" id="modal-role"></p>
-                        <h3 id="modal-title"></h3>
+                        <h3 class="modal-identity-title" id="modal-title"></h3>
                         <p class="modal-portfolio" id="modal-portfolio"></p>
                     </div>
-                </div>
-                <p class="modal-description" id="modal-description"></p>
-                <dl class="modal-meta">
-                    <div>
-                        <dt>Mission</dt>
-                        <dd id="modal-mission"></dd>
+                    <div class="modal-module modal-module--description">
+                        <p class="modal-description" id="modal-description"></p>
                     </div>
-                </dl>
-                <section class="modal-module modal-module--career" hidden>
-                    <h4 class="modal-module-title">Carrière</h4>
-                    <ul class="modal-career-list" id="modal-career-list"></ul>
-                </section>
-                <button id="export-minister-pdf" class="modal-export" type="button">Exporter cette fiche</button>
-                <!-- Disclaimer & contact prompt -->
-                <div class="modal-footer-cta" aria-hidden="true">
-                    <img class="modal-footer-logo" src="assets/LogoRP_Bloc_logo_RP_bleu.png" alt="Logo RumeurPublique" onerror="this.src='assets/LogoRP_Bloc_logo_RP_bleu.svg'"/>
-                    <p class="modal-footer-text">Vous souhaitez rentrer en contact avec un ministre et ses équipes ? Contactez nos équipes pour définir le plan d'influence qui s'adaptera à votre entreprise.</p>
+                    <div class="modal-module modal-module--mission">
+                        <dl class="modal-meta">
+                            <div class="modal-meta-item">
+                                <dt>Mission</dt>
+                                <dd id="modal-mission"></dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <div class="modal-module modal-module--export">
+                        <button id="export-minister-pdf" class="modal-export" type="button">Exporter cette fiche</button>
+                    </div>
+                    <div class="modal-module modal-module--footer">
+                        <!-- Disclaimer & contact prompt -->
+                        <div class="modal-footer-cta" aria-hidden="true">
+                            <img class="modal-footer-logo" src="assets/LogoRP_Bloc_logo_RP_bleu.png" alt="Logo RumeurPublique" onerror="this.src='assets/LogoRP_Bloc_logo_RP_bleu.svg'" />
+                            <p class="modal-footer-text">
+                                Vous souhaitez rentrer en contact avec un ministre et ses équipes ? Contactez nos équipes pour définir le plan d'influence qui s'adaptera à votre entreprise.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- ================= SCRIPTS ================= -->
     <!-- Supabase client (required to fetch live ministers) -->

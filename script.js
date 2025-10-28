@@ -91,20 +91,6 @@ const CAREER_CATEGORY_COLORS = {
     political: "#ec4899"
 };
 
-const CAREER_SELECT_COLUMNS = [
-    "id",
-    "title",
-    "organisation",
-    "description",
-    "location",
-    "category",
-    "category_color",
-    "start_date",
-    "end_date",
-    "ongoing",
-    "sort_index"
-];
-
 const DEFAULT_CAREER_COLOR = "#475569";
 const CAREER_DATE_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
     month: "long",
@@ -265,83 +251,6 @@ const normalizeCareerSteps = (rawSteps) => {
     return steps.map(({ startDateMs, originalIndex, ...rest }) => rest);
 };
 
-const createCareerTimelineFragment = (steps) => {
-    const fragment = document.createDocumentFragment();
-    steps.forEach((step) => {
-        if (!step || typeof step !== "object") return;
-
-        const item = document.createElement("li");
-        item.className = "modal-career-item";
-
-        if (step.categoryColor) {
-            item.style.setProperty("--career-color", step.categoryColor);
-        }
-        if (step.categoryLineColor) {
-            item.style.setProperty("--career-line-color", step.categoryLineColor);
-        }
-        if (step.categoryShadowColor) {
-            item.style.setProperty("--career-shadow-color", step.categoryShadowColor);
-        }
-
-        if (step.period) {
-            const periodEl = document.createElement("span");
-            periodEl.className = "modal-career-period";
-            periodEl.textContent = step.period;
-            item.appendChild(periodEl);
-        }
-
-        const headlineParts = [];
-        if (step.title) headlineParts.push(step.title);
-        if (step.organisation) headlineParts.push(step.organisation);
-        if (headlineParts.length) {
-            const headlineEl = document.createElement("span");
-            headlineEl.className = "modal-career-title";
-            headlineEl.textContent = headlineParts.join(" • ");
-            item.appendChild(headlineEl);
-        }
-
-        const metaRow = document.createElement("div");
-        metaRow.className = "modal-career-meta";
-
-        if (step.categoryLabel) {
-            const categoryEl = document.createElement("span");
-            categoryEl.className = "modal-career-category";
-            categoryEl.textContent = step.categoryLabel;
-            if (step.category) {
-                categoryEl.dataset.careerCategory = step.category;
-                item.dataset.careerCategory = step.category;
-            }
-            metaRow.appendChild(categoryEl);
-        }
-
-        if (step.location) {
-            const locationEl = document.createElement("span");
-            locationEl.className = "modal-career-location";
-            locationEl.textContent = step.location;
-            metaRow.appendChild(locationEl);
-        }
-
-        if (step.category && !item.dataset.careerCategory) {
-            item.dataset.careerCategory = step.category;
-        }
-
-        if (metaRow.childElementCount) {
-            item.appendChild(metaRow);
-        }
-
-        if (step.description) {
-            const descriptionEl = document.createElement("span");
-            descriptionEl.className = "modal-career-description";
-            descriptionEl.textContent = step.description;
-            item.appendChild(descriptionEl);
-        }
-
-        fragment.appendChild(item);
-    });
-
-    return fragment;
-};
-
 // Mapping des valeurs `party` (valeurs possibles depuis Supabase) vers
 // les étiquettes utilisées par les sélecteurs CSS `[data-party="$LABEL"]`.
 const PARTY_MAP = new Map([
@@ -442,6 +351,7 @@ const modalElements = {
     careerSection: document.querySelector(".modal-module--career"),
     careerList: document.getElementById("modal-career-list"),
 };
+const modalDelegatesList = document.getElementById("modal-delegates");
 
 const initializeAdvancedSearchToggle = () => {
     if (!advancedToggleButton || !advancedSearchPanel) return null;
@@ -2294,7 +2204,58 @@ const openModal = (minister) => {
         if (missionWrapper) missionWrapper.hidden = true;
     }
 
-    populateCareerModule(minister);
+    if (modalDelegatesList) {
+        modalDelegatesList.replaceChildren();
+        const delegates = Array.isArray(minister?.delegates)
+            ? minister.delegates.filter((entry) => entry && (entry.name || entry.portfolio || entry.role))
+            : [];
+
+        if (delegates.length > 0) {
+            delegates.forEach((delegate) => {
+                const item = document.createElement("li");
+                item.className = "modal-delegate-item";
+
+                const name = document.createElement("span");
+                name.className = "modal-delegate-name";
+                name.textContent = delegate.name ?? "Ministre délégué";
+                item.appendChild(name);
+
+                let portfolioValue = delegate.portfolio ?? "";
+                if (!portfolioValue && Array.isArray(delegate.ministries)) {
+                    const labels = delegate.ministries
+                        .map((entry) => entry?.label)
+                        .filter((label) => Boolean(label && label.trim()));
+                    if (labels.length) {
+                        portfolioValue = labels.join(" • ");
+                    }
+                }
+                if (!portfolioValue && delegate.title) {
+                    portfolioValue = delegate.title;
+                }
+                if (!portfolioValue && delegate.function) {
+                    portfolioValue = delegate.function;
+                }
+                if (!portfolioValue && delegate.role) {
+                    portfolioValue = formatRole(delegate.role);
+                }
+
+                if (portfolioValue) {
+                    const portfolio = document.createElement("span");
+                    portfolio.className = "modal-delegate-portfolio";
+                    portfolio.textContent = portfolioValue;
+                    item.appendChild(portfolio);
+                }
+
+                modalDelegatesList.appendChild(item);
+            });
+
+            modalDelegatesList.hidden = false;
+            modalDelegatesList.removeAttribute("hidden");
+        } else {
+            modalDelegatesList.hidden = true;
+            modalDelegatesList.setAttribute("hidden", "");
+        }
+    }
 
     if (modalBody) {
         const oldCollabSection = modalBody.querySelector(".modal-collaborators");
@@ -2335,12 +2296,14 @@ const openModal = (minister) => {
     }
 
     modal.hidden = false;
+    modal.removeAttribute("hidden");
     document.body.style.overflow = "hidden";
 };
 
 const closeModal = () => {
     if (!modal) return;
     modal.hidden = true;
+    modal.setAttribute("hidden", "");
     modal.classList.remove("modal--cabinet-active", "modal--cabinet-mode");
     const modalBody = modal.querySelector('.modal-body');
     if (modalBody) {
@@ -2483,11 +2446,24 @@ const fetchMinistersFromSupabase = async () => {
     const { data: persons, error: personsError } = await client
         .from("persons")
         .select(
-            `id, full_name, role, description, photo_url, email, party, superior_id,
+            `id, full_name, role, description, photo_url, email, party, superior_id, career,
              person_ministries(
                 role_label,
                 is_primary,
                 ministries(id, short_name, name, color, parent_ministry_id)
+             ),
+             person_careers(
+                id,
+                title,
+                organisation,
+                description,
+                location,
+                category,
+                category_color,
+                start_date,
+                end_date,
+                ongoing,
+                sort_index
              )`
         )
         .order("role", { ascending: true })
@@ -2537,6 +2513,24 @@ const fetchMinistersFromSupabase = async () => {
             ...ministriesLabels.map((entry) => entry.roleLabel || "")
         ];
 
+        const normalizedCareer = (() => {
+            if (Array.isArray(person.person_careers)) {
+                return normalizeCareerSteps(person.person_careers);
+            }
+            if (Array.isArray(person.career)) {
+                return normalizeCareerSteps(person.career);
+            }
+            if (typeof person.career === "string") {
+                try {
+                    const parsed = JSON.parse(person.career);
+                    return normalizeCareerSteps(parsed);
+                } catch (e) {
+                    return [];
+                }
+            }
+            return [];
+        })();
+
         return {
             id: person.id,
             name: person.full_name ?? "",
@@ -2554,7 +2548,7 @@ const fetchMinistersFromSupabase = async () => {
             primaryMinistryId: primaryMinistry?.id || null,
             primaryParentMinistryId: primaryMinistry?.parent_ministry_id || null,
             searchIndex: searchIndexParts.filter(Boolean).join(" "),
-            career: []
+            career: normalizedCareer
         };
     });
 };
@@ -2639,6 +2633,19 @@ const fetchMinistersFromView = async () => {
         primaryMinistryId: row.ministry_name ? (ministryIdByName.get(row.ministry_name) || null) : null,
         ministries: row.ministry_name ? [{ label: row.ministry_name, isPrimary: true }] : [],
         career: [],
+    }));
+};
+
+const fetchMinistersFromFallback = async () => {
+    const response = await fetch(FALLBACK_DATA_URL, { cache: "no-store" });
+    if (!response.ok) {
+        throw new Error(`Impossible de charger les données (${response.status})`);
+    }
+    const payload = await response.json();
+    if (!Array.isArray(payload)) return [];
+    return payload.map((entry) => ({
+        ...entry,
+        career: normalizeCareerSteps(entry?.career)
     }));
 };
 
