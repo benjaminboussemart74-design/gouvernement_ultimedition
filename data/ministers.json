@@ -1,110 +1,35 @@
 [
-    {
-        "id": "1",
-        "name": "Jean Dupont",
-        "role": "leader",
-        "portfolio": "Premier ministre",
-        "photo": "assets/placeholder-minister.svg",
-        "photoAlt": "Portrait de Jean Dupont",
-        "description": "Chef du gouvernement, responsable de la coordination interministérielle.",
-        "mission": "Coordonner l'action gouvernementale.",
-        "contact": "jean.dupont@example.com",
-        "career": [
-            {
-                "id": "1a",
-                "title": "Premier ministre",
-                "organisation": "Gouvernement de la République",
-                "description": "Premier ministre de la République, en charge de la coordination interministérielle.",
-                "location": "Paris",
-                "category": "political",
-                "startDate": "2024-05-20",
-                "ongoing": true,
-                "sortIndex": 0
-            },
-            {
-                "id": "1b",
-                "title": "Ministre de l'Intérieur",
-                "organisation": "Ministère de l'Intérieur",
-                "description": "Pilotage des politiques de sécurité intérieure et de prévention.",
-                "location": "Paris",
-                "category": "political",
-                "startDate": "2021-07-06",
-                "endDate": "2024-05-19",
-                "ongoing": false,
-                "sortIndex": 1
-            },
-            {
-                "id": "1c",
-                "title": "Député",
-                "organisation": "Assemblée nationale",
-                "description": "Membre de la commission des finances pour la majorité présidentielle.",
-                "location": "Paris",
-                "category": "political",
-                "startDate": "2017-06-20",
-                "endDate": "2021-06-30",
-                "ongoing": false,
-                "sortIndex": 2
-            }
-        ]
-    },
-    {
-        "id": "2",
-        "name": "Marie Curie",
-        "role": "minister",
-        "portfolio": "Ministre de l'Économie",
-        "photo": "assets/placeholder-minister.svg",
-        "photoAlt": "Portrait de Marie Curie",
-        "description": "En charge des politiques économiques et du soutien aux entreprises.",
-        "mission": "Piloter la stratégie économique.",
-        "contact": "marie.curie@example.com",
-        "career": [
-            {
-                "id": "2a",
-                "title": "Ministre de l'Économie",
-                "organisation": "Gouvernement de la République",
-                "description": "Conduite de la stratégie de réindustrialisation et des investissements d'avenir.",
-                "location": "Paris",
-                "category": "political",
-                "startDate": "2023-07-01",
-                "ongoing": true,
-                "sortIndex": 0
-            },
-            {
-                "id": "2b",
-                "title": "Secrétaire d'État au Numérique",
-                "organisation": "Gouvernement de la République",
-                "description": "Accompagnement de la transformation digitale des entreprises.",
-                "location": "Paris",
-                "category": "political",
-                "startDate": "2020-07-07",
-                "endDate": "2023-06-30",
-                "ongoing": false,
-                "sortIndex": 1
-            },
-            {
-                "id": "2c",
-                "title": "Directrice de l'innovation",
-                "organisation": "Agence nationale de l'innovation",
-                "description": "Pilotage de programmes de soutien aux start-up industrielles.",
-                "location": "Paris",
-                "category": "professional",
-                "startDate": "2015-03-01",
-                "endDate": "2020-06-30",
-                "ongoing": false,
-                "sortIndex": 2
-            }
-        ]
-    },
-    {
-        "id": "3",
-        "name": "Paul Martin",
-        "role": "secretary",
-        "portfolio": "Secrétaire d'État chargé des Transports",
-        "photo": "assets/placeholder-minister.svg",
-        "photoAlt": "Portrait de Paul Martin",
-        "description": "Soutient le ministre des Transports sur les dossiers de mobilité.",
-        "mission": "Suivre les réformes de mobilité.",
-        "contact": "paul.martin@example.com",
-        "career": []
-    }
+	{
+		"id": "1",
+		"name": "Jean Dupont",
+		"role": "leader",
+		"portfolio": "Premier ministre",
+		"photo": "assets/placeholder-minister.svg",
+		"photoAlt": "Portrait de Jean Dupont",
+		"description": "Chef du gouvernement, responsable de la coordination interministérielle.",
+		"mission": "Coordonner l'action gouvernementale.",
+		"contact": "jean.dupont@example.com"
+	},
+	{
+		"id": "2",
+		"name": "Marie Curie",
+		"role": "minister",
+		"portfolio": "Ministre de l'Économie",
+		"photo": "assets/placeholder-minister.svg",
+		"photoAlt": "Portrait de Marie Curie",
+		"description": "En charge des politiques économiques et du soutien aux entreprises.",
+		"mission": "Piloter la stratégie économique.",
+		"contact": "marie.curie@example.com"
+	},
+	{
+		"id": "3",
+		"name": "Paul Martin",
+		"role": "secretary",
+		"portfolio": "Secrétaire d'État chargé des Transports",
+		"photo": "assets/placeholder-minister.svg",
+		"photoAlt": "Portrait de Paul Martin",
+		"description": "Soutient le ministre des Transports sur les dossiers de mobilité.",
+		"mission": "Suivre les réformes de mobilité.",
+		"contact": "paul.martin@example.com"
+	}
 ]

@@ -206,13 +206,22 @@
                             </div>
                         </dl>
                     </div>
+                    <section class="modal-module modal-module--career" hidden>
+                        <h4 class="modal-module-title">Carrière</h4>
+                        <ul class="modal-career-list" id="modal-career-list"></ul>
+                    </section>
                     <div class="modal-module modal-module--export">
                         <button id="export-minister-pdf" class="modal-export" type="button">Exporter cette fiche</button>
                     </div>
                     <div class="modal-module modal-module--footer">
                         <!-- Disclaimer & contact prompt -->
                         <div class="modal-footer-cta" aria-hidden="true">
-                            <img class="modal-footer-logo" src="assets/LogoRP_Bloc_logo_RP_bleu.png" alt="Logo RumeurPublique" onerror="this.src='assets/LogoRP_Bloc_logo_RP_bleu.svg'" />
+                            <img
+                                class="modal-footer-logo"
+                                src="assets/LogoRP_Bloc_logo_RP_bleu.png"
+                                alt="Logo RumeurPublique"
+                                onerror="this.src='assets/LogoRP_Bloc_logo_RP_bleu.svg'"
+                            />
                             <p class="modal-footer-text">
                                 Vous souhaitez rentrer en contact avec un ministre et ses équipes ? Contactez nos équipes pour définir le plan d'influence qui s'adaptera à votre entreprise.
                             </p>
@@ -221,6 +230,7 @@
                 </div>
             </div>
         </div>
+    </div>
 
     <!-- ================= SCRIPTS ================= -->
     <!-- Supabase client (required to fetch live ministers) -->

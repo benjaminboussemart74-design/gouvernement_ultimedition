@@ -2294,7 +2294,7 @@ body.print-all .toolbar {
 
 .modal-photo-frame {
     width: clamp(160px, 22vw, 220px);
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 3 / 4; /* align with .minister-photo ratio */
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 30px 60px rgba(17, 23, 39, 0.18);
@@ -2333,10 +2333,17 @@ body.print-all .toolbar {
     transform: none;
 }
 
+.modal-header {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.25rem;
+    align-items: center;
+}
+
 .modal-photo {
     width: 100%;
     height: 100%;
-    border-radius: inherit;
+    display: block;
     object-fit: cover;
     background: var(--color-guimauve);
 }
@@ -2420,60 +2427,6 @@ body.print-all .toolbar {
     color: var(--color-sesame);
 }
 
-.modal-module--mission .modal-collaborators-toggle {
-    width: 100%;
-    display: inline-flex;
-    justify-content: center;
-    padding: 1.1rem 1.5rem;
-    font-size: 1.05rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    border-radius: 14px;
-    box-shadow: 0 22px 46px rgba(75, 37, 121, 0.22);
-}
-
-.modal-module--export {
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-module--export .modal-export {
-    width: 100%;
-    max-width: 320px;
-}
-
-.modal-module--footer {
-    background: rgba(17, 23, 39, 0.04);
-    box-shadow: none;
-    padding: clamp(1.25rem, 3vw, 1.8rem) clamp(1rem, 2.6vw, 1.6rem);
-}
-
-.modal-footer-cta {
-    margin-top: 0;
-}
-
-.modal-module--footer .modal-footer-text {
-    line-height: 1.35;
-}
-
-@media (max-width: 920px) {
-    .modal-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .modal-module--photo,
-    .modal-module--identity {
-        grid-column: 1 / -1;
-    }
-}
-
-@media (max-width: 600px) {
-    .modal-module {
-        padding: clamp(1rem, 6vw, 1.4rem);
-    }
-}
-
 @media (max-width: 900px) {
     .brand-block {
         flex-direction: column;
@@ -2483,6 +2436,15 @@ body.print-all .toolbar {
     .site-nav ul {
         flex-wrap: wrap;
         justify-content: flex-start;
+    }
+
+    .modal-header {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .modal-header .modal-photo {
+        margin: 0 auto;
     }
 }
 
