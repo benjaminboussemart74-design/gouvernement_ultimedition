@@ -2574,6 +2574,12 @@ body.print-all .toolbar {
     width: 100%;
 }
 
+/* Ensure the anchor wrapping the logo doesn't stretch and remains centered */
+.brand-logo {
+    display: inline-block;
+    margin: 0 auto;
+}
+
 /* Compact header + hide decorative backdrops (requested) */
 .site-header {
     padding: 0.75rem 0.75rem !important;
