@@ -2347,6 +2347,37 @@ body.print-all .toolbar {
     color: var(--color-sesame);
 }
 
+.modal-delegates {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 1.1rem 1.3rem;
+    list-style: none;
+    background: var(--color-guimauve);
+    border-radius: var(--radius-base);
+    border: 1px solid rgba(62, 62, 61, 0.1);
+}
+
+.modal-delegate-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: calc(var(--radius-base) - 4px);
+    box-shadow: 0 2px 4px rgba(17, 23, 39, 0.08);
+}
+
+.modal-delegate-name {
+    font-weight: 600;
+    color: var(--color-poivre);
+}
+
+.modal-delegate-portfolio {
+    color: var(--color-sesame);
+    font-size: 0.95rem;
+}
+
 @media (max-width: 900px) {
     .brand-block {
         flex-direction: column;
