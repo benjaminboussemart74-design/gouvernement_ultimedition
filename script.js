@@ -457,6 +457,10 @@ const normalizeCareerSteps = (arr) => {
         return isNaN(d.getTime()) ? null : d;
     };
     const fmt = (v) => (v == null ? "" : String(v).trim());
+    const fmtColor = (v) => {
+        const value = fmt(v);
+        return value || null;
+    };
     const items = (Array.isArray(arr) ? arr : [])
         .map((c) => {
             const start = c.start_date || c.start || c.begin || null;
@@ -474,7 +478,7 @@ const normalizeCareerSteps = (arr) => {
                 color: color ? String(color).trim() : null,
             };
         })
-        .filter((it) => it.title || it.org || it.startRaw || it.endRaw);
+        .filter((it) => it.title || it.org || it.description || it.startRaw || it.endRaw || it.category);
     items.sort((a, b) => {
         const aTime = a.startDate ? a.startDate.getTime() : 0;
         const bTime = b.startDate ? b.startDate.getTime() : 0;
