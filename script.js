@@ -199,7 +199,7 @@ const modalElements = {
 };
 // Career elements (optional; shown only when data exists)
 const modalCareerSection = document.querySelector('.modal-module--career');
-const modalCareerList = document.getElementById('modal-career-list');
+const modalCareerRoot = document.getElementById('modal-career-root');
 const modalDelegatesList = document.getElementById("modal-delegates");
 
 const initializeAdvancedSearchToggle = () => {
@@ -467,9 +467,7 @@ const normalizeCareerSteps = (arr) => {
             const end = c.end_date || c.end || null;
             const title = c.title || c.position || c.job_title || "";
             const org = c.organisation || c.organization || c.org || c.company || "";
-            const category = c.category || c.type || c.sector || c.domain || c.scope || "";
-            const description = c.description || c.details || c.summary || c.context || "";
-            const color = c.category_color || c.categoryColor || c.color || c.badge_color || "";
+            const color = c.color || c.colour || c.category_color || c.ministry_color || null;
             return {
                 startRaw: start,
                 endRaw: end,
@@ -477,9 +475,7 @@ const normalizeCareerSteps = (arr) => {
                 endDate: toDate(end),
                 title: fmt(title),
                 org: fmt(org),
-                description: fmt(description),
-                category: fmt(category),
-                categoryColor: fmtColor(color)
+                color: color ? String(color).trim() : null,
             };
         })
         .filter((it) => it.title || it.org || it.description || it.startRaw || it.endRaw || it.category);
@@ -491,167 +487,102 @@ const normalizeCareerSteps = (arr) => {
     return items;
 };
 
-// Format one career period as a compact label (used in the CSS timeline)
+// Format one career period as a compact label (years only)
 const formatCareerPeriod = (it) => {
-    const sd = it.startRaw || "";
-    const ed = it.endRaw || "";
-    if (sd) return ed ? `${sd} → ${ed}` : `${sd} → présent`;
-    return ed ? `jusqu'à ${ed}` : "";
+    const extractYear = (raw, dateObj) => {
+        if (dateObj instanceof Date && !isNaN(dateObj.getTime())) return String(dateObj.getFullYear());
+        if (typeof raw === 'string') {
+            const m = raw.match(/(\d{4})/);
+            if (m) return m[1];
+        }
+        return '';
+    };
+    const y1 = extractYear(it.startRaw, it.startDate);
+    const y2 = extractYear(it.endRaw, it.endDate);
+    if (y1) return y2 ? `${y1} → ${y2}` : `${y1} → présent`;
+    return y2 ? `jusqu'à ${y2}` : '';
 };
 
-// Build a document fragment representing the modal career timeline component
-const createCareerTimelineFragment = (entries = []) => {
-    const fragment = document.createDocumentFragment();
-    let index = 0;
+// Render a legend for the timeline colors
+const renderTimelineLegend = (entries, accentColor) => {
+    if (!modalCareerSection) return;
+    // Ensure container
+    let legend = modalCareerSection.querySelector('.timeline-legend');
+    if (!legend) {
+        legend = document.createElement('div');
+        legend.className = 'timeline-legend';
+        modalCareerSection.appendChild(legend);
+    }
+    legend.innerHTML = '';
 
-    (Array.isArray(entries) ? entries : []).forEach((entry) => {
-        if (!entry) return;
-        const period = formatCareerPeriod(entry);
-        const hasContent = Boolean(entry.title || entry.org || entry.description || period || entry.category);
-        if (!hasContent) return;
+    const addItem = (color, label) => {
+        const item = document.createElement('div');
+        item.className = 'timeline-legend__item';
+        const dot = document.createElement('span');
+        dot.className = 'timeline-legend__dot';
+        if (color) dot.style.backgroundColor = color;
+        const txt = document.createElement('span');
+        txt.className = 'timeline-legend__label';
+        txt.textContent = label;
+        item.appendChild(dot);
+        item.appendChild(txt);
+        legend.appendChild(item);
+    };
 
-        const item = document.createElement("article");
-        item.className = `timeline__item timeline__item--${index % 2 === 0 ? "left" : "right"}`;
-        item.setAttribute("role", "listitem");
-        item.style.gridRowStart = String(index + 1);
-        if (entry.categoryColor) {
-            item.style.setProperty("--timeline-item-color", entry.categoryColor);
+    // Principal color
+    if (accentColor) addItem(accentColor, 'Couleur principale');
+
+    // Entry-specific colors (distinct from accent)
+    const seen = new Set();
+    (Array.isArray(entries) ? entries : []).forEach((it) => {
+        const c = (it && it.color ? String(it.color).trim() : '') || '';
+        if (!c) return;
+        const norm = c.toLowerCase();
+        const normAccent = (accentColor || '').toLowerCase();
+        if (norm && norm !== normAccent && !seen.has(norm)) {
+            seen.add(norm);
+            const label = it.org || it.title || 'Étape spécifique';
+            addItem(c, label);
         }
+    });
+};
 
-        const point = document.createElement("span");
-        point.className = "timeline__point";
-        point.setAttribute("aria-hidden", "true");
-        item.appendChild(point);
-
-        const content = document.createElement("div");
-        content.className = "timeline__content";
-
-        const header = document.createElement("div");
-        header.className = "timeline__header";
+// Build a CodePen-like timeline fragment
+const createCareerTimelineFragment = (entries) => {
+    const frag = document.createDocumentFragment();
+    const ul = document.createElement('ul');
+    (Array.isArray(entries) ? entries : []).forEach((it) => {
+        const li = document.createElement('li');
+        li.setAttribute('role', 'listitem');
+        if (it.color) {
+            li.style.setProperty('--timeline-color', it.color);
+        }
+        const period = formatCareerPeriod(it);
 
         if (period) {
-            const periodEl = document.createElement("p");
-            periodEl.className = "timeline__period";
-            periodEl.textContent = period;
-            header.appendChild(periodEl);
+            const badge = document.createElement('span');
+            badge.className = 'time-badge';
+            badge.textContent = period;
+            li.appendChild(badge);
         }
 
-        if (entry.category) {
-            const categoryEl = document.createElement("span");
-            categoryEl.className = "timeline__category";
-            categoryEl.textContent = entry.category;
-            if (entry.categoryColor) {
-                categoryEl.style.setProperty("--badge-color", entry.categoryColor);
-            }
-            header.appendChild(categoryEl);
+        const content = document.createElement('div');
+        content.className = 'content';
+        const h3 = document.createElement('h3');
+        h3.textContent = it.title || '';
+        content.appendChild(h3);
+        const details = [];
+        if (it.org) details.push(it.org);
+        if (details.length) {
+            const p = document.createElement('p');
+            p.textContent = details.join(' · ');
+            content.appendChild(p);
         }
-
-        if (header.childNodes.length) {
-            content.appendChild(header);
-        }
-
-        if (entry.title) {
-            const titleEl = document.createElement("h5");
-            titleEl.className = "timeline__title";
-            titleEl.textContent = entry.title;
-            content.appendChild(titleEl);
-        }
-
-        if (entry.org) {
-            const orgEl = document.createElement("p");
-            orgEl.className = "timeline__organisation";
-            orgEl.textContent = entry.org;
-            content.appendChild(orgEl);
-        }
-
-        if (entry.description) {
-            const descriptionEl = document.createElement("p");
-            descriptionEl.className = "timeline__description";
-            descriptionEl.textContent = entry.description;
-            content.appendChild(descriptionEl);
-        }
-
-        if (!content.childNodes.length) {
-            return;
-        }
-
-        item.appendChild(content);
-        fragment.appendChild(item);
-        index += 1;
+        li.appendChild(content);
+        ul.appendChild(li);
     });
-
-    return fragment;
-};
-
-const renderCareerTimeline = (container, entries = []) => {
-    if (!container) return false;
-    container.innerHTML = "";
-    const fragment = createCareerTimelineFragment(entries);
-    if (!fragment || fragment.childNodes.length === 0) {
-        return false;
-    }
-    container.appendChild(fragment);
-    return true;
-};
-
-let activeCareerRequestToken = 0;
-
-const fetchCareerTimeline = async (minister) => {
-    if (!minister) return [];
-
-    if (Array.isArray(minister.career) && minister.career.length) {
-        return minister.career;
-    }
-
-    if (minister.__careerTimelineLoaded) {
-        return Array.isArray(minister.career) ? minister.career : [];
-    }
-
-    if (minister.id == null) {
-        minister.__careerTimelineLoaded = true;
-        return Array.isArray(minister.career) ? minister.career : [];
-    }
-
-    const client = ensureSupabaseClient();
-    if (!client) {
-        return Array.isArray(minister.career) ? minister.career : [];
-    }
-
-    try {
-        const { data, error } = await client
-            .from('person_careers')
-            .select('*')
-            .eq('person_id', minister.id)
-            .order('start_date', { ascending: false });
-
-        if (error || !Array.isArray(data)) {
-            return Array.isArray(minister.career) ? minister.career : [];
-        }
-
-        const normalized = normalizeCareerSteps(data);
-        minister.career = normalized;
-        minister.__careerTimelineLoaded = true;
-        return normalized;
-    } catch (err) {
-        return Array.isArray(minister.career) ? minister.career : [];
-    }
-};
-
-const populateCareerModule = async (minister) => {
-    if (!modalCareerSection || !modalCareerList) return;
-
-    const requestToken = ++activeCareerRequestToken;
-
-    modalCareerSection.hidden = true;
-    modalCareerList.innerHTML = "";
-
-    if (!minister) return;
-
-    const entries = await fetchCareerTimeline(minister);
-    if (requestToken !== activeCareerRequestToken) return;
-
-    const hasContent = renderCareerTimeline(modalCareerList, entries);
-    modalCareerSection.hidden = !hasContent;
+    frag.appendChild(ul);
+    return frag;
 };
 
 const ensureSupabaseClient = () => {
@@ -2195,7 +2126,46 @@ const openModal = (minister) => {
         }
     }
 
-    populateCareerModule(minister);
+    // Career timeline (best-effort)
+    if (modalCareerSection && modalCareerRoot) {
+        let careerItems = Array.isArray(minister.career) ? minister.career : [];
+        if (careerItems.length) {
+            modalCareerRoot.innerHTML = '';
+            modalCareerRoot.setAttribute('role', 'list');
+            modalCareerRoot.appendChild(createCareerTimelineFragment(careerItems));
+            renderTimelineLegend(careerItems, minister.accentColor || null);
+            modalCareerSection.hidden = false;
+        } else {
+            // Try lazy-load via REST if nested relation wasn't present
+            const client = ensureSupabaseClient();
+            if (client && minister.id != null) {
+                client
+                    .from('person_careers')
+                    .select('*')
+                    .eq('person_id', minister.id)
+                    .order('start_date', { ascending: false })
+                    .then(({ data, error }) => {
+                        if (!error && Array.isArray(data) && data.length) {
+                            const normalized = normalizeCareerSteps(data);
+                            modalCareerRoot.innerHTML = '';
+                            modalCareerRoot.setAttribute('role', 'list');
+                            modalCareerRoot.appendChild(createCareerTimelineFragment(normalized));
+                            renderTimelineLegend(normalized, minister.accentColor || null);
+                            modalCareerSection.hidden = false;
+                            // Also store on the minister object for subsequent opens
+                            minister.career = normalized;
+                        } else {
+                            modalCareerSection.hidden = true;
+                        }
+                    })
+                    .catch(() => {
+                        modalCareerSection.hidden = true;
+                    });
+            } else {
+                modalCareerSection.hidden = true;
+            }
+        }
+    }
 
     if (modalBody) {
         const oldCollabSection = modalBody.querySelector(".modal-collaborators");

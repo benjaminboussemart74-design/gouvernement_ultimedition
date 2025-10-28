@@ -1547,6 +1547,101 @@ body.print-all .toolbar {
     gap: 1.25rem;
 }
 
+/* Scoped CodePen-like timeline inside the career module */
+.modal-module--career .timeline {
+    /* No forced background to keep modal look */
+    padding: 10px 5px;
+}
+
+.modal-module--career .timeline ul {
+    list-style: none;
+    margin: 0;
+    padding: 10px 5px 10px 20px;
+    border-left: 2px solid var(--timeline-color, rgba(62, 62, 61, 0.18));
+}
+
+.modal-module--career .timeline li[role="listitem"] {
+    padding: 14px 16px;
+    position: relative;
+    cursor: default;
+    transition: background-color .25s ease;
+}
+
+.modal-module--career .timeline li[role="listitem"]:before {
+    position: absolute;
+    content: '';
+    width: 10px;
+    height: 10px;
+    background-color: var(--timeline-color, var(--color-turquoise));
+    border-radius: 50%;
+    left: -16px;
+    top: 22px;
+    transition: box-shadow .25s ease, background-color .25s ease;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(62, 62, 61, 0.25);
+}
+
+.modal-module--career .timeline li[role="listitem"]:hover {
+    background-color: rgba(17, 23, 39, 0.04);
+}
+
+.modal-module--career .timeline li[role="listitem"]:hover:before {
+    box-shadow: 0 0 0 3px rgba(17, 23, 39, 0.10);
+}
+
+.modal-module--career .timeline .time-badge {
+    display: inline-block;
+    background-color: color-mix(in oklab, var(--timeline-color, var(--color-turquoise)) 24%, white);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 0.875rem;
+    line-height: 1.2;
+    color: var(--color-encre);
+}
+
+.modal-module--career .timeline .content h3 {
+    color: var(--color-poivre);
+    font-size: 1rem;
+    margin: 6px 0 0 0;
+}
+
+.modal-module--career .timeline .content p {
+    margin: 6px 0 0 0;
+    color: var(--color-sesame);
+    font-size: 0.95rem;
+}
+
+/* Legend for timeline colors */
+.modal-module--career .timeline-legend {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 0.75rem;
+}
+
+.modal-module--career .timeline-legend__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(236, 234, 237, 0.45);
+}
+
+.modal-module--career .timeline-legend__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(62, 62, 61, 0.25);
+    display: inline-block;
+}
+
+.modal-module--career .timeline-legend__label {
+    font-size: 0.9rem;
+    color: var(--color-poivre);
+}
+
 .cabinet-panel-header {
     display: grid;
     gap: 0.5rem;
