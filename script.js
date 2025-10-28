@@ -43,35 +43,6 @@ const MINISTRY_ORDER_MAP = new Map(
     MINISTRY_ORDER.map((label, idx) => [normalizeLabel(label), idx])
 );
 
-const getPrimaryMinistryLabel = (minister) => {
-    if (!minister) return "";
-    if (Array.isArray(minister.ministries) && minister.ministries.length) {
-        const primary = minister.ministries.find((entry) => entry?.isPrimary && entry?.label);
-        if (primary?.label) return primary.label;
-        const first = minister.ministries.find((entry) => entry?.label);
-        if (first?.label) return first.label;
-    }
-    return minister.portfolio || minister.ministry || "";
-};
-
-const compareMinisters = (a, b) => {
-    if (!a && !b) return 0;
-    if (!a) return 1;
-    if (!b) return -1;
-
-    const roleA = ROLE_PRIORITY[a.role] ?? Number.MAX_SAFE_INTEGER;
-    const roleB = ROLE_PRIORITY[b.role] ?? Number.MAX_SAFE_INTEGER;
-    if (roleA !== roleB) return roleA - roleB;
-
-    const portfolioKeyA = MINISTRY_ORDER_MAP.get(normalise(getPrimaryMinistryLabel(a)));
-    const portfolioKeyB = MINISTRY_ORDER_MAP.get(normalise(getPrimaryMinistryLabel(b)));
-    const orderA = typeof portfolioKeyA === "number" ? portfolioKeyA : Number.MAX_SAFE_INTEGER;
-    const orderB = typeof portfolioKeyB === "number" ? portfolioKeyB : Number.MAX_SAFE_INTEGER;
-    if (orderA !== orderB) return orderA - orderB;
-
-    return (a.name || "").localeCompare(b.name || "");
-};
-
 // Priorité d'importance par rôle
 // 0 = plus important (haut gauche), grandissant vers la droite/bas
 const ROLE_PRIORITY = {
@@ -171,6 +142,18 @@ const modal = document.getElementById("minister-modal");
 const modalBackdrop = modal?.querySelector("[data-dismiss]");
 const modalClose = modal?.querySelector(".modal-close");
 const exportButton = document.getElementById("export-minister-pdf");
+if (exportButton) {
+    exportButton.disabled = true;
+    exportButton.setAttribute("aria-disabled", "true");
+}
+const sortSelect = document.getElementById("sort-order");
+const delegatesToggle = document.getElementById("filter-delegates");
+const bioToggle = document.getElementById("filter-bio");
+const resetButton = document.getElementById("filters-reset");
+const resultsCurrentEl = document.getElementById("results-count-current");
+const resultsTotalEl = document.getElementById("results-count-total");
+const resultsLabelEl = document.getElementById("results-count-label");
+const activeFiltersHint = document.getElementById("active-filters-hint");
 
 const modalElements = {
     photo: document.getElementById("modal-photo"),
@@ -231,6 +214,99 @@ let onlyWithDelegates = false;
 let onlyWithBio = false;
 let lastFetchError = null; // store last fetch error for debug UI
 let activeMinister = null;
+let printSheetContainer = null;
+
+const ensurePrintSheetContainer = () => {
+    if (typeof document === "undefined") return null;
+    if (!printSheetContainer) {
+        printSheetContainer = document.createElement("div");
+        printSheetContainer.id = "print-sheet";
+    }
+    return printSheetContainer;
+};
+
+const cleanupPrintSheet = () => {
+    if (typeof document === "undefined" || !document.body) return;
+    document.body.classList.remove("print-single");
+    if (!printSheetContainer) return;
+    if (printSheetContainer.parentElement) {
+        printSheetContainer.parentElement.removeChild(printSheetContainer);
+    }
+    printSheetContainer.innerHTML = "";
+};
+
+updatePartyFilterOptions();
+
+const hasDelegates = (minister) => Array.isArray(minister?.delegates) && minister.delegates.length > 0;
+const hasBiography = (minister) => Boolean((minister?.description ?? "").trim());
+
+const updateResultsSummary = (visible, total) => {
+    if (resultsCurrentEl) {
+        resultsCurrentEl.textContent = String(visible);
+    }
+    if (resultsTotalEl) {
+        resultsTotalEl.textContent = String(total);
+    }
+    if (resultsLabelEl) {
+        resultsLabelEl.textContent = visible > 1 || visible === 0 ? "résultats" : "résultat";
+    }
+};
+
+const updateActiveFiltersHint = (visible, total) => {
+    if (!activeFiltersHint) return;
+    const summaries = [];
+    if (currentRole !== "all") {
+        const roleButton = filterButtons.find((btn) => btn.dataset.role === currentRole);
+        if (roleButton) summaries.push(roleButton.textContent.trim());
+    }
+    if (currentParty) {
+        summaries.push(`Parti : ${currentParty}`);
+    }
+    if (onlyWithDelegates) {
+        summaries.push("Cabinet renseigné");
+    }
+    if (onlyWithBio) {
+        summaries.push("Bio disponible");
+    }
+    if (currentQueryInput.trim()) {
+        summaries.push(`Recherche « ${currentQueryInput.trim()} »`);
+    }
+
+    if (!summaries.length) {
+        activeFiltersHint.textContent = visible || total === 0 ? "Tous les profils sont affichés." : "Les profils disponibles sont affichés.";
+        return;
+    }
+
+    const text = summaries.join(" • ");
+    activeFiltersHint.textContent = visible ? text : `${text} — aucun résultat`;
+};
+
+const sortMinisters = (items) => {
+    const list = items.slice();
+    switch (currentSort) {
+        case "alpha":
+            return list.sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr", { sensitivity: "base" }));
+        case "portfolio":
+            return list.sort((a, b) => {
+                const byPortfolio = (a.portfolio || "").localeCompare(b.portfolio || "", "fr", { sensitivity: "base" });
+                if (byPortfolio !== 0) return byPortfolio;
+                return (a.name || "").localeCompare(b.name || "", "fr", { sensitivity: "base" });
+            });
+        case "role":
+        default:
+            return list.sort((a, b) => {
+                const ra = ROLE_PRIORITY[a.role] ?? Number.MAX_SAFE_INTEGER;
+                const rb = ROLE_PRIORITY[b.role] ?? Number.MAX_SAFE_INTEGER;
+                if (ra !== rb) return ra - rb;
+                const ia = MINISTRY_ORDER_MAP.get(normalise(a.portfolio || a.ministry || ""));
+                const ib = MINISTRY_ORDER_MAP.get(normalise(b.portfolio || b.ministry || ""));
+                const va = typeof ia === "number" ? ia : Number.MAX_SAFE_INTEGER;
+                const vb = typeof ib === "number" ? ib : Number.MAX_SAFE_INTEGER;
+                if (va !== vb) return va - vb;
+                return (a.name || "").localeCompare(b.name || "", "fr", { sensitivity: "base" });
+            });
+    }
+};
 
 const debounce = (fn, wait = 220) => {
     let timeout;
@@ -251,17 +327,6 @@ function normalise(value) {
             .trim() ?? ""
     );
 }
-
-const getPortfolioLabel = (minister) => {
-    if (!minister) return "";
-    if (Array.isArray(minister.ministries) && minister.ministries.length) {
-        return minister.ministries
-            .map((entry) => entry?.label)
-            .filter(Boolean)
-            .join(" • ");
-    }
-    return minister.portfolio || minister.ministry || "";
-};
 
 const ensureSupabaseClient = () => {
     try {
@@ -470,9 +535,7 @@ const renderGrid = (items) => {
     emptyState.hidden = true;
     const fragment = document.createDocumentFragment();
 
-    const sorted = items.slice().sort(compareMinisters);
-
-    sorted.forEach((minister) => {
+    items.forEach((minister) => {
         fragment.appendChild(buildCard(minister));
     });
 
@@ -663,38 +726,13 @@ const ensureCollaboratorsForPrint = async (minister) => {
     return collaboratorsCache.get(minister.id) || [];
 };
 
-const collectAllMinistersForPrint = () => {
-    const seen = new Set();
-    const combined = [];
-    const pushUnique = (person) => {
-        if (!person) return;
-        const key =
-            person.id != null
-                ? `id:${person.id}`
-                : `${normalise(person.name || "")}|${normalise(getPortfolioLabel(person))}|${person.role || ""}`;
-        if (seen.has(key)) return;
-        seen.add(key);
-        combined.push(person);
-    };
-
-    if (Array.isArray(coreMinisters)) coreMinisters.forEach(pushUnique);
-    if (Array.isArray(delegateMinisters)) delegateMinisters.forEach(pushUnique);
-    if (!combined.length && Array.isArray(ministers)) ministers.forEach(pushUnique);
-
-    return combined.sort(compareMinisters);
-};
-
 const printMinisterSheet = async (minister) => {
-    if (!minister) return;
+    if (!minister || typeof document === "undefined" || !document.body) return;
 
-    let printSheet = document.getElementById("print-sheet");
-    if (!printSheet) {
-        printSheet = document.createElement("div");
-        printSheet.id = "print-sheet";
-    } else {
-        printSheet.innerHTML = "";
-    }
-    printSheet.className = "print-sheet";
+    const printSheet = ensurePrintSheetContainer();
+    if (!printSheet) return;
+
+    printSheet.innerHTML = "";
 
     const ensureText = (value, fallback = "") => {
         if (typeof value !== "string") {
@@ -711,19 +749,93 @@ const printMinisterSheet = async (minister) => {
         return element;
     };
 
-    const fragment = document.createDocumentFragment();
+    const ministriesLabel = minister.ministries?.length
+        ? minister.ministries
+              .map((entry) => entry?.label)
+              .filter(Boolean)
+              .join(" • ")
+        : null;
 
     const roleLabel = ensureText(formatRole(minister.role));
     const nameLabel = ensureText(minister.name, "Nom du ministre");
-    const portfolioLabel = ensureText(getPortfolioLabel(minister));
+    const portfolioLabel = ensureText(ministriesLabel || minister.portfolio);
     const descriptionText = ensureText(
         minister.description,
         "Ajoutez ici une biographie synthétique."
     );
     const missionText = ensureText(minister.mission);
     const contactText = ensureText(minister.contact, "Contact prochainement disponible.");
-    const rawParty = minister.party == null ? "" : String(minister.party).trim();
-    const partyText = rawParty ? mapPartyLabel(rawParty) || rawParty : "";
+    const partyLabel = typeof minister.party === "string" ? minister.party.trim() : minister.party;
+    const printDate = new Date().toLocaleDateString("fr-FR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+    });
+
+    const header = createElement("header", "print-sheet-header");
+    const brand = createElement("div", "print-sheet-brand");
+    brand.appendChild(createElement("p", "print-sheet-eyebrow", "RumeurLAB • Gouvernement Lecornu II"));
+    brand.appendChild(createElement("h1", "print-sheet-name", nameLabel));
+    if (roleLabel) brand.appendChild(createElement("p", "print-sheet-role", roleLabel));
+    if (portfolioLabel) brand.appendChild(createElement("p", "print-sheet-portfolio", portfolioLabel));
+    brand.appendChild(createElement("p", "print-sheet-date", `Édité le ${printDate}`));
+
+    const partyBadge = createPartyBadge(partyLabel == null ? "" : String(partyLabel).trim());
+    if (partyBadge) {
+        partyBadge.classList.add("print-sheet-party");
+        brand.appendChild(partyBadge);
+    }
+
+    const photoWrapper = createElement("div", "print-sheet-photo");
+    const photo = document.createElement("img");
+    photo.src = minister.photo || "assets/placeholder-minister.svg";
+    photo.alt = minister.photoAlt || (minister.name ? `Portrait de ${minister.name}` : "Portrait du ministre");
+    photoWrapper.appendChild(photo);
+
+    header.appendChild(brand);
+    header.appendChild(photoWrapper);
+    printSheet.appendChild(header);
+
+    const ministerSection = createElement("section", "print-sheet-section print-sheet-minister");
+    ministerSection.appendChild(createElement("h2", "print-section-title", "Ministre"));
+    const ministerBody = createElement("div", "print-section-body");
+    ministerBody.appendChild(createElement("p", "print-section-text", descriptionText));
+
+    if (contactText) {
+        const contactList = createElement("dl", "print-sheet-meta");
+        const contactWrapper = createElement("div", "print-meta-item");
+        contactWrapper.appendChild(createElement("dt", "print-meta-label", "Contact"));
+        contactWrapper.appendChild(createElement("dd", "print-meta-value", contactText));
+        contactList.appendChild(contactWrapper);
+        ministerBody.appendChild(contactList);
+    }
+
+    ministerSection.appendChild(ministerBody);
+    printSheet.appendChild(ministerSection);
+
+    const missionItems = [];
+    if (missionText) {
+        missionItems.push({ label: "Mission principale", value: missionText });
+    }
+    if (portfolioLabel) {
+        missionItems.push({ label: "Portefeuille", value: portfolioLabel });
+    }
+
+    if (missionItems.length) {
+        const missionsSection = createElement("section", "print-sheet-section print-sheet-missions");
+        missionsSection.appendChild(createElement("h2", "print-section-title", "Missions"));
+        const missionsBody = createElement("div", "print-section-body");
+        const metaList = createElement("dl", "print-sheet-meta");
+        missionItems.forEach((entry) => {
+            const wrapper = createElement("div", "print-meta-item");
+            wrapper.appendChild(createElement("dt", "print-meta-label", entry.label));
+            wrapper.appendChild(createElement("dd", "print-meta-value", entry.value));
+            metaList.appendChild(wrapper);
+        });
+        missionsBody.appendChild(metaList);
+        missionsSection.appendChild(missionsBody);
+        printSheet.appendChild(missionsSection);
+    }
 
     let collaborators = [];
     try {
@@ -731,163 +843,17 @@ const printMinisterSheet = async (minister) => {
     } catch (error) {
         console.warn("[onepage] Impossible de préparer les collaborateurs pour l'impression", error);
     }
-    const delegates = Array.isArray(minister.delegates) ? minister.delegates.filter(Boolean) : [];
-    const allMinisters = collectAllMinistersForPrint();
-
-    const cover = createElement("section", "print-sheet-cover");
-    const coverBrand = createElement("div", "print-cover-brand");
-    coverBrand.appendChild(createElement("p", "print-cover-eyebrow", "Gouvernement Lecornu II"));
-    coverBrand.appendChild(createElement("h1", "print-cover-title", "Fiche ministre"));
-
-    const subtitleParts = [nameLabel];
-    if (roleLabel) subtitleParts.push(roleLabel);
-    const coverSubtitle = createElement("p", "print-cover-subtitle", subtitleParts.join(" • "));
-    coverBrand.appendChild(coverSubtitle);
-    if (portfolioLabel) {
-        coverBrand.appendChild(createElement("p", "print-cover-portfolio", portfolioLabel));
-    }
-    coverBrand.appendChild(
-        createElement(
-            "p",
-            "print-cover-note",
-            "Document généré automatiquement depuis la plateforme Gouvernement Lecornu II"
-        )
-    );
-
-    cover.appendChild(coverBrand);
-    const tricolor = createElement("div", "print-cover-tricolor");
-    ["bleu", "blanc", "rouge"].forEach((tone) => {
-        tricolor.appendChild(createElement("span", `print-cover-swatch is-${tone}`));
-    });
-    cover.appendChild(tricolor);
-    fragment.appendChild(cover);
-
-    const profile = createElement("section", "print-profile");
-    const profileInfo = createElement("div", "print-profile-info");
-    const profileHeader = createElement("div", "print-profile-header");
-    profileHeader.appendChild(
-        createElement(
-            "p",
-            "print-profile-role",
-            roleLabel || "Membre du gouvernement"
-        )
-    );
-    profileHeader.appendChild(createElement("h2", "print-profile-name", nameLabel));
-    if (portfolioLabel) {
-        profileHeader.appendChild(createElement("p", "print-profile-portfolio", portfolioLabel));
-    }
-    profileInfo.appendChild(profileHeader);
-
-    if (descriptionText) {
-        profileInfo.appendChild(createElement("p", "print-profile-description", descriptionText));
-    }
-
-    if (partyText) {
-        const badges = createElement("ul", "print-profile-badges");
-        const badge = createElement("li", "print-profile-badge", partyText);
-        badges.appendChild(badge);
-        profileInfo.appendChild(badges);
-    }
-
-    const metaItems = [];
-    if (missionText) {
-        metaItems.push({ label: "Mission prioritaire", value: missionText });
-    }
-    if (contactText) {
-        metaItems.push({ label: "Contact", value: contactText });
-    }
-
-    if (metaItems.length) {
-        const metaList = createElement("dl", "print-sheet-meta print-profile-meta");
-        metaItems.forEach((entry) => {
-            const wrapper = createElement("div", "print-meta-item");
-            wrapper.appendChild(createElement("dt", "print-meta-label", entry.label));
-            wrapper.appendChild(createElement("dd", "print-meta-value", entry.value));
-            metaList.appendChild(wrapper);
-        });
-        profileInfo.appendChild(metaList);
-    }
-
-    const profilePhoto = createElement("div", "print-profile-photo");
-    const photo = document.createElement("img");
-    photo.src = minister.photo || "assets/placeholder-minister.svg";
-    photo.alt = minister.photoAlt || (minister.name ? `Portrait de ${minister.name}` : "Portrait du ministre");
-    profilePhoto.appendChild(photo);
-
-    profile.appendChild(profileInfo);
-    profile.appendChild(profilePhoto);
-    fragment.appendChild(profile);
-
-    const hasDelegates = delegates.some((delegate) => DELEGATE_ROLES.has(delegate.role));
-    if (hasDelegates) {
-        const delegateSection = createElement(
-            "section",
-            "print-sheet-section print-delegates-section"
-        );
-        delegateSection.appendChild(
-            createElement(
-                "h2",
-                "print-section-title",
-                "Ministres délégués & secrétaires d'État rattachés"
-            )
-        );
-        const delegateGrid = createElement("div", "print-delegates-grid");
-        delegates
-            .filter((delegate) => DELEGATE_ROLES.has(delegate.role))
-            .forEach((delegate) => {
-                const card = createElement("article", "print-delegate-card");
-                card.appendChild(
-                    createElement(
-                        "p",
-                        "print-delegate-role",
-                        ensureText(formatRole(delegate.role), "Ministre délégué")
-                    )
-                );
-                card.appendChild(
-                    createElement(
-                        "h3",
-                        "print-delegate-name",
-                        ensureText(delegate.name, "Nom à préciser")
-                    )
-                );
-                const delegatePortfolio = ensureText(getPortfolioLabel(delegate));
-                if (delegatePortfolio) {
-                    card.appendChild(
-                        createElement("p", "print-delegate-portfolio", delegatePortfolio)
-                    );
-                }
-                const delegatePartyRaw = delegate.party == null ? "" : String(delegate.party).trim();
-                const delegateParty = delegatePartyRaw
-                    ? mapPartyLabel(delegatePartyRaw) || delegatePartyRaw
-                    : "";
-                if (delegateParty) {
-                    card.appendChild(
-                        createElement("p", "print-delegate-party", delegateParty)
-                    );
-                }
-                delegateGrid.appendChild(card);
-            });
-        delegateSection.appendChild(delegateGrid);
-        fragment.appendChild(delegateSection);
-    }
-
     const hasCollaborators = Array.isArray(collaborators) && collaborators.length;
     if (hasCollaborators) {
         const collabSection = createElement(
             "section",
-            "print-sheet-section print-collaborators-section"
+            "print-sheet-section print-sheet-cabinet print-collaborators-section"
         );
         collabSection.appendChild(createElement("h2", "print-section-title", "Cabinet"));
-        collabSection.appendChild(
-            createElement(
-                "p",
-                "print-section-text",
-                "Liste indicative des collaborateur·rices rattaché·es"
-            )
-        );
+        const collabBody = createElement("div", "print-section-body");
         const collabGrid = createElement("div", "print-collaborators-grid");
         collaborators.forEach((collab) => {
-            const card = createElement("article", "print-collaborator-card");
+            const card = createElement("div", "print-collaborator-card");
             const collabPhotoWrapper = createElement("div", "print-collaborator-photo");
             const collabImg = document.createElement("img");
             collabImg.src = collab.photo_url || "assets/placeholder-minister.svg";
@@ -899,18 +865,10 @@ const printMinisterSheet = async (minister) => {
 
             const details = createElement("div", "print-collaborator-details");
             details.appendChild(
-                createElement(
-                    "p",
-                    "print-collaborator-name",
-                    ensureText(collab.full_name, "Collaborateur·rice")
-                )
+                createElement("p", "print-collaborator-name", ensureText(collab.full_name, "Collaborateur·rice"))
             );
             details.appendChild(
-                createElement(
-                    "p",
-                    "print-collaborator-role",
-                    ensureText(collab.cabinet_role, "Collaborateur")
-                )
+                createElement("p", "print-collaborator-role", ensureText(collab.cabinet_role, "Collaborateur"))
             );
             if (collab.collab_grade) {
                 details.appendChild(
@@ -920,107 +878,17 @@ const printMinisterSheet = async (minister) => {
             card.appendChild(details);
             collabGrid.appendChild(card);
         });
-        collabSection.appendChild(collabGrid);
-        fragment.appendChild(collabSection);
+        collabBody.appendChild(collabGrid);
+        collabSection.appendChild(collabBody);
+        printSheet.appendChild(collabSection);
     }
-    if (allMinisters.length) {
-        const governmentSection = createElement("section", "print-government-section");
-        governmentSection.appendChild(
-            createElement("h2", "print-section-title", "Composition complète du gouvernement")
-        );
-        governmentSection.appendChild(
-            createElement(
-                "p",
-                "print-section-text",
-                "Inclut les ministres, ministres délégués et secrétaires d'État en exercice."
-            )
-        );
-
-        const buildGovernmentCard = (person) => {
-            const card = createElement("article", "print-government-card");
-            const isDelegate = DELEGATE_ROLES.has(person.role);
-            if (isDelegate) card.classList.add("is-delegate");
-
-            const sameId =
-                minister.id != null && person.id != null
-                    ? String(minister.id) === String(person.id)
-                    : false;
-            const sameFallback =
-                !sameId && !person.id && !minister.id
-                    ? normalise(person.name) === normalise(minister.name) &&
-                      normalise(person.role) === normalise(minister.role)
-                    : false;
-            if (sameId || sameFallback) {
-                card.classList.add("is-active");
-            }
-
-            card.appendChild(
-                createElement(
-                    "p",
-                    "print-government-role",
-                    ensureText(formatRole(person.role), "Membre du gouvernement")
-                )
-            );
-            card.appendChild(
-                createElement("h4", "print-government-name", ensureText(person.name, "Nom à confirmer"))
-            );
-            const portfolio = ensureText(getPortfolioLabel(person));
-            if (portfolio) {
-                card.appendChild(
-                    createElement("p", "print-government-portfolio", portfolio)
-                );
-            }
-            const partyRaw = person.party == null ? "" : String(person.party).trim();
-            const partyLabel = partyRaw ? mapPartyLabel(partyRaw) || partyRaw : "";
-            if (partyLabel) {
-                card.appendChild(createElement("p", "print-government-party", partyLabel));
-            }
-            return card;
-        };
-
-        const grouped = {
-            core: allMinisters.filter((person) => !DELEGATE_ROLES.has(person.role)),
-            delegates: allMinisters.filter((person) => DELEGATE_ROLES.has(person.role))
-        };
-
-        const buildGroup = (title, items) => {
-            if (!items.length) return null;
-            const group = createElement("div", "print-government-group");
-            group.appendChild(createElement("h3", "print-government-heading", title));
-            const grid = createElement("div", "print-government-grid");
-            items.forEach((person) => grid.appendChild(buildGovernmentCard(person)));
-            group.appendChild(grid);
-            return group;
-        };
-
-        const coreGroup = buildGroup("Premier ministre & ministres", grouped.core);
-        if (coreGroup) governmentSection.appendChild(coreGroup);
-        const delegateGroup = buildGroup(
-            "Ministres délégués & secrétaires d'État",
-            grouped.delegates
-        );
-        if (delegateGroup) governmentSection.appendChild(delegateGroup);
-
-        fragment.appendChild(governmentSection);
-    }
-
-    const footer = createElement("footer", "print-sheet-footer");
-    const now = new Date();
-    footer.appendChild(
-        createElement(
-            "p",
-            "print-footer-note",
-            `Mise à jour générée le ${now.toLocaleDateString("fr-FR")}`
-        )
-    );
-    fragment.appendChild(footer);
 
     // --- print footer / contact CTA (discret) ---
     try {
         const printFooter = createElement("footer", "print-sheet-footer");
         const logo = document.createElement("img");
-    // prefer provided SVG (normalized filename) and fallback to alternate
-    logo.src = "assets/LogoRP_Bloc_logo_RP_bleu.svg";
+        // prefer provided SVG and fallback to previously bundled SVG
+        logo.src = "assets/LogoRP_Bloc logo RP bleu.svg";
         logo.alt = "Logo RumeurPublique";
         logo.onerror = function () {
             this.onerror = null;
@@ -1034,36 +902,532 @@ const printMinisterSheet = async (minister) => {
         );
         printFooter.appendChild(logo);
         printFooter.appendChild(text);
-        fragment.appendChild(printFooter);
+        printSheet.appendChild(printFooter);
     } catch (e) {
         console.warn("[onepage] impossible d'ajouter le footer d'impression :", e);
     }
 
-    printSheet.appendChild(fragment);
+    document.body.appendChild(printSheet);
     document.body.classList.add("print-single");
 
-    const cleanup = () => {
-        document.body.classList.remove("print-single");
-        if (printSheet.parentElement) {
-            printSheet.parentElement.removeChild(printSheet);
-        } else {
-            printSheet.innerHTML = "";
-        }
-        window.removeEventListener("afterprint", cleanup);
+    const handleAfterPrint = () => {
+        cleanupPrintSheet();
+        window.removeEventListener("afterprint", handleAfterPrint);
     };
 
-    window.addEventListener("afterprint", cleanup);
+    window.addEventListener("afterprint", handleAfterPrint);
+
     window.print();
 
     window.setTimeout(() => {
         if (document.body.classList.contains("print-single")) {
-            cleanup();
+            cleanupPrintSheet();
+            window.removeEventListener("afterprint", handleAfterPrint);
         }
     }, 1000);
 };
 
+const handleExportMinisterClick = async (minister = activeMinister) => {
+    if (!exportButton || !minister) return;
+
+    exportButton.disabled = true;
+    exportButton.setAttribute("aria-busy", "true");
+    exportButton.setAttribute("aria-disabled", "true");
+
+    try {
+        await printMinisterSheet(minister);
+    } finally {
+        exportButton.removeAttribute("aria-busy");
+        if (modal && !modal.hidden) {
+            exportButton.disabled = false;
+            exportButton.removeAttribute("aria-disabled");
+        } else {
+            exportButton.disabled = true;
+            exportButton.setAttribute("aria-disabled", "true");
+        }
+    }
+
+    const assignedIds = new Set();
+    const lanesWrapper = document.createElement("div");
+    lanesWrapper.className = "cabinet-lanes";
+
+    CABINET_LANES.forEach((laneDefinition) => {
+        const laneMembers = members.filter((member) => laneDefinition.grades.includes(member.gradeKey));
+        laneMembers.forEach((member) => assignedIds.add(member.id));
+
+        const lane = renderCabinetLane(laneDefinition, laneMembers);
+        if (lane) {
+            lanesWrapper.appendChild(lane);
+        }
+    });
+
+    const remainingMembers = members.filter((member) => !assignedIds.has(member.id));
+    if (remainingMembers.length) {
+        const fallbackLane = renderCabinetLane(CABINET_FALLBACK_LANE, remainingMembers);
+        if (fallbackLane) {
+            lanesWrapper.appendChild(fallbackLane);
+        }
+    }
+
+    panel.appendChild(lanesWrapper);
+    return section;
+};
+
+// Cabinet grade helpers and caches
+let collaboratorGradesLookup = null;
+let collaboratorGradesPromise = null;
+
+const toAlphaKey = (value) => {
+    if (value == null) return null;
+    try {
+        return String(value)
+            .normalize("NFD")
+            .replace(/\p{Diacritic}+/gu, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "")
+            .trim();
+    } catch {
+        const s = String(value).toLowerCase();
+        return s.replace(/[^a-z0-9]+/g, "").trim();
+    }
+};
+
+const CABINET_GRADE_ALIASES = [
+    ["dircab", "direcab"],
+    ["directeurdecabinet", "direcab"],
+    ["directricedecabinet", "direcab"],
+    ["chefcab", "chefcab"],
+    ["chefdecabinet", "chefcab"],
+    ["direcabadj", "direcab-adj"],
+    ["directeuradjointdecabinet", "direcab-adj"],
+    ["chefcabadj", "chefcabadj"],
+    ["adjointaucheffedecabinet", "chefcabadj"],
+    ["conseiller", "conseiller"],
+    ["conseillere", "conseiller"],
+];
+
+const FALLBACK_COLLAB_GRADES = [
+    { key: "direcab", code: "DIRECAB", label: "Directeur·rice de cabinet", rank: 1 },
+    { key: "direcab-adj", code: "DIRECAB-ADJ", label: "Adjoint·e au directeur de cabinet", rank: 2 },
+    { key: "chefcab", code: "CHEFCAB", label: "Chef·fe de cabinet", rank: 3 },
+    { key: "chefcabadj", code: "CHEFCAB-ADJ", label: "Adjoint·e au·à la chef·fe de cabinet", rank: 4 },
+    { key: "conseiller", code: "CONSEILLER", label: "Conseiller·ère", rank: 10 },
+];
+
+const canonicaliseCabinetGrade = (grade, gradeLookup) => {
+    const key = toAlphaKey(grade);
+    if (!key) return null;
+    const alias = gradeLookup?.alias;
+    if (alias && alias.has(key)) return alias.get(key);
+    return key;
+};
+
+const createGradeLookup = (grades) => {
+    const byKey = new Map();
+    const alias = new Map(CABINET_GRADE_ALIASES);
+
+    const register = (key, meta, sources = []) => {
+        if (!key) return;
+        const safeMeta = {
+            key,
+            code: meta?.code ?? key,
+            label: meta?.label ?? key,
+            rank: typeof meta?.rank === "number" ? meta.rank : Number.POSITIVE_INFINITY
+        };
+        byKey.set(key, safeMeta);
+        alias.set(key, key);
+        sources.forEach((source) => {
+            const aliasKey = toAlphaKey(source);
+            if (aliasKey) {
+                alias.set(aliasKey, key);
+            }
+        });
+    };
+
+    FALLBACK_COLLAB_GRADES.forEach((fallbackGrade) => {
+        register(fallbackGrade.key, fallbackGrade, [fallbackGrade.code, fallbackGrade.label]);
+    });
+
+    (grades || []).forEach((grade) => {
+        if (!grade) return;
+        const sources = [grade.code, grade.label];
+        const preferredKey = sources
+            .map((value) => {
+                const key = toAlphaKey(value);
+                if (key && byKey.has(key)) {
+                    return key;
+                }
+                return null;
+            })
+            .find(Boolean);
+
+        const key = preferredKey || toAlphaKey(grade.code) || toAlphaKey(grade.label);
+        if (!key) return;
+
+        const existing = byKey.get(key);
+        register(key, {
+            key,
+            code: grade.code || existing?.code || key,
+            label: grade.label || existing?.label || grade.code || key,
+            rank:
+                typeof grade.rank === "number"
+                    ? grade.rank
+                    : typeof existing?.rank === "number"
+                    ? existing.rank
+                    : Number.POSITIVE_INFINITY
+        }, sources);
+    });
+
+    const ordered = Array.from(byKey.values()).sort((a, b) => {
+        if (a.rank !== b.rank) return a.rank - b.rank;
+        return (a.label || "").localeCompare(b.label || "");
+    });
+
+    return { byKey, alias, ordered };
+};
+
+const getCollaboratorGradeLookup = async () => {
+    if (collaboratorGradesLookup) {
+        return collaboratorGradesLookup;
+    }
+
+    if (!collaboratorGradesPromise) {
+        collaboratorGradesPromise = (async () => {
+            const client = ensureSupabaseClient();
+            if (!client) {
+                collaboratorGradesLookup = createGradeLookup(null);
+                return collaboratorGradesLookup;
+            }
+
+            try {
+                const { data, error } = await client
+                    .from("collab_grades")
+                    .select("code, label, rank")
+                    .order("rank", { ascending: true });
+
+                if (error) {
+                    console.warn("[onepage] Impossible de récupérer collab_grades :", error);
+                    collaboratorGradesLookup = createGradeLookup(null);
+                    return collaboratorGradesLookup;
+                }
+
+                collaboratorGradesLookup = createGradeLookup(Array.isArray(data) ? data : null);
+                return collaboratorGradesLookup;
+            } catch (err) {
+                console.warn("[onepage] Erreur collab_grades :", err);
+                collaboratorGradesLookup = createGradeLookup(null);
+                return collaboratorGradesLookup;
+            }
+        })().finally(() => {
+            collaboratorGradesPromise = null;
+        });
+    }
+
+    if (collaboratorGradesPromise) {
+        return collaboratorGradesPromise;
+    }
+
+    collaboratorGradesLookup = createGradeLookup(null);
+    return collaboratorGradesLookup;
+};
+
+const DISPLAY_JOB_TITLE_ONLY_GRADES = new Set(["direcab", "direcab-adj", "chefcab", "chefcabadj"]);
+
+const resolveGradeMeta = (gradeLookup, grade) => {
+    const key = canonicaliseCabinetGrade(grade, gradeLookup);
+    if (!key) {
+        return {
+            key: null,
+            code: grade || null,
+            label: grade || null,
+            rank: Number.POSITIVE_INFINITY
+        };
+    }
+
+    const meta = gradeLookup?.byKey?.get(key);
+    if (meta) return meta;
+
+    return {
+        key,
+        code: grade || key,
+        label: grade || key,
+        rank: Number.POSITIVE_INFINITY
+    };
+};
+
+const toCabinetNode = (person, gradeLookup) => {
+    const gradeMeta = resolveGradeMeta(gradeLookup, person?.collab_grade);
+
+    return {
+        id: person?.id != null ? String(person.id) : null,
+        superiorId: person?.superior_id != null ? String(person.superior_id) : null,
+        name: person?.full_name?.trim() || "Collaborateur·rice",
+        cabinetRole: person?.cabinet_role?.trim() || null,
+        jobTitle: person?.job_title?.trim() || null,
+        gradeLabel: gradeMeta?.label || person?.collab_grade?.trim() || null,
+        gradeKey: gradeMeta?.key || null,
+        gradeRank: typeof gradeMeta?.rank === "number" ? gradeMeta.rank : Number.POSITIVE_INFINITY,
+        email: person?.email?.trim() || null,
+        order: typeof person?.cabinet_order === "number" ? person.cabinet_order : null,
+        photo: person?.photo_url || null
+    };
+};
+
+const compareCabinetMembers = (a, b) => {
+    const rankDiff = (a.gradeRank ?? Number.POSITIVE_INFINITY) - (b.gradeRank ?? Number.POSITIVE_INFINITY);
+    if (rankDiff !== 0) return rankDiff;
+
+    const orderA = a.order ?? Number.POSITIVE_INFINITY;
+    const orderB = b.order ?? Number.POSITIVE_INFINITY;
+    if (orderA !== orderB) return orderA - orderB;
+
+    return (a.name || "").localeCompare(b.name || "");
+};
+
+const normaliseCabinetMembers = (collaborators, gradeLookup) => {
+    if (!Array.isArray(collaborators)) return [];
+    return collaborators
+        .map((person) => toCabinetNode(person, gradeLookup))
+        .filter((node) => node?.id)
+        .sort(compareCabinetMembers);
+};
+
+const createCabinetNodeCard = (member) => {
+    const card = document.createElement("article");
+    card.className = "cabinet-node";
+    if (member?.gradeKey) {
+        card.dataset.grade = member.gradeKey;
+    }
+
+    const avatar = document.createElement("div");
+    avatar.className = "cabinet-node-avatar";
+    const avatarImg = document.createElement("img");
+    avatarImg.src = member?.photo || "assets/placeholder-minister.svg";
+    avatarImg.alt = member?.name ? `Portrait de ${member.name}` : "Portrait";
+    avatar.appendChild(avatarImg);
+    card.appendChild(avatar);
+
+    const info = document.createElement("div");
+    info.className = "cabinet-node-info";
+
+    if (member?.gradeLabel) {
+        const badge = document.createElement("span");
+        badge.className = "cabinet-node-grade";
+        badge.textContent = member.gradeLabel;
+        info.appendChild(badge);
+    }
+
+    const name = document.createElement("strong");
+    name.className = "cabinet-node-name";
+    name.textContent = member?.name || "Collaborateur·rice";
+    info.appendChild(name);
+
+    const normalizedRole = member?.cabinetRole?.trim() || null;
+    const normalizedJob = member?.jobTitle?.trim() || null;
+    const normalizedGrade = member?.gradeLabel?.trim() || null;
+
+    const shouldShowJobTitleOnly = DISPLAY_JOB_TITLE_ONLY_GRADES.has(member?.gradeKey);
+
+    if (shouldShowJobTitleOnly) {
+        const titleLine = normalizedJob || normalizedRole || normalizedGrade;
+        if (titleLine) {
+            const title = document.createElement("p");
+            title.className = "cabinet-node-title";
+            title.textContent = titleLine;
+            info.appendChild(title);
+        }
+    } else {
+        if (normalizedRole) {
+            const roleLine = document.createElement("p");
+            roleLine.className = "cabinet-node-role";
+            roleLine.textContent = normalizedRole;
+            info.appendChild(roleLine);
+        }
+
+        if (normalizedJob && normalizedJob !== normalizedRole) {
+            const jobLine = document.createElement("p");
+            jobLine.className = "cabinet-node-title";
+            jobLine.textContent = normalizedJob;
+            info.appendChild(jobLine);
+        }
+    }
+
+    if (member?.email) {
+        const email = document.createElement("a");
+        email.href = `mailto:${member.email}`;
+        email.textContent = member.email;
+        email.className = "cabinet-node-email";
+        email.rel = "noopener";
+        info.appendChild(email);
+    }
+
+    card.appendChild(info);
+    return card;
+};
+
+const buildCabinetTree = (members) => {
+    const map = new Map();
+    members.forEach((member) => {
+        map.set(member.id, { ...member, children: [] });
+    });
+
+    const roots = [];
+
+    map.forEach((node) => {
+        const parentId = node.superiorId;
+        if (parentId && map.has(parentId)) {
+            map.get(parentId).children.push(node);
+        } else {
+            roots.push(node);
+        }
+    });
+
+    const sortBranch = (list) => {
+        list.sort(compareCabinetMembers);
+        list.forEach((child) => {
+            if (Array.isArray(child.children) && child.children.length) {
+                sortBranch(child.children);
+            }
+        });
+    };
+
+    sortBranch(roots);
+    return roots;
+};
+
+const groupCabinetByDepth = (roots) => {
+    const levels = [];
+    const queue = [];
+
+    roots.forEach((root) => {
+        queue.push({ node: root, depth: 0 });
+    });
+
+    while (queue.length) {
+        const { node, depth } = queue.shift();
+        if (!levels[depth]) {
+            levels[depth] = [];
+        }
+        levels[depth].push(node);
+        node.children.forEach((child) => queue.push({ node: child, depth: depth + 1 }));
+    }
+
+    return levels;
+};
+
+const createCabinetTreeHero = (minister, totalMembers) => {
+    const hero = document.createElement("div");
+    hero.className = "cabinet-tree-hero";
+
+    const portrait = document.createElement("img");
+    portrait.className = "cabinet-tree-hero-avatar";
+    portrait.src = minister?.photo ?? "assets/placeholder-minister.svg";
+    portrait.alt = minister?.name ? `Portrait de ${minister.name}` : "Portrait du ministre";
+
+    const info = document.createElement("div");
+    info.className = "cabinet-tree-hero-info";
+
+    const title = document.createElement("strong");
+    title.className = "cabinet-tree-hero-name";
+    title.textContent = minister?.name || "Ministre";
+
+    const subtitle = document.createElement("p");
+    subtitle.className = "cabinet-tree-hero-role";
+    subtitle.textContent = minister?.mission || minister?.portfolio || formatRole(minister?.role) || "Cabinet ministériel";
+
+    const count = document.createElement("span");
+    count.className = "cabinet-tree-hero-count";
+    count.textContent = totalMembers
+        ? `${totalMembers} membre${totalMembers > 1 ? "s" : ""}`
+        : "Aucun collaborateur renseigné";
+
+    info.appendChild(title);
+    info.appendChild(subtitle);
+    info.appendChild(count);
+
+    hero.appendChild(portrait);
+    hero.appendChild(info);
+
+    return hero;
+};
+
+const renderCabinetSection = (minister, collaborators, gradeLookup) => {
+    const lookup = gradeLookup || collaboratorGradesLookup || createGradeLookup(null);
+    const members = normaliseCabinetMembers(collaborators, lookup);
+    const section = document.createElement("section");
+    section.className = "modal-collaborators is-hidden";
+    section.setAttribute("role", "region");
+    section.setAttribute("aria-label", "Cabinet du ministre");
+    section.setAttribute("aria-live", "polite");
+
+    const panel = document.createElement("div");
+    panel.className = "cabinet-panel";
+    section.appendChild(panel);
+
+    const header = document.createElement("header");
+    header.className = "cabinet-panel-header";
+
+    const title = document.createElement("h2");
+    title.className = "cabinet-panel-title";
+    title.textContent = "Collaborateurs";
+    header.appendChild(title);
+
+    const context = document.createElement("p");
+    context.className = "cabinet-panel-context";
+    context.textContent = minister?.name ? `Cabinet de ${minister.name}` : "Organisation du cabinet";
+    header.appendChild(context);
+
+    panel.appendChild(header);
+
+    if (!members.length) {
+        const empty = document.createElement("p");
+        empty.className = "cabinet-empty";
+        empty.textContent = "Les collaborateurs de ce cabinet seront bientôt disponibles.";
+        panel.appendChild(empty);
+        return section;
+    }
+
+    panel.appendChild(createCabinetTreeHero(minister, members.length));
+
+    const treeWrapper = document.createElement("div");
+    treeWrapper.className = "cabinet-tree";
+
+    const roots = buildCabinetTree(members);
+    const levels = groupCabinetByDepth(roots);
+
+    levels.forEach((levelMembers, index) => {
+        const level = document.createElement("section");
+        level.className = "cabinet-tree-level";
+        level.dataset.depth = String(index);
+
+        levelMembers.forEach((member) => {
+            level.appendChild(createCabinetNodeCard(member));
+        });
+
+        treeWrapper.appendChild(level);
+
+        if (index < levels.length - 1) {
+            const connector = document.createElement("div");
+            connector.className = "cabinet-tree-connector";
+            connector.setAttribute("aria-hidden", "true");
+            treeWrapper.appendChild(connector);
+        }
+    });
+
+    panel.appendChild(treeWrapper);
+    return section;
+};
+
+
 const openModal = (minister) => {
     if (!modal) return;
+    // Ensure any cabinet overlay is hidden/cleared when opening detail view
+    const modalContent = modal.querySelector('.modal-content');
+    const overlay = modalContent?.querySelector('.cabinet-overlay');
+    if (overlay) {
+        overlay.remove();
+    }
+    modal.classList.remove('modal--cabinet-mode', 'modal--cabinet-active');
     activeMinister = minister;
     const modalBody = modal.querySelector(".modal-body");
     if (modalBody) modalBody.hidden = false;
@@ -1084,8 +1448,13 @@ const openModal = (minister) => {
     modalElements.role.textContent = formatRole(minister.role);
     modalElements.title.textContent = minister.name ?? "Nom du ministre";
 
-    const portfolioLabel = getPortfolioLabel(minister);
-    modalElements.portfolio.textContent = portfolioLabel || "Portefeuille à préciser";
+    const ministriesLabel = minister.ministries?.length
+        ? minister.ministries
+              .map((entry) => entry.label)
+              .filter(Boolean)
+              .join(" • ")
+        : null;
+    modalElements.portfolio.textContent = ministriesLabel || minister.portfolio || "Portefeuille à préciser";
 
     modalElements.description.textContent = minister.description ?? "Ajoutez ici une biographie synthétique.";
 
@@ -1133,19 +1502,6 @@ const openModal = (minister) => {
         }
     }
 
-    if (exportButton && !exportButton.dataset.bound) {
-        exportButton.addEventListener("click", async () => {
-            if (!activeMinister) return;
-            exportButton.disabled = true;
-            try {
-                await printMinisterSheet(activeMinister);
-            } finally {
-                exportButton.disabled = false;
-            }
-        });
-        exportButton.dataset.bound = "true";
-    }
-
     modal.hidden = false;
     document.body.style.overflow = "hidden";
 };
@@ -1159,11 +1515,111 @@ const closeModal = () => {
     const modalContent = modal.querySelector('.modal-content');
     const overlay = modalContent?.querySelector('.cabinet-overlay');
     if (overlay) {
-        overlay.hidden = true;
-        overlay.innerHTML = '';
+        overlay.remove();
     }
     document.body.style.overflow = "";
+    cleanupPrintSheet();
+    if (exportButton) {
+        exportButton.onclick = null;
+        exportButton.disabled = true;
+        exportButton.removeAttribute("aria-busy");
+        exportButton.setAttribute("aria-disabled", "true");
+    }
     activeMinister = null;
+};
+
+// Switch modal content to cabinet-only view
+const switchToCabinetView = async (minister) => {
+    if (!modal) return;
+    const modalBody = modal.querySelector(".modal-body");
+    const modalContent = modal.querySelector(".modal-content");
+    if (!modalBody || !modalContent) return;
+
+    let collabs = collaboratorsCache.get(minister.id);
+    if (!collabs) {
+        try {
+            collabs = await fetchCollaboratorsForMinister(minister.id);
+        } catch (e) {
+            collabs = [];
+        }
+        collaboratorsCache.set(minister.id, Array.isArray(collabs) ? collabs : []);
+    }
+
+    const gradeLookup = await getCollaboratorGradeLookup();
+
+    // Create an overlay container above the detail content (kept intact)
+    let overlay = modalContent.querySelector('.cabinet-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'cabinet-overlay';
+        modalContent.appendChild(overlay);
+    } else {
+        overlay.innerHTML = '';
+    }
+
+    const backbar = document.createElement('div');
+    backbar.className = 'cabinet-backbar';
+    const backBtn = document.createElement('button');
+    backBtn.type = 'button';
+    backBtn.className = 'btn btn-ghost cabinet-back';
+    backBtn.textContent = 'Retour à la fiche';
+    backBtn.addEventListener('click', () => switchToDetailView(minister));
+    backbar.appendChild(backBtn);
+    overlay.appendChild(backbar);
+
+    const section = renderCabinetSection(minister, collabs, gradeLookup);
+    section.classList.remove('is-hidden');
+    overlay.appendChild(section);
+
+    modalBody.hidden = true;
+    overlay.hidden = false;
+    modal.classList.add('modal--cabinet-mode');
+};
+
+const switchToDetailView = (minister) => {
+    if (!modal) return;
+    const modalBody = modal.querySelector('.modal-body');
+    const modalContent = modal.querySelector('.modal-content');
+    const overlay = modalContent?.querySelector('.cabinet-overlay');
+    if (overlay) {
+        overlay.remove();
+    }
+    if (modalBody) {
+        modalBody.hidden = false;
+    }
+    modal.classList.remove('modal--cabinet-mode');
+    // Ensure detail view shows current minister info
+    openModal(minister);
+};
+
+const refreshGridForPrint = () => {
+    if (!grid) return;
+
+    if (currentRole === "all" && !currentQuery) {
+        renderGrid(coreMinisters);
+    } else {
+        applyFilters();
+    }
+};
+
+const printAllMinisters = () => {
+    if (!document?.body) return;
+
+    if (modal && !modal.hidden) {
+        closeModal();
+    }
+
+    refreshGridForPrint();
+
+    document.body.classList.add("print-all");
+
+    const cleanup = () => {
+        document.body.classList.remove("print-all");
+        window.removeEventListener("afterprint", cleanup);
+    };
+
+    window.addEventListener("afterprint", cleanup);
+    window.print();
 };
 
 const highlightFilter = (role) => {
