@@ -457,12 +457,19 @@ const normalizeCareerSteps = (arr) => {
         return isNaN(d.getTime()) ? null : d;
     };
     const fmt = (v) => (v == null ? "" : String(v).trim());
+    const fmtColor = (v) => {
+        const value = fmt(v);
+        return value || null;
+    };
     const items = (Array.isArray(arr) ? arr : [])
         .map((c) => {
             const start = c.start_date || c.start || c.begin || null;
             const end = c.end_date || c.end || null;
             const title = c.title || c.position || c.job_title || "";
             const org = c.organisation || c.organization || c.org || c.company || "";
+            const category = c.category || c.type || c.sector || c.domain || c.scope || "";
+            const description = c.description || c.details || c.summary || c.context || "";
+            const color = c.category_color || c.categoryColor || c.color || c.badge_color || "";
             return {
                 startRaw: start,
                 endRaw: end,
@@ -470,9 +477,12 @@ const normalizeCareerSteps = (arr) => {
                 endDate: toDate(end),
                 title: fmt(title),
                 org: fmt(org),
+                description: fmt(description),
+                category: fmt(category),
+                categoryColor: fmtColor(color)
             };
         })
-        .filter((it) => it.title || it.org || it.startRaw || it.endRaw);
+        .filter((it) => it.title || it.org || it.description || it.startRaw || it.endRaw || it.category);
     items.sort((a, b) => {
         const aTime = a.startDate ? a.startDate.getTime() : 0;
         const bTime = b.startDate ? b.startDate.getTime() : 0;
@@ -489,31 +499,159 @@ const formatCareerPeriod = (it) => {
     return ed ? `jusqu'à ${ed}` : "";
 };
 
-// Render a list of normalized career entries into a UL using timeline styles
-const renderCareerTimeline = (ul, entries) => {
-    if (!ul) return;
-    ul.innerHTML = "";
-    (Array.isArray(entries) ? entries : []).forEach((it) => {
-        const li = document.createElement('li');
-        const period = formatCareerPeriod(it);
+// Build a document fragment representing the modal career timeline component
+const createCareerTimelineFragment = (entries = []) => {
+    const fragment = document.createDocumentFragment();
+    let index = 0;
+
+    (Array.isArray(entries) ? entries : []).forEach((entry) => {
+        if (!entry) return;
+        const period = formatCareerPeriod(entry);
+        const hasContent = Boolean(entry.title || entry.org || entry.description || period || entry.category);
+        if (!hasContent) return;
+
+        const item = document.createElement("article");
+        item.className = `timeline__item timeline__item--${index % 2 === 0 ? "left" : "right"}`;
+        item.setAttribute("role", "listitem");
+        item.style.gridRowStart = String(index + 1);
+        if (entry.categoryColor) {
+            item.style.setProperty("--timeline-item-color", entry.categoryColor);
+        }
+
+        const point = document.createElement("span");
+        point.className = "timeline__point";
+        point.setAttribute("aria-hidden", "true");
+        item.appendChild(point);
+
+        const content = document.createElement("div");
+        content.className = "timeline__content";
+
+        const header = document.createElement("div");
+        header.className = "timeline__header";
+
         if (period) {
-            const p = document.createElement('span');
-            p.className = 'career-period';
-            p.textContent = period;
-            li.appendChild(p);
+            const periodEl = document.createElement("p");
+            periodEl.className = "timeline__period";
+            periodEl.textContent = period;
+            header.appendChild(periodEl);
         }
-        const t = document.createElement('span');
-        t.className = 'career-title';
-        t.textContent = it.title || '';
-        li.appendChild(t);
-        if (it.org) {
-            const o = document.createElement('span');
-            o.className = 'career-org';
-            o.textContent = ` — ${it.org}`;
-            li.appendChild(o);
+
+        if (entry.category) {
+            const categoryEl = document.createElement("span");
+            categoryEl.className = "timeline__category";
+            categoryEl.textContent = entry.category;
+            if (entry.categoryColor) {
+                categoryEl.style.setProperty("--badge-color", entry.categoryColor);
+            }
+            header.appendChild(categoryEl);
         }
-        ul.appendChild(li);
+
+        if (header.childNodes.length) {
+            content.appendChild(header);
+        }
+
+        if (entry.title) {
+            const titleEl = document.createElement("h5");
+            titleEl.className = "timeline__title";
+            titleEl.textContent = entry.title;
+            content.appendChild(titleEl);
+        }
+
+        if (entry.org) {
+            const orgEl = document.createElement("p");
+            orgEl.className = "timeline__organisation";
+            orgEl.textContent = entry.org;
+            content.appendChild(orgEl);
+        }
+
+        if (entry.description) {
+            const descriptionEl = document.createElement("p");
+            descriptionEl.className = "timeline__description";
+            descriptionEl.textContent = entry.description;
+            content.appendChild(descriptionEl);
+        }
+
+        if (!content.childNodes.length) {
+            return;
+        }
+
+        item.appendChild(content);
+        fragment.appendChild(item);
+        index += 1;
     });
+
+    return fragment;
+};
+
+const renderCareerTimeline = (container, entries = []) => {
+    if (!container) return false;
+    container.innerHTML = "";
+    const fragment = createCareerTimelineFragment(entries);
+    if (!fragment || fragment.childNodes.length === 0) {
+        return false;
+    }
+    container.appendChild(fragment);
+    return true;
+};
+
+let activeCareerRequestToken = 0;
+
+const fetchCareerTimeline = async (minister) => {
+    if (!minister) return [];
+
+    if (Array.isArray(minister.career) && minister.career.length) {
+        return minister.career;
+    }
+
+    if (minister.__careerTimelineLoaded) {
+        return Array.isArray(minister.career) ? minister.career : [];
+    }
+
+    if (minister.id == null) {
+        minister.__careerTimelineLoaded = true;
+        return Array.isArray(minister.career) ? minister.career : [];
+    }
+
+    const client = ensureSupabaseClient();
+    if (!client) {
+        return Array.isArray(minister.career) ? minister.career : [];
+    }
+
+    try {
+        const { data, error } = await client
+            .from('person_careers')
+            .select('*')
+            .eq('person_id', minister.id)
+            .order('start_date', { ascending: false });
+
+        if (error || !Array.isArray(data)) {
+            return Array.isArray(minister.career) ? minister.career : [];
+        }
+
+        const normalized = normalizeCareerSteps(data);
+        minister.career = normalized;
+        minister.__careerTimelineLoaded = true;
+        return normalized;
+    } catch (err) {
+        return Array.isArray(minister.career) ? minister.career : [];
+    }
+};
+
+const populateCareerModule = async (minister) => {
+    if (!modalCareerSection || !modalCareerList) return;
+
+    const requestToken = ++activeCareerRequestToken;
+
+    modalCareerSection.hidden = true;
+    modalCareerList.innerHTML = "";
+
+    if (!minister) return;
+
+    const entries = await fetchCareerTimeline(minister);
+    if (requestToken !== activeCareerRequestToken) return;
+
+    const hasContent = renderCareerTimeline(modalCareerList, entries);
+    modalCareerSection.hidden = !hasContent;
 };
 
 const ensureSupabaseClient = () => {
@@ -2057,40 +2195,7 @@ const openModal = (minister) => {
         }
     }
 
-    // Career timeline (best-effort)
-    if (modalCareerSection && modalCareerList) {
-        let careerItems = Array.isArray(minister.career) ? minister.career : [];
-        if (careerItems.length) {
-            renderCareerTimeline(modalCareerList, careerItems);
-            modalCareerSection.hidden = false;
-        } else {
-            // Try lazy-load via REST if nested relation wasn't present
-            const client = ensureSupabaseClient();
-            if (client && minister.id != null) {
-                client
-                    .from('person_careers')
-                    .select('*')
-                    .eq('person_id', minister.id)
-                    .order('start_date', { ascending: false })
-                    .then(({ data, error }) => {
-                        if (!error && Array.isArray(data) && data.length) {
-                            const normalized = normalizeCareerSteps(data);
-                            renderCareerTimeline(modalCareerList, normalized);
-                            modalCareerSection.hidden = false;
-                            // Also store on the minister object for subsequent opens
-                            minister.career = normalized;
-                        } else {
-                            modalCareerSection.hidden = true;
-                        }
-                    })
-                    .catch(() => {
-                        modalCareerSection.hidden = true;
-                    });
-            } else {
-                modalCareerSection.hidden = true;
-            }
-        }
-    }
+    populateCareerModule(minister);
 
     if (modalBody) {
         const oldCollabSection = modalBody.querySelector(".modal-collaborators");

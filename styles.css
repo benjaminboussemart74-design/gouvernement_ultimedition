@@ -2396,60 +2396,173 @@ body.print-all .toolbar {
     grid-column: 1 / -1;
 }
 
+.modal-module--career {
+    --timeline-track-color: var(--timeline-color, rgba(62, 62, 61, 0.18));
+    --timeline-default-color: var(--timeline-color, var(--color-turquoise));
+}
+
 .modal-module--career .modal-module-title {
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.75rem 0;
 }
 
-.modal-career-list {
-    list-style: none;
+.modal-career-timeline {
+    position: relative;
+    padding: 0.25rem 0 0.75rem 0;
+}
+
+.modal-career-timeline .timeline {
+    position: relative;
+    display: grid;
+    gap: 1.75rem;
     margin: 0;
-    padding: 0 0 0 1.25rem;
-    position: relative;
+    padding: 0;
 }
 
-.modal-career-list::before {
+.modal-career-timeline .timeline::before {
     content: "";
     position: absolute;
-    left: 0.45rem;
-    top: 0.25rem;
-    bottom: 0.25rem;
+    inset-block: 0.35rem 0.35rem;
+    inset-inline-start: 1rem;
     width: 2px;
-    background: var(--timeline-color, rgba(62, 62, 61, 0.18));
+    background: var(--timeline-track-color);
+    border-radius: 999px;
 }
 
-.modal-career-list li {
+.modal-career-timeline .timeline__item {
     position: relative;
-    padding: 0.6rem 0 0.6rem 0.5rem;
+    padding-inline-start: 2.75rem;
+    display: grid;
+    gap: 0.75rem;
+    list-style: none;
 }
 
-.modal-career-list li::before {
-    content: "";
+.modal-career-timeline .timeline__item:last-child {
+    padding-block-end: 0;
+}
+
+.modal-career-timeline .timeline__point {
     position: absolute;
-    left: -0.65rem;
-    top: 1.05rem;
-    width: 10px;
-    height: 10px;
-    background: var(--timeline-color, var(--color-turquoise));
+    inset-block-start: 0.5rem;
+    inset-inline-start: 0.65rem;
+    width: 0.85rem;
+    height: 0.85rem;
     border-radius: 50%;
+    background: var(--timeline-item-color, var(--timeline-default-color));
     border: 2px solid #fff;
-    box-shadow: 0 0 0 1px rgba(62, 62, 61, 0.25);
+    box-shadow: 0 0 0 2px rgba(62, 62, 61, 0.25);
 }
 
-.career-period {
-    display: inline-block;
-    min-width: 9.5rem;
+.modal-career-timeline .timeline__content {
+    background: rgba(236, 234, 237, 0.65);
+    border-radius: 18px;
+    border: 1px solid rgba(62, 62, 61, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    padding: 1rem 1.25rem;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.modal-career-timeline .timeline__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.modal-career-timeline .timeline__period {
+    margin: 0;
     color: var(--color-sesame);
+    font-size: 0.95rem;
     font-variant-numeric: tabular-nums;
 }
 
-.career-title {
-    font-weight: 600;
+.modal-career-timeline .timeline__title {
+    margin: 0;
     color: var(--color-poivre);
-    margin-left: 0.35rem;
+    font-size: 1.05rem;
+    font-weight: 600;
 }
 
-.career-org {
+.modal-career-timeline .timeline__organisation {
+    margin: 0;
     color: var(--color-sesame);
+    font-size: 0.95rem;
+}
+
+.modal-career-timeline .timeline__description {
+    margin: 0;
+    color: var(--color-poivre);
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+
+.modal-career-timeline .timeline__category {
+    --badge-color: var(--timeline-item-color, var(--timeline-default-color));
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--badge-color);
+    border: 1px solid var(--badge-color);
+    background-color: rgba(255, 255, 255, 0.92);
+}
+
+.modal-career-timeline .timeline__category::before {
+    content: "";
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--badge-color);
+    box-shadow: 0 0 0 1px rgba(62, 62, 61, 0.1);
+}
+
+@media (min-width: 768px) {
+    .modal-career-timeline {
+        padding-inline: 1.5rem;
+    }
+
+    .modal-career-timeline .timeline {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 2.25rem 2rem;
+    }
+
+    .modal-career-timeline .timeline::before {
+        inset-inline-start: calc(50% - 1px);
+    }
+
+    .modal-career-timeline .timeline__item {
+        padding-inline: 2.75rem;
+    }
+
+    .modal-career-timeline .timeline__item--left {
+        grid-column: 1;
+        justify-self: end;
+        text-align: right;
+    }
+
+    .modal-career-timeline .timeline__item--left .timeline__content {
+        text-align: left;
+    }
+
+    .modal-career-timeline .timeline__item--left .timeline__point {
+        inset-inline-start: auto;
+        inset-inline-end: -0.9rem;
+    }
+
+    .modal-career-timeline .timeline__item--right {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    .modal-career-timeline .timeline__item--right .timeline__point {
+        inset-inline-start: -0.9rem;
+    }
 }
 
 .modal-module--mission {
