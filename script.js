@@ -68,6 +68,15 @@ const DELEGATE_ROLES = new Set(["minister-delegate", "ministre-delegue", "secret
 const CORE_ROLES = new Set(["leader", "minister", "minister-state"]);
 const FALLBACK_DATA_URL = "data/ministers.json";
 
+const ensureImageSource = (value, fallback = "assets/placeholder-minister.svg") => {
+    if (!value) return fallback;
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        return trimmed ? trimmed : fallback;
+    }
+    return value || fallback;
+};
+
 // Mapping des valeurs `party` (valeurs possibles depuis Supabase) vers
 // les étiquettes utilisées par les sélecteurs CSS `[data-party="$LABEL"]`.
 const PARTY_MAP = new Map([
@@ -459,7 +468,7 @@ const buildCard = (minister) => {
 
     const photo = document.createElement("img");
     photo.className = "minister-photo";
-    photo.src = minister.photo ?? "assets/placeholder-minister.svg";
+    photo.src = ensureImageSource(minister.photo);
     photo.alt = minister.photoAlt ?? `Portrait de ${minister.name ?? "ministre"}`;
     right.appendChild(photo);
 
@@ -703,7 +712,7 @@ const renderCollaboratorsTemplate = (collaborators) => `
             .map(
                 (c) => `
           <div class="collaborator-card">
-            <img src="${c.photo_url || 'assets/placeholder-minister.svg'}" class="collaborator-photo" alt="${c.full_name ? `Portrait de ${c.full_name}` : 'Portrait collaborateur'}">
+            <img src="${ensureImageSource(c.photo_url)}" class="collaborator-photo" alt="${c.full_name ? `Portrait de ${c.full_name}` : 'Portrait collaborateur'}">
             <div>
               <p class="collab-name">${c.full_name ?? 'Collaborateur·rice'}</p>
               <p class="collab-role">${c.cabinet_role || 'Collaborateur'}</p>
@@ -788,7 +797,7 @@ const printMinisterSheet = async (minister) => {
 
     const photoWrapper = createElement("div", "print-sheet-photo");
     const photo = document.createElement("img");
-    photo.src = minister.photo || "assets/placeholder-minister.svg";
+    photo.src = ensureImageSource(minister.photo);
     photo.alt = minister.photoAlt || (minister.name ? `Portrait de ${minister.name}` : "Portrait du ministre");
     photoWrapper.appendChild(photo);
 
@@ -856,7 +865,7 @@ const printMinisterSheet = async (minister) => {
             const card = createElement("div", "print-collaborator-card");
             const collabPhotoWrapper = createElement("div", "print-collaborator-photo");
             const collabImg = document.createElement("img");
-            collabImg.src = collab.photo_url || "assets/placeholder-minister.svg";
+            collabImg.src = ensureImageSource(collab.photo_url);
             collabImg.alt = collab.full_name
                 ? `Portrait de ${collab.full_name}`
                 : "Portrait collaborateur";
@@ -1202,7 +1211,7 @@ const createCabinetNodeCard = (member) => {
     const avatar = document.createElement("div");
     avatar.className = "cabinet-node-avatar";
     const avatarImg = document.createElement("img");
-    avatarImg.src = member?.photo || "assets/placeholder-minister.svg";
+    avatarImg.src = ensureImageSource(member?.photo);
     avatarImg.alt = member?.name ? `Portrait de ${member.name}` : "Portrait";
     avatar.appendChild(avatarImg);
     card.appendChild(avatar);
@@ -1321,7 +1330,7 @@ const createCabinetTreeHero = (minister, totalMembers) => {
 
     const portrait = document.createElement("img");
     portrait.className = "cabinet-tree-hero-avatar";
-    portrait.src = minister?.photo ?? "assets/placeholder-minister.svg";
+    portrait.src = ensureImageSource(minister?.photo);
     portrait.alt = minister?.name ? `Portrait de ${minister.name}` : "Portrait du ministre";
 
     const info = document.createElement("div");
@@ -1443,7 +1452,7 @@ const openModal = (minister) => {
             exportButton.onclick = null;
         }
     }
-    modalElements.photo.src = minister.photo ?? "assets/placeholder-minister.svg";
+    modalElements.photo.src = ensureImageSource(minister.photo);
     modalElements.photo.alt = minister.photoAlt ?? `Portrait de ${minister.name ?? "ministre"}`;
     modalElements.role.textContent = formatRole(minister.role);
     modalElements.title.textContent = minister.name ?? "Nom du ministre";
@@ -2092,7 +2101,7 @@ const renderHeaderSuggestions = (query) => {
             const img = document.createElement('img');
             img.className = 'avatar';
             img.alt = it.label;
-            img.src = it.photo || 'assets/placeholder-minister.svg';
+            img.src = ensureImageSource(it.photo);
             el.appendChild(img);
         } else {
             const placeholder = document.createElement('div');
