@@ -66,7 +66,25 @@ const MINISTER_ROLES = new Set([
 
 const DELEGATE_ROLES = new Set(["minister-delegate", "ministre-delegue", "secretary"]);
 const CORE_ROLES = new Set(["leader", "minister", "minister-state"]);
-const FALLBACK_DATA_URL = "data/ministers.json";
+const careerCache = new Map();
+
+const readGlobalString = (key, fallback) => {
+    if (typeof window !== "undefined" && window && typeof window[key] === "string") {
+        const trimmed = window[key].trim();
+        if (trimmed) {
+            return trimmed;
+        }
+    }
+    return fallback;
+};
+
+const SUPABASE_SOURCES = {
+    ministers: readGlobalString("SUPABASE_MINISTERS_TABLE", "persons"),
+    ministersView: readGlobalString("SUPABASE_MINISTERS_VIEW", "vw_ministernode"),
+    careers: readGlobalString("SUPABASE_CAREERS_TABLE", "person_careers"),
+    collaborators: readGlobalString("SUPABASE_COLLABORATORS_TABLE", "persons"),
+    ministries: readGlobalString("SUPABASE_MINISTRIES_TABLE", "ministries"),
+};
 
 const ensureImageSource = (value, fallback = "assets/placeholder-minister.svg") => {
     if (!value) return fallback;
@@ -611,6 +629,52 @@ const ensureSupabaseClient = () => {
     return null;
 };
 
+const fetchCareerTimeline = async (personId) => {
+    if (!personId) return [];
+
+    const cached = careerCache.get(personId);
+    if (cached) {
+        try {
+            return await cached;
+        } catch (error) {
+            careerCache.delete(personId);
+            throw error;
+        }
+    }
+
+    const client = ensureSupabaseClient();
+    if (!client) {
+        throw new Error("Client Supabase non initialisé");
+    }
+
+    const fetchPromise = (async () => {
+        const { data, error } = await client
+            .from(SUPABASE_SOURCES.careers)
+            .select(CAREER_SELECT_QUERY)
+            .eq("person_id", personId)
+            .order("start_date", { ascending: false })
+            .order("sort_index", { ascending: true });
+
+        if (error) {
+            throw error;
+        }
+
+        const normalized = normalizeCareerSteps(Array.isArray(data) ? data : []);
+        return normalized;
+    })();
+
+    careerCache.set(personId, fetchPromise);
+
+    try {
+        const steps = await fetchPromise;
+        careerCache.set(personId, steps);
+        return steps;
+    } catch (error) {
+        careerCache.delete(personId);
+        throw error;
+    }
+};
+
 const buildCard = (minister) => {
     const card = document.createElement("article");
     card.className = "minister-card";
@@ -935,7 +999,7 @@ const fetchCollaboratorsForMinister = async (ministerId) => {
         const parentId = queue.shift();
         try {
             const { data, error } = await client
-                .from("persons")
+                .from(SUPABASE_SOURCES.collaborators)
                 .select(
                     "id, superior_id, full_name, photo_url, cabinet_role, job_title, collab_grade, email, cabinet_order"
                 )
@@ -2041,6 +2105,68 @@ const toggleExecutiveCabinet = async (minister, toggleButton) => {
 };
 
 
+const populateCareerModule = async (minister) => {
+    const careerSection = modalElements.careerSection;
+    const careerList = modalElements.careerList;
+
+    if (!careerSection || !careerList) {
+        return;
+    }
+
+    careerSection.hidden = true;
+    careerList.innerHTML = "";
+
+    if (!minister?.id) {
+        careerSection.hidden = true;
+        minister.career = [];
+        return;
+    }
+
+    const applySteps = (steps) => {
+        const normalizedSteps = Array.isArray(steps) ? steps : [];
+        if (!normalizedSteps.length) {
+            careerSection.hidden = true;
+            careerList.innerHTML = "";
+            minister.career = [];
+            careerCache.set(minister.id, []);
+            return;
+        }
+
+        careerList.innerHTML = "";
+        careerList.appendChild(createCareerTimelineFragment(normalizedSteps));
+        careerSection.hidden = false;
+        minister.career = normalizedSteps;
+        careerCache.set(minister.id, normalizedSteps);
+    };
+
+    const cached = careerCache.get(minister.id);
+    if (Array.isArray(cached)) {
+        applySteps(cached);
+        return;
+    }
+
+    const placeholder = document.createElement("li");
+    placeholder.className = "modal-career-placeholder";
+    placeholder.textContent = "Chargement…";
+    careerList.appendChild(placeholder);
+    careerSection.hidden = false;
+
+    try {
+        const steps = await fetchCareerTimeline(minister.id);
+        applySteps(steps);
+    } catch (error) {
+        careerList.innerHTML = "";
+        const errorItem = document.createElement("li");
+        errorItem.className = "modal-career-error";
+        errorItem.textContent = "Impossible de charger la carrière pour le moment.";
+        careerList.appendChild(errorItem);
+        careerSection.hidden = false;
+        minister.career = [];
+        console.error("[onepage] Échec du chargement de la carrière", error);
+    }
+};
+
+
 const openModal = (minister) => {
     if (!modal) return;
     // Ensure any cabinet overlay is hidden/cleared when opening detail view
@@ -2335,8 +2461,10 @@ const fetchMinistersFromSupabase = async () => {
         throw new Error("Client Supabase non initialisé");
     }
 
+    const ministersTable = SUPABASE_SOURCES.ministers;
+
     const { data: persons, error: personsError } = await client
-        .from("persons")
+        .from(ministersTable)
         .select(
             `id, full_name, role, description, photo_url, email, party, superior_id,
              person_ministries(
@@ -2436,8 +2564,10 @@ const fetchMinistersFromView = async () => {
     const client = ensureSupabaseClient();
     if (!client) throw new Error("Client Supabase non initialisé");
 
+    const viewName = SUPABASE_SOURCES.ministersView;
+
     const { data, error } = await client
-        .from("vw_ministernode")
+        .from(viewName)
         .select("person_id, full_name, is_leader, ministry_name, color, photo_url, party")
         .order("is_leader", { ascending: false })
         .order("full_name", { ascending: true });
@@ -2448,11 +2578,11 @@ const fetchMinistersFromView = async () => {
         // This commonly means the DB view `public.vw_ministernode` has not been created in the project
         // or is in a different schema. Useful message for debugging in the browser console.
         if (error.code === "PGRST205" || (error.message && error.message.includes("Could not find the table"))) {
-            console.warn("[onepage] La view 'public.vw_ministernode' est introuvable côté Supabase (404).\n" +
-                "Vérifiez que vous avez exécuté sql/vw_ministernode.sql dans l'éditeur SQL Supabase et que la view appartient au schema 'public'.\n" +
-                "Si la view existe dans un autre schema, adaptez l'endpoint PostgREST ou créez la view dans 'public'.");
+            console.warn(`[onepage] La view '${viewName}' est introuvable côté Supabase (404).\n` +
+                "Assurez-vous qu'elle existe dans le schéma 'public' ou ajustez SUPABASE_MINISTERS_VIEW dans config/supabase.js.\n" +
+                "Vous pouvez aussi exécuter le script SQL fourni par l'équipe (ex: sql/vw_ministernode.sql).");
         } else {
-            console.warn("[onepage] Erreur lors de l'appel à vw_ministernode :", error);
+            console.warn(`[onepage] Erreur lors de l'appel à ${viewName} :`, error);
         }
         throw error;
     }
@@ -2465,7 +2595,7 @@ const fetchMinistersFromView = async () => {
     if (leaderIds.length) {
         try {
             const { data: persons } = await client
-                .from("persons")
+                .from(SUPABASE_SOURCES.ministers)
                 .select("id, description")
                 .in("id", leaderIds);
             leaderDescriptions = new Map((persons ?? []).map((p) => [p.id, p.description || ""]));
@@ -2480,8 +2610,9 @@ const fetchMinistersFromView = async () => {
     if (ministryNames.length) {
         try {
             // 1) Match sur short_name
+            const ministriesTable = SUPABASE_SOURCES.ministries;
             const { data: byShort } = await client
-                .from("ministries")
+                .from(ministriesTable)
                 .select("id, short_name")
                 .in("short_name", ministryNames);
             (byShort || []).forEach((m) => ministryIdByName.set(m.short_name, m.id));
@@ -2489,7 +2620,7 @@ const fetchMinistersFromView = async () => {
             const remaining = ministryNames.filter((n) => !ministryIdByName.has(n));
             if (remaining.length) {
                 const { data: byName } = await client
-                    .from("ministries")
+                    .from(ministriesTable)
                     .select("id, name")
                     .in("name", remaining);
                 (byName || []).forEach((m) => ministryIdByName.set(m.name, m.id));
@@ -2543,7 +2674,8 @@ const loadMinisters = async () => {
             delegateMinisters = supabaseMinisters.filter((m) => DELEGATE_ROLES.has(m.role));
         } catch (firstErr) {
             lastFetchError = firstErr;
-            console.warn('[onepage] fetchMinistersFromSupabase failed, attempting vw_ministernode as fallback', firstErr);
+            const fallbackView = SUPABASE_SOURCES.ministersView;
+            console.warn(`[onepage] fetchMinistersFromSupabase failed, attempting ${fallbackView} as fallback`, firstErr);
             try {
                 supabaseMinisters = await fetchMinistersFromView();
                 ministers = supabaseMinisters;
@@ -2608,7 +2740,7 @@ const loadMinisters = async () => {
         grid.setAttribute("aria-busy", "false");
         emptyState.hidden = false;
         emptyState.textContent =
-            "Aucune donnée disponible. Vérifiez la configuration Supabase ou ajoutez un fichier data/ministers.json.";
+            "Aucune donnée disponible. Vérifiez la configuration Supabase (URL, clé anon) et que les tables requises sont accessibles.";
         updateResultsSummary(0, 0);
         updateActiveFiltersHint(0, 0);
     }
@@ -2709,7 +2841,7 @@ const initApp = () => {
         try {
             const banner = document.createElement('div');
             banner.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:rgba(209,0,123,0.1);border-top:1px solid rgba(209,0,123,0.35);color:#4B2579;padding:8px 12px;font:600 13px/1.4 \"Space Grotesk\",system-ui;backdrop-filter:saturate(120%) blur(2px)';
-            banner.textContent = 'Diagnostic: échec du chargement des données. Vérifiez Supabase (URL/KEY) ou data/ministers.json.';
+            banner.textContent = 'Diagnostic: échec du chargement des données. Vérifiez Supabase (URL/KEY) ou les règles d\'accès (RLS).';
             document.body.appendChild(banner);
             setTimeout(() => banner.remove(), 6000);
         } catch { /* no-op */ }
