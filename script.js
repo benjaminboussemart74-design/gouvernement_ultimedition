@@ -2012,12 +2012,14 @@ const openModal = (minister) => {
     }
 
     modal.hidden = false;
+    modal.removeAttribute("hidden");
     document.body.style.overflow = "hidden";
 };
 
 const closeModal = () => {
     if (!modal) return;
     modal.hidden = true;
+    modal.setAttribute("hidden", "");
     modal.classList.remove("modal--cabinet-active", "modal--cabinet-mode");
     const modalBody = modal.querySelector('.modal-body');
     if (modalBody) {

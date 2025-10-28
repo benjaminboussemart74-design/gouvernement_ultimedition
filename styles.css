@@ -2207,8 +2207,9 @@ body.print-all .toolbar {
 .modal-content {
     position: relative;
     z-index: 1;
-    width: min(680px, 96vw);
-    max-height: min(92vh, 960px);
+    width: clamp(320px, 92vw, 1400px);
+    min-height: clamp(520px, 85vh, 1200px);
+    max-height: min(96vh, 1500px);
     background: var(--color-perle);
     border-radius: var(--radius-base);
     box-shadow: 0 40px 80px rgba(17, 23, 39, 0.28);
@@ -2221,8 +2222,8 @@ body.print-all .toolbar {
 /* Cabinet-only view: make modal wider than the regular detail */
 .modal.modal--cabinet-mode .modal-content {
     /* increase maximum width for cabinet view so the lanes and cards have more room */
-    width: min(1220px, 96vw);
-    max-height: min(96vh, 1200px);
+    width: clamp(480px, 96vw, 1600px);
+    max-height: min(97vh, 1700px);
 }
 
 /* Cabinet overlay container sits above the detail body without altering it */
