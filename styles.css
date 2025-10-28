@@ -2482,6 +2482,34 @@ body.print-all .toolbar {
         margin-bottom: 0.2cm;
     }
 
+/* Header logo sizing - keep the header compact across breakpoints */
+.site-logo {
+    display: block;
+    max-height: 32px; /* mobile default: reduced */
+    width: auto;
+    height: auto;
+}
+
+@media (min-width: 768px) {
+    .site-logo {
+        max-height: 48px; /* tablet and small desktop */
+    }
+}
+
+@media (min-width: 1200px) {
+    .site-logo {
+        max-height: 64px; /* large screens */
+    }
+}
+
+/* Keep the header vertically centered */
+.brand-block {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.4rem 1rem;
+}
+
     body.print-all .section-subtitle {
         font-size: 1rem;
         color: var(--color-sesame);
