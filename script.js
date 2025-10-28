@@ -175,6 +175,7 @@ const modalElements = {
     description: document.getElementById("modal-description"),
     mission: document.getElementById("modal-mission"),
 };
+const modalDelegatesList = document.getElementById("modal-delegates");
 
 const initializeAdvancedSearchToggle = () => {
     if (!advancedToggleButton || !advancedSearchPanel) return null;
@@ -1919,6 +1920,59 @@ const openModal = (minister) => {
         if (missionWrapper) missionWrapper.hidden = true;
     }
 
+    if (modalDelegatesList) {
+        modalDelegatesList.replaceChildren();
+        const delegates = Array.isArray(minister?.delegates)
+            ? minister.delegates.filter((entry) => entry && (entry.name || entry.portfolio || entry.role))
+            : [];
+
+        if (delegates.length > 0) {
+            delegates.forEach((delegate) => {
+                const item = document.createElement("li");
+                item.className = "modal-delegate-item";
+
+                const name = document.createElement("span");
+                name.className = "modal-delegate-name";
+                name.textContent = delegate.name ?? "Ministre délégué";
+                item.appendChild(name);
+
+                let portfolioValue = delegate.portfolio ?? "";
+                if (!portfolioValue && Array.isArray(delegate.ministries)) {
+                    const labels = delegate.ministries
+                        .map((entry) => entry?.label)
+                        .filter((label) => Boolean(label && label.trim()));
+                    if (labels.length) {
+                        portfolioValue = labels.join(" • ");
+                    }
+                }
+                if (!portfolioValue && delegate.title) {
+                    portfolioValue = delegate.title;
+                }
+                if (!portfolioValue && delegate.function) {
+                    portfolioValue = delegate.function;
+                }
+                if (!portfolioValue && delegate.role) {
+                    portfolioValue = formatRole(delegate.role);
+                }
+
+                if (portfolioValue) {
+                    const portfolio = document.createElement("span");
+                    portfolio.className = "modal-delegate-portfolio";
+                    portfolio.textContent = portfolioValue;
+                    item.appendChild(portfolio);
+                }
+
+                modalDelegatesList.appendChild(item);
+            });
+
+            modalDelegatesList.hidden = false;
+            modalDelegatesList.removeAttribute("hidden");
+        } else {
+            modalDelegatesList.hidden = true;
+            modalDelegatesList.setAttribute("hidden", "");
+        }
+    }
+
     if (modalBody) {
         const oldCollabSection = modalBody.querySelector(".modal-collaborators");
         if (oldCollabSection) oldCollabSection.remove();
@@ -1958,12 +2012,14 @@ const openModal = (minister) => {
     }
 
     modal.hidden = false;
+    modal.removeAttribute("hidden");
     document.body.style.overflow = "hidden";
 };
 
 const closeModal = () => {
     if (!modal) return;
     modal.hidden = true;
+    modal.setAttribute("hidden", "");
     modal.classList.remove("modal--cabinet-active", "modal--cabinet-mode");
     const modalBody = modal.querySelector('.modal-body');
     if (modalBody) {

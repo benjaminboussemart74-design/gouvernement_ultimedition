@@ -2207,8 +2207,9 @@ body.print-all .toolbar {
 .modal-content {
     position: relative;
     z-index: 1;
-    width: min(680px, 96vw);
-    max-height: min(92vh, 960px);
+    width: clamp(320px, 92vw, 1400px);
+    min-height: clamp(520px, 85vh, 1200px);
+    max-height: min(96vh, 1500px);
     background: var(--color-perle);
     border-radius: var(--radius-base);
     box-shadow: 0 40px 80px rgba(17, 23, 39, 0.28);
@@ -2221,8 +2222,8 @@ body.print-all .toolbar {
 /* Cabinet-only view: make modal wider than the regular detail */
 .modal.modal--cabinet-mode .modal-content {
     /* increase maximum width for cabinet view so the lanes and cards have more room */
-    width: min(1220px, 96vw);
-    max-height: min(96vh, 1200px);
+    width: clamp(480px, 96vw, 1600px);
+    max-height: min(97vh, 1700px);
 }
 
 /* Cabinet overlay container sits above the detail body without altering it */
@@ -2295,8 +2296,18 @@ body.print-all .toolbar {
 .modal-header {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 1.25rem;
-    align-items: center;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.modal-identity {
+    display: grid;
+    gap: 0.65rem;
+    align-content: start;
+}
+
+.modal-identity .modal-delegates {
+    margin-top: 0.2rem;
 }
 
 .modal-photo {
@@ -2345,6 +2356,37 @@ body.print-all .toolbar {
 .modal-meta dd {
     margin: 0;
     color: var(--color-sesame);
+}
+
+.modal-delegates {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 1.1rem 1.3rem;
+    list-style: none;
+    background: var(--color-guimauve);
+    border-radius: var(--radius-base);
+    border: 1px solid rgba(62, 62, 61, 0.1);
+}
+
+.modal-delegate-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: calc(var(--radius-base) - 4px);
+    box-shadow: 0 2px 4px rgba(17, 23, 39, 0.08);
+}
+
+.modal-delegate-name {
+    font-weight: 600;
+    color: var(--color-poivre);
+}
+
+.modal-delegate-portfolio {
+    color: var(--color-sesame);
+    font-size: 0.95rem;
 }
 
 @media (max-width: 900px) {
