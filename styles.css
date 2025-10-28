@@ -2510,6 +2510,12 @@ body.print-all .toolbar {
     padding: 0.4rem 1rem;
 }
 
+/* Stronger rule to override other generic img rules if needed */
+.site-header .site-logo {
+    max-height: 32px !important;
+    height: auto !important;
+}
+
     body.print-all .section-subtitle {
         font-size: 1rem;
         color: var(--color-sesame);
