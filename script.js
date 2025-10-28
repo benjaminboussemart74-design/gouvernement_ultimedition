@@ -174,7 +174,6 @@ const modalElements = {
     portfolio: document.getElementById("modal-portfolio"),
     description: document.getElementById("modal-description"),
     mission: document.getElementById("modal-mission"),
-    contact: document.getElementById("modal-contact")
 };
 
 const initializeAdvancedSearchToggle = () => {
@@ -1823,7 +1822,7 @@ const toggleExecutiveCabinet = async (minister, toggleButton) => {
     if (existingSection) {
         existingSection.remove();
         if (toggleButton) {
-            toggleButton.textContent = "Voir le cabinet";
+            toggleButton.textContent = "Afficher les collaborateurs";
             toggleButton.setAttribute("aria-expanded", "false");
             toggleButton.dataset.cabinetState = "closed";
         }
@@ -1852,7 +1851,7 @@ const toggleExecutiveCabinet = async (minister, toggleButton) => {
 
     modalBody.insertBefore(section, modalBody.firstChild);
     if (toggleButton) {
-        toggleButton.textContent = "Masquer le cabinet";
+        toggleButton.textContent = "Masquer les collaborateurs";
         toggleButton.setAttribute("aria-expanded", "true");
         toggleButton.dataset.cabinetState = "open";
     }
@@ -1919,7 +1918,6 @@ const openModal = (minister) => {
         modalElements.mission.textContent = "";
         if (missionWrapper) missionWrapper.hidden = true;
     }
-    modalElements.contact.textContent = minister.contact ?? "Contact prochainement disponible.";
 
     if (modalBody) {
         const oldCollabSection = modalBody.querySelector(".modal-collaborators");
@@ -1931,8 +1929,8 @@ const openModal = (minister) => {
     if (modalBody) {
         const toggleButton = document.createElement("button");
         toggleButton.type = "button";
-        toggleButton.className = "btn btn-ghost modal-collaborators-toggle";
-        toggleButton.textContent = minister.id ? "Voir le cabinet" : "Cabinet non disponible";
+        toggleButton.className = "btn btn-primary modal-collaborators-toggle";
+        toggleButton.textContent = minister.id ? "Afficher les collaborateurs" : "Cabinet non disponible";
         toggleButton.setAttribute("aria-expanded", "false");
         toggleButton.dataset.cabinetState = "closed";
 
@@ -1982,7 +1980,7 @@ const closeModal = () => {
     }
     const toggleButton = modal.querySelector('.modal-collaborators-toggle');
     if (toggleButton) {
-        toggleButton.textContent = 'Voir le cabinet';
+        toggleButton.textContent = 'Afficher les collaborateurs';
         toggleButton.setAttribute('aria-expanded', 'false');
         toggleButton.dataset.cabinetState = 'closed';
     }
