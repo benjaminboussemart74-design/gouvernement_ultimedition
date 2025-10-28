@@ -1779,6 +1779,10 @@ body.print-all .toolbar {
     transform: none;
 }
 
+.modal-export {
+    justify-self: start;
+}
+
 .modal-header {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -2194,18 +2198,10 @@ body.print-single #print-sheet {
     }
 
     body.print-single {
-        background: var(--color-perle);
+        background: #fff;
         color: var(--color-encre);
         font-family: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
         font-weight: 400;
-        line-height: 1.35;
-    }
-
-    body.print-single *,
-    body.print-single *::before,
-    body.print-single *::after {
-        box-shadow: none !important;
-        text-shadow: none !important;
     }
 
     body.print-single > *:not(#print-sheet) {
@@ -2215,175 +2211,282 @@ body.print-single #print-sheet {
     body.print-single #print-sheet {
         display: flex;
         flex-direction: column;
-        gap: 0.9cm;
+        gap: 1cm;
         padding: 0;
-        color: inherit;
     }
 
-    body.print-single #print-sheet .print-sheet-header {
+    body.print-single #print-sheet .print-sheet-cover {
+        background: var(--gradient-header);
+        color: var(--color-guimauve);
+        border-radius: 0.6cm;
+        padding: 1.2cm;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6cm;
+        position: relative;
+        overflow: hidden;
+    }
+
+    body.print-single #print-sheet .print-cover-brand {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3cm;
+        position: relative;
+        z-index: 1;
+    }
+
+    body.print-single #print-sheet .print-cover-eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 0.9rem;
+        margin: 0;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    body.print-single #print-sheet .print-cover-title {
+        margin: 0;
+        font-size: 2.4rem;
+        color: var(--color-guimauve);
+        letter-spacing: -0.01em;
+    }
+
+    body.print-single #print-sheet .print-cover-subtitle {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 500;
+        color: var(--color-perle);
+    }
+
+    body.print-single #print-sheet .print-cover-portfolio {
+        margin: 0;
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    body.print-single #print-sheet .print-cover-note {
+        margin: 0;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    body.print-single #print-sheet .print-cover-tricolor {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        border-radius: 0.6cm;
+        overflow: hidden;
+        height: 0.6cm;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+    }
+
+    body.print-single #print-sheet .print-cover-swatch.is-bleu { background: var(--color-panthere); }
+    body.print-single #print-sheet .print-cover-swatch.is-blanc { background: #ffffff; }
+    body.print-single #print-sheet .print-cover-swatch.is-rouge { background: var(--color-framboise); }
+
+    body.print-single #print-sheet .print-profile {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
-        gap: 0.8cm;
-        align-items: start;
-        padding-bottom: 0.6cm;
-        border-bottom: 2px solid rgba(17, 23, 39, 0.12);
+        gap: 1.2cm;
+        background: #fff;
+        border-radius: 0.6cm;
+        padding: 1.2cm;
+        border: 1px solid rgba(17, 23, 39, 0.08);
     }
 
-    body.print-single #print-sheet .print-sheet-brand {
-        display: grid;
+    body.print-single #print-sheet .print-profile-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5cm;
+    }
+
+    body.print-single #print-sheet .print-profile-header {
+        display: flex;
+        flex-direction: column;
         gap: 0.25cm;
     }
 
-    body.print-single #print-sheet .print-sheet-eyebrow {
-        text-transform: uppercase;
-        letter-spacing: 0.16em;
-        font-size: 0.85rem;
-        color: var(--color-sesame);
+    body.print-single #print-sheet .print-profile-role {
         margin: 0;
-        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 0.95rem;
+        color: var(--color-sesame);
     }
 
-    body.print-single #print-sheet .print-sheet-name {
-        font-size: 2.8rem;
+    body.print-single #print-sheet .print-profile-name {
         margin: 0;
+        font-size: 2.4rem;
         color: var(--color-encre);
     }
 
-    body.print-single #print-sheet .print-sheet-role {
-        font-size: 1rem;
-        margin: 0;
-        color: var(--color-sesame);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-    }
-
-    body.print-single #print-sheet .print-sheet-portfolio {
+    body.print-single #print-sheet .print-profile-portfolio {
         margin: 0;
         font-size: 1.05rem;
         color: var(--color-poivre);
     }
 
-    body.print-single #print-sheet .print-sheet-date {
-        margin: 0.15cm 0 0;
-        font-size: 0.95rem;
-        color: var(--color-sesame);
+    body.print-single #print-sheet .print-profile-description {
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.55;
+        color: var(--color-poivre);
     }
 
-    body.print-single #print-sheet .print-sheet-party {
-        align-self: start;
+    body.print-single #print-sheet .print-profile-badges {
+        display: flex;
+        gap: 0.3cm;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    body.print-single #print-sheet .print-profile-badge {
         display: inline-flex;
         align-items: center;
-        gap: 0.2cm;
-        font-size: 0.8rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        padding: 0.18cm 0.45cm;
+        padding: 0.25cm 0.5cm;
         border-radius: 999px;
+        background: rgba(100, 215, 205, 0.18);
+        color: var(--color-aubergine);
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
     }
 
-    body.print-single #print-sheet .print-sheet-photo img {
-        width: 5.8cm;
-        height: 7.6cm;
+    body.print-single #print-sheet .print-profile-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(6cm, 1fr));
+        gap: 0.6cm;
+        margin: 0;
+    }
+
+    body.print-single #print-sheet .print-profile-photo {
+        display: flex;
+        align-items: flex-start;
+    }
+
+    body.print-single #print-sheet .print-profile-photo img {
+        width: 6.8cm;
+        height: 9cm;
         object-fit: cover;
-        border-radius: 0.85cm;
+        border-radius: 1cm;
         background: var(--color-guimauve);
-        border: 3px solid rgba(100, 215, 205, 0.3);
+        border: 1px solid rgba(39, 8, 59, 0.1);
     }
 
     body.print-single #print-sheet .print-sheet-section {
         display: flex;
         flex-direction: column;
-        gap: 0.45cm;
-        page-break-inside: avoid;
-        background: #ffffff;
+        gap: 0.4cm;
+        background: #fff;
         border-radius: 0.6cm;
-        border: 1px solid rgba(17, 23, 39, 0.12);
-        padding: 0.6cm;
+        padding: 1.1cm;
+        border: 1px solid rgba(17, 23, 39, 0.08);
+        page-break-inside: avoid;
     }
 
     body.print-single #print-sheet .print-section-title {
-        font-size: 1.15rem;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: var(--color-sesame);
         margin: 0;
-    }
-
-    body.print-single #print-sheet .print-section-body {
-        display: grid;
-        gap: 0.35cm;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 1.1rem;
+        color: var(--color-sesame);
     }
 
     body.print-single #print-sheet .print-section-text {
-        font-size: 1.05rem;
+        margin: 0;
+        font-size: 0.95rem;
         line-height: 1.5;
         color: var(--color-poivre);
-        margin: 0;
     }
 
     body.print-single #print-sheet .print-sheet-meta {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(6cm, 1fr));
-        gap: 0.5cm;
+        grid-template-columns: repeat(auto-fit, minmax(5.5cm, 1fr));
+        gap: 0.6cm;
         margin: 0;
     }
 
     body.print-single #print-sheet .print-meta-item {
-        border: 1px solid rgba(17, 23, 39, 0.12);
         border-radius: 0.45cm;
-        padding: 0.45cm;
-        background: rgba(236, 234, 237, 0.4);
-        min-height: 0;
+        padding: 0.55cm;
+        background: rgba(236, 234, 237, 0.55);
+        border: 1px solid rgba(17, 23, 39, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 0.18cm;
     }
 
     body.print-single #print-sheet .print-meta-label {
-        font-size: 0.82rem;
+        margin: 0;
+        font-size: 0.8rem;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.12em;
         color: var(--color-sesame);
-        margin: 0 0 0.18cm;
     }
 
     body.print-single #print-sheet .print-meta-value {
-        font-size: 1rem;
-        color: var(--color-encre);
         margin: 0;
+        font-size: 0.95rem;
+        color: var(--color-encre);
     }
 
+    body.print-single #print-sheet .print-delegates-grid,
     body.print-single #print-sheet .print-collaborators-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(6.4cm, 1fr));
-        gap: 0.45cm;
+        grid-template-columns: repeat(auto-fit, minmax(6.2cm, 1fr));
+        gap: 0.6cm;
+    }
+
+    body.print-single #print-sheet .print-delegate-card,
+    body.print-single #print-sheet .print-collaborator-card {
+        border-radius: 0.45cm;
+        border: 1px solid rgba(17, 23, 39, 0.08);
+        background: #fff;
+        padding: 0.55cm;
+        display: grid;
+        gap: 0.25cm;
+        page-break-inside: avoid;
+    }
+
+    body.print-single #print-sheet .print-delegate-role {
+        margin: 0;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--color-sesame);
+    }
+
+    body.print-single #print-sheet .print-delegate-name {
+        margin: 0;
+        font-size: 1.15rem;
+        color: var(--color-encre);
+    }
+
+    body.print-single #print-sheet .print-delegate-portfolio,
+    body.print-single #print-sheet .print-delegate-party {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--color-poivre);
     }
 
     body.print-single #print-sheet .print-collaborator-card {
-        display: grid;
         grid-template-columns: auto 1fr;
         align-items: center;
-        gap: 0.35cm;
-        border: 1px solid rgba(17, 23, 39, 0.12);
-        border-radius: 0.45cm;
-        padding: 0.4cm;
-        background: #ffffff;
+        gap: 0.45cm;
     }
 
     body.print-single #print-sheet .print-collaborator-photo img {
-        width: 2.4cm;
-        height: 2.4cm;
+        width: 2.6cm;
+        height: 2.6cm;
         border-radius: 50%;
         object-fit: cover;
         background: var(--color-guimauve);
     }
 
-    body.print-single #print-sheet .print-collaborator-details {
-        display: grid;
-        gap: 0.12cm;
-    }
-
     body.print-single #print-sheet .print-collaborator-name {
-        font-weight: 600;
         margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
         color: var(--color-encre);
     }
 
@@ -2392,5 +2495,112 @@ body.print-single #print-sheet {
         margin: 0;
         font-size: 0.9rem;
         color: var(--color-poivre);
+    }
+
+    body.print-single #print-sheet .print-government-section {
+        page-break-before: always;
+    }
+
+    body.print-single #print-sheet .print-government-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45cm;
+        margin-top: 0.8cm;
+    }
+
+    body.print-single #print-sheet .print-government-heading {
+        margin: 0;
+        font-size: 1.05rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--color-sesame);
+    }
+
+    body.print-single #print-sheet .print-government-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(5.2cm, 1fr));
+        gap: 0.45cm;
+    }
+
+    body.print-single #print-sheet .print-government-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 0.4cm;
+        border: 1px solid rgba(17, 23, 39, 0.06);
+        border-left: 0.18cm solid rgba(100, 215, 205, 0.5);
+        background: linear-gradient(160deg, rgba(100, 215, 205, 0.18), rgba(105, 135, 255, 0.08));
+        padding: 0.42cm 0.45cm;
+        display: grid;
+        gap: 0.16cm;
+        page-break-inside: avoid;
+        box-shadow: 0 10px 26px rgba(39, 8, 59, 0.08);
+    }
+
+    body.print-single #print-sheet .print-government-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, rgba(17, 23, 39, 0.08), transparent 70%);
+        opacity: 0.2;
+    }
+
+    body.print-single #print-sheet .print-government-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0));
+        pointer-events: none;
+    }
+
+    body.print-single #print-sheet .print-government-card > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    body.print-single #print-sheet .print-government-card.is-active {
+        border-color: rgba(100, 215, 205, 0.8);
+        border-left-color: rgba(100, 215, 205, 0.9);
+        box-shadow: 0 12px 28px rgba(100, 215, 205, 0.16);
+        background: linear-gradient(160deg, rgba(100, 215, 205, 0.28), rgba(105, 135, 255, 0.18));
+    }
+
+    body.print-single #print-sheet .print-government-card.is-delegate {
+        background: linear-gradient(160deg, rgba(105, 135, 255, 0.28), rgba(209, 0, 123, 0.08));
+        border-color: rgba(105, 135, 255, 0.4);
+        border-left-color: rgba(105, 135, 255, 0.65);
+    }
+
+    body.print-single #print-sheet .print-government-role {
+        margin: 0;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: rgba(17, 23, 39, 0.75);
+        font-weight: 600;
+    }
+
+    body.print-single #print-sheet .print-government-name {
+        margin: 0;
+        font-size: 0.95rem;
+        color: var(--color-encre);
+        font-weight: 600;
+    }
+
+    body.print-single #print-sheet .print-government-portfolio,
+    body.print-single #print-sheet .print-government-party {
+        margin: 0;
+        font-size: 0.82rem;
+        color: rgba(17, 23, 39, 0.7);
+    }
+
+    body.print-single #print-sheet .print-sheet-footer {
+        text-align: right;
+        font-size: 0.85rem;
+        color: var(--color-sesame);
+    }
+
+    body.print-single #print-sheet .print-footer-note {
+        margin: 0;
     }
 }
