@@ -923,8 +923,6 @@ const printMinisterSheet = async (minister) => {
         collabSection.appendChild(collabGrid);
         fragment.appendChild(collabSection);
     }
-
-<<<<<<< Updated upstream
     if (allMinisters.length) {
         const governmentSection = createElement("section", "print-government-section");
         governmentSection.appendChild(
