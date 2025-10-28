@@ -2532,21 +2532,21 @@ body.print-all .toolbar {
 /* Header logo sizing - keep the header compact across breakpoints */
 .site-logo {
     display: block;
-    /* very small header logo as requested */
-    max-height: 30px;
+    /* header logo size tuned for 60px asset */
+    max-height: 48px;
     width: auto;
     height: auto;
 }
 
 @media (min-width: 768px) {
     .site-logo {
-        max-height: 36px;
+        max-height: 64px;
     }
 }
 
 @media (min-width: 1200px) {
     .site-logo {
-        max-height: 42px;
+        max-height: 80px;
     }
 }
 
@@ -2560,7 +2560,7 @@ body.print-all .toolbar {
 
 /* Stronger rule to override other generic img rules if needed */
 .site-header .site-logo {
-    max-height: 30px !important; /* enforce the reduced header logo size */
+    max-height: 48px !important; /* enforce header logo size for the 60px asset */
     height: auto !important;
     display: block;
     margin: 0 auto; /* ensure image centered if container allows */
