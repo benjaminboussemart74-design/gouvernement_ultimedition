@@ -325,6 +325,22 @@ const debounce = (fn, wait = 220) => {
     };
 };
 
+const updateMinistersGridLayout = () => {
+    if (!grid) return;
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    let columns = 1;
+    if (viewportWidth >= 1280) {
+        columns = 5;
+    } else if (viewportWidth >= 768) {
+        columns = 3;
+    }
+    grid.dataset.columns = String(columns);
+};
+
+const debouncedGridLayoutUpdate = debounce(updateMinistersGridLayout, 160);
+window.addEventListener("resize", debouncedGridLayoutUpdate);
+updateMinistersGridLayout();
+
 const formatRole = (role) => ROLE_LABELS[role] ?? role ?? "";
 
 function normalise(value) {
@@ -549,6 +565,7 @@ const renderGrid = (items) => {
     });
 
     grid.appendChild(fragment);
+    updateMinistersGridLayout();
     grid.setAttribute("aria-busy", "false");
 };
 
