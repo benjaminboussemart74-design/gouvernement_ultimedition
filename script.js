@@ -2679,6 +2679,12 @@ const switchToCabinetView = async (minister) => {
     modalBody.hidden = true;
     overlay.hidden = false;
     modal.classList.add('modal--cabinet-mode');
+
+    if (typeof overlay.scrollTo === 'function') {
+        overlay.scrollTo({ top: 0 });
+    } else {
+        overlay.scrollTop = 0;
+    }
 };
 
 const switchToDetailView = (minister) => {
