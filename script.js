@@ -907,7 +907,10 @@ const attachDelegatesToCore = () => {
 const applyFilters = () => {
     let basePool;
     if (currentRole === "all") {
-        basePool = coreMinisters.slice();
+        // Show core ministers and ministres délégués together by default
+        // Avoid duplicates if a delegate is also present in coreMinisters
+        const delegatesToInclude = (delegateMinisters || []).filter((d) => !coreMinisters.some((c) => String(c.id) === String(d.id)));
+        basePool = coreMinisters.slice().concat(delegatesToInclude);
     } else if (currentRole === "secretary") {
         basePool = delegateMinisters.filter((minister) => DELEGATE_ROLES.has(minister.role));
     } else {
