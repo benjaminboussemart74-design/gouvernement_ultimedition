@@ -200,6 +200,7 @@ const modalElements = {
 // Career elements (optional; shown only when data exists)
 const modalCareerSection = document.querySelector('.modal-module--career');
 const modalCareerRoot = document.getElementById('modal-career-root');
+const modalCareerLegend = document.getElementById('modal-career-legend');
 const modalDelegatesList = document.getElementById("modal-delegates");
 
 const initializeAdvancedSearchToggle = () => {
@@ -508,8 +509,94 @@ const formatCareerPeriod = (it) => {
     return y2 ? `jusqu'à ${y2}` : '';
 };
 
-// Timeline legend removed in the new layout (CodePen integration)
-const renderTimelineLegend = () => {};
+// Translate common career categories to French
+const CAREER_CATEGORY_LABELS = {
+    // Normalized (lowercase no accents) → French label
+    'government': 'Gouvernement',
+    'cabinet': 'Cabinet',
+    'ministerial cabinet': 'Cabinet ministériel',
+    'parliament': 'Parlement',
+    'assembly': 'Assemblée',
+    'senate': 'Sénat',
+    'local government': 'Collectivités locales',
+    'city': 'Collectivité locale',
+    'region': 'Région',
+    'department': 'Département',
+    'european union': 'Union européenne',
+    'europe': 'Union européenne',
+    'ngo': 'ONG',
+    'nonprofit': 'Association',
+    'think tank': 'Think tank',
+    'advisory': 'Conseil',
+    'advisor': 'Conseiller',
+    'board': "Conseil d'administration",
+    'private sector': 'Secteur privé',
+    'company': 'Entreprise',
+    'corporate': 'Entreprise',
+    'consulting': 'Conseil',
+    'communication': 'Communication',
+    'press': 'Presse',
+    'media': 'Médias',
+    'education': 'Formation',
+    'university': 'Université',
+    'school': 'École',
+    'civil service': 'Fonction publique',
+    'administration': 'Administration',
+    'other': 'Autre',
+    'misc': 'Autre',
+};
+
+const translateCareerCategory = (raw) => {
+    const val = (raw ?? '').toString().trim();
+    if (!val) return '';
+    const key = normalise(val);
+    return CAREER_CATEGORY_LABELS[key] || val;
+};
+
+// Build or update a legend for timeline colors
+const renderTimelineLegend = (steps, accentColor = null) => {
+    if (!modalCareerLegend) return;
+    const items = Array.isArray(steps) ? steps : [];
+    // Build unique label → color mapping
+    const map = new Map();
+    items.forEach((s) => {
+        const labelRaw = s?.category || '';
+        const label = translateCareerCategory(labelRaw) || 'Sans catégorie';
+        const color = (s?.color || '').toString().trim() || accentColor || '';
+        const key = `${label}__${color}`;
+        if (!map.has(key)) map.set(key, { label, color });
+    });
+
+    // If nothing meaningful, hide legend
+    if (map.size === 0) {
+        modalCareerLegend.innerHTML = '';
+        modalCareerLegend.hidden = true;
+        return;
+    }
+
+    // Create fragment
+    const frag = document.createDocumentFragment();
+    map.forEach(({ label, color }) => {
+        const item = document.createElement('span');
+        item.className = 'timeline-legend__item';
+        if (color) item.style.color = color;
+
+        const dot = document.createElement('span');
+        dot.className = 'timeline-legend__dot';
+        item.appendChild(dot);
+
+        const text = document.createElement('span');
+        text.className = 'timeline-legend__label';
+        text.textContent = label;
+        item.appendChild(text);
+
+        frag.appendChild(item);
+    });
+
+    modalCareerLegend.innerHTML = '';
+    modalCareerLegend.appendChild(frag);
+    modalCareerLegend.hidden = false;
+};
 
 // Build a CodePen-like timeline fragment
 const createCareerTimelineFragment = (entries) => {
@@ -559,7 +646,7 @@ const createCareerTimelineFragment = (entries) => {
             if (category) {
                 const badge = document.createElement('span');
                 badge.className = 'timeline__event-badge';
-                badge.textContent = category;
+                badge.textContent = translateCareerCategory(category);
                 header.appendChild(badge);
             }
             event.appendChild(header);
@@ -2306,6 +2393,72 @@ const openModal = async (minister) => {
             showCabinetInlineForMinister(minister).catch((error) => {
                 console.warn("[onepage] Impossible d'afficher le cabinet :", error);
             });
+        }
+
+        // Populate inline ministres délégués section inside the fiche modal
+        try {
+            const delegatesSection = modal.querySelector('.modal-module--delegates');
+            if (delegatesSection && modalDelegatesList) {
+                // Determine linked delegates: prefer minister.delegates if already attached
+                let linkedDelegates = Array.isArray(minister.delegates) && minister.delegates.length ? minister.delegates.slice() : [];
+                if (!linkedDelegates.length && Array.isArray(delegateMinisters) && delegateMinisters.length) {
+                    linkedDelegates = delegateMinisters.filter((d) => {
+                        if (!d) return false;
+                        if (d.superiorId && minister.id && String(d.superiorId) === String(minister.id)) return true;
+                        if (minister.primaryMinistryId && d.primaryParentMinistryId && String(d.primaryParentMinistryId) === String(minister.primaryMinistryId)) return true;
+                        const keyA = normalise(minister.portfolio || minister.ministry || '');
+                        const keyB = normalise(d.portfolio || d.ministry || '');
+                        if (keyA && keyB && keyA === keyB) return true;
+                        try {
+                            const mCats = new Set((Array.isArray(minister.ministries) ? minister.ministries : []).map((m) => (m && (m.category || m.cat || m.type) ? normalise(m.category || m.cat || m.type) : '')).filter(Boolean));
+                            const dCats = new Set((Array.isArray(d.ministries) ? d.ministries : []).map((m) => (m && (m.category || m.cat || m.type) ? normalise(m.category || m.cat || m.type) : '')).filter(Boolean));
+                            for (const c of dCats) {
+                                if (mCats.has(c)) return true;
+                            }
+                        } catch (e) {
+                            // ignore
+                        }
+                        return false;
+                    });
+                }
+
+                modalDelegatesList.innerHTML = '';
+                if (Array.isArray(linkedDelegates) && linkedDelegates.length) {
+                    linkedDelegates.forEach((delegate) => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'delegate-card delegate-card--inline';
+                        btn.setAttribute('role', 'listitem');
+
+                        const info = document.createElement('div');
+                        info.className = 'delegate-info';
+                        const dn = document.createElement('p');
+                        dn.className = 'delegate-name';
+                        dn.textContent = delegate.name || '';
+                        info.appendChild(dn);
+                        const dr = document.createElement('p');
+                        dr.className = 'delegate-role';
+                        dr.textContent = delegate.portfolio || formatRole(delegate.role) || '';
+                        info.appendChild(dr);
+                        btn.appendChild(info);
+
+                        const delegateBadge = createPartyBadge(delegate.party == null ? '' : String(delegate.party).trim());
+                        if (delegateBadge) btn.appendChild(delegateBadge);
+
+                        btn.addEventListener('click', (ev) => {
+                            ev.stopPropagation();
+                            openModal(delegate);
+                        });
+
+                        modalDelegatesList.appendChild(btn);
+                    });
+                    delegatesSection.hidden = false;
+                } else {
+                    delegatesSection.hidden = true;
+                }
+            }
+        } catch (e) {
+            // ignore errors populating delegates section
         }
     }
 
