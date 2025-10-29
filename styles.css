@@ -468,6 +468,35 @@ main > * { position: relative; z-index: 2; }
 .print-footer-logo { width: 140px; max-width: 36vw; height: auto; opacity: 0.95; }
 .print-footer-text { font-size: 0.82rem; color: rgba(0,0,0,0.7); max-width: 58ch; text-align: center; }
 
+/* Inline ministres délégués inside minister fiche modal */
+.modal-module--delegates {
+    margin-top: 0.8rem;
+    display: flex;
+    justify-content: center; /* center the delegates container under portfolio */
+}
+
+#modal-delegates {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    max-width: 720px; /* keep delegates section reasonably narrow */
+}
+
+.modal-delegates-list .delegate-card--inline,
+#modal-delegates .delegate-card--inline {
+    width: 100%;
+    max-width: 640px;
+}
+
+@media (max-width: 520px) {
+    #modal-delegates {
+        padding: 0 0.5rem;
+        max-width: 100%;
+    }
+}
+
 @media print {
     .modal-footer-cta { display: none; }
     .print-sheet-footer { page-break-inside: avoid; }
