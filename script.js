@@ -2352,6 +2352,11 @@ const openModal = async (minister) => {
     }
     modal.classList.remove('modal--cabinet-mode', 'modal--cabinet-active');
     activeMinister = minister;
+    if (minister?.accentColor) {
+        modal.style.setProperty('--minister-accent', String(minister.accentColor));
+    } else {
+        modal.style.removeProperty('--minister-accent');
+    }
     const modalBody = modal.querySelector(".modal-body");
     if (modalBody) {
         modalBody.hidden = false;
@@ -2674,6 +2679,12 @@ const switchToCabinetView = async (minister) => {
     modalBody.hidden = true;
     overlay.hidden = false;
     modal.classList.add('modal--cabinet-mode');
+
+    if (typeof overlay.scrollTo === 'function') {
+        overlay.scrollTo({ top: 0 });
+    } else {
+        overlay.scrollTop = 0;
+    }
 };
 
 const switchToDetailView = (minister) => {
