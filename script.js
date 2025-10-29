@@ -2352,6 +2352,11 @@ const openModal = async (minister) => {
     }
     modal.classList.remove('modal--cabinet-mode', 'modal--cabinet-active');
     activeMinister = minister;
+    if (minister?.accentColor) {
+        modal.style.setProperty('--minister-accent', String(minister.accentColor));
+    } else {
+        modal.style.removeProperty('--minister-accent');
+    }
     const modalBody = modal.querySelector(".modal-body");
     if (modalBody) {
         modalBody.hidden = false;
