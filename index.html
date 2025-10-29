@@ -184,17 +184,25 @@
         <div class="modal-content" role="document">
             <button class="modal-close" type="button" aria-label="Fermer" data-dismiss>&times;</button>
             <div class="modal-body">
-                <div class="modal-layout">
-                    <div class="modal-module modal-module--photo">
-                        <div class="modal-photo-frame">
-                            <img class="modal-photo" id="modal-photo" src="" alt="" />
+                <header class="modal-hero" aria-labelledby="modal-title">
+                    <div class="modal-hero-grid">
+                        <div class="modal-hero-portrait">
+                            <div class="modal-photo-frame">
+                                <img class="modal-photo" id="modal-photo" src="" alt="" />
+                            </div>
+                        </div>
+                        <div class="modal-hero-details">
+                            <p class="modal-role" id="modal-role"></p>
+                            <h3 class="modal-identity-title" id="modal-title"></h3>
+                            <p class="modal-portfolio" id="modal-portfolio"></p>
+                        </div>
+                        <div class="modal-hero-actions">
+                            <button id="export-minister-pdf" class="modal-export" type="button">Exporter cette fiche</button>
                         </div>
                     </div>
-                    <div class="modal-module modal-module--identity">
-                        <p class="modal-role" id="modal-role"></p>
-                        <h3 class="modal-identity-title" id="modal-title"></h3>
-                        <p class="modal-portfolio" id="modal-portfolio"></p>
-                    </div>
+                </header>
+                <dl class="modal-meta"></dl>
+                <div class="modal-layout">
                     <div class="modal-module modal-module--description">
                         <p class="modal-description" id="modal-description"></p>
                     </div>
@@ -210,9 +218,6 @@
                             <div id="modal-career-legend" class="timeline-legend" aria-label="Légende des couleurs" hidden></div>
                         </div>
                     </section>
-                    <div class="modal-module modal-module--export">
-                        <button id="export-minister-pdf" class="modal-export" type="button">Exporter cette fiche</button>
-                    </div>
                     <div class="modal-module modal-module--footer">
                         <!-- Disclaimer & contact prompt -->
                         <div class="modal-footer-cta" aria-hidden="true">
