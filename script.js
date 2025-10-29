@@ -524,72 +524,68 @@ const createCareerTimelineFragment = (entries) => {
     });
 
     steps.forEach((step, index) => {
-        const event = document.createElement("article");
-        event.className = "timeline-event";
-        event.setAttribute("role", "listitem");
-        event.dataset.side = index % 2 === 0 ? "left" : "right";
+        const event = document.createElement('article');
+        event.className = 'timeline__event';
+        event.setAttribute('role', 'listitem');
 
         const color = step.color ? String(step.color).trim() : "";
         if (color) {
-            event.style.setProperty("--timeline-entry-color", color);
+            event.style.setProperty('--timeline-entry-color', color);
         }
 
         if (index === 0) {
-            event.classList.add("timeline-event--current");
+            event.classList.add('timeline__event--current');
         }
-
-        const card = document.createElement("div");
-        card.className = "timeline-event__card";
 
         const period = formatCareerPeriod(step);
         if (period) {
-            const date = document.createElement("p");
-            date.className = "timeline-event__date";
+            const date = document.createElement('p');
+            date.className = 'timeline__event-date';
             date.textContent = period;
-            card.appendChild(date);
+            event.appendChild(date);
         }
 
-        const title = step.title ? String(step.title).trim() : "";
-        const category = step.category ? String(step.category).trim() : "";
+        const title = step.title ? String(step.title).trim() : '';
+        const category = step.category ? String(step.category).trim() : '';
         if (title || category) {
-            const header = document.createElement("header");
-            header.className = "timeline-event__header";
+            const header = document.createElement('div');
+            header.className = 'timeline__event-header';
             if (title) {
-                const heading = document.createElement("h5");
-                heading.className = "timeline-event__title";
+                const heading = document.createElement('h5');
+                heading.className = 'timeline__event-title';
                 heading.textContent = title;
                 header.appendChild(heading);
             }
             if (category) {
-                const badge = document.createElement("span");
-                badge.className = "timeline-event__badge";
+                const badge = document.createElement('span');
+                badge.className = 'timeline__event-badge';
                 badge.textContent = category;
                 header.appendChild(badge);
             }
-            card.appendChild(header);
+            event.appendChild(header);
         }
 
         const organisation = step.org ? String(step.org).trim() : "";
         if (organisation) {
-            const org = document.createElement("p");
-            org.className = "timeline-event__organisation";
+            const org = document.createElement('p');
+            org.className = 'timeline__event-organisation';
             org.textContent = organisation;
-            card.appendChild(org);
+            event.appendChild(org);
         }
 
         const description = step.description ? String(step.description).trim() : "";
         if (description) {
-            const desc = document.createElement("p");
-            desc.className = "timeline-event__description";
+            const desc = document.createElement('p');
+            desc.className = 'timeline__event-description';
             desc.textContent = description;
-            card.appendChild(desc);
+            event.appendChild(desc);
         }
 
-        if (!card.childElementCount) {
-            card.textContent = "Étape de carrière";
+        if (!event.childElementCount) {
+            event.removeAttribute('role');
+            event.textContent = 'Étape de carrière';
         }
 
-        event.appendChild(card);
         frag.appendChild(event);
     });
 
