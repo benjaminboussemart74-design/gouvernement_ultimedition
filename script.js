@@ -2090,7 +2090,77 @@ const toggleExecutiveCabinet = async (minister, toggleButton) => {
 };
 
 
-const openModal = (minister) => {
+const showCabinetInlineForMinister = async (minister) => {
+    if (!modal || !minister) return;
+    const modalBody = modal.querySelector(".modal-body");
+    if (!modalBody) return;
+
+    const existingSection = modalBody.querySelector(".modal-collaborators");
+    if (existingSection) {
+        existingSection.remove();
+    }
+
+    const placeholder = renderCabinetSection(minister, [], createGradeLookup(null));
+    placeholder.classList.remove("is-hidden");
+
+    const placeholderMessage = placeholder.querySelector(".cabinet-empty");
+    if (placeholderMessage) {
+        placeholderMessage.textContent = minister.id
+            ? "Chargement des collaborateurs…"
+            : "Cabinet non disponible pour le moment.";
+    }
+
+    const modalLayout = modalBody.querySelector(".modal-layout");
+    const parent = modalLayout?.parentElement || modalBody;
+    parent.insertBefore(placeholder, modalLayout ? modalLayout.nextSibling : null);
+
+    if (!minister.id) {
+        return;
+    }
+
+    let collabs = collaboratorsCache.get(minister.id);
+    let fetchError = false;
+    if (!collabs) {
+        try {
+            collabs = await fetchCollaboratorsForMinister(minister.id);
+        } catch (error) {
+            collabs = null;
+        }
+        fetchError = !Array.isArray(collabs);
+        collaboratorsCache.set(minister.id, Array.isArray(collabs) ? collabs : []);
+    }
+
+    const gradeLookup = await getCollaboratorGradeLookup();
+    const finalSection = renderCabinetSection(
+        minister,
+        Array.isArray(collabs) ? collabs : [],
+        gradeLookup
+    );
+    finalSection.classList.remove("is-hidden");
+
+    const finalMessage = finalSection.querySelector(".cabinet-empty");
+    if (fetchError) {
+        if (finalMessage) {
+            finalMessage.textContent = "Impossible de charger les collaborateurs pour le moment.";
+        } else {
+            const panel = finalSection.querySelector(".cabinet-panel");
+            if (panel) {
+                const errorMessage = document.createElement("p");
+                errorMessage.className = "cabinet-empty";
+                errorMessage.textContent = "Impossible de charger les collaborateurs pour le moment.";
+                panel.appendChild(errorMessage);
+            }
+        }
+    }
+
+    if (activeMinister !== minister || !placeholder.isConnected) {
+        return;
+    }
+
+    placeholder.replaceWith(finalSection);
+};
+
+const openModal = async (minister) => {
     if (!modal) return;
     // Ensure any cabinet overlay is hidden/cleared when opening detail view
     const modalContent = modal.querySelector('.modal-content');
@@ -2204,32 +2274,34 @@ const openModal = (minister) => {
     }
 
     if (modalBody) {
-        const toggleButton = document.createElement("button");
-        toggleButton.type = "button";
-        toggleButton.className = "btn btn-primary modal-collaborators-toggle";
-        toggleButton.textContent = minister.id ? "Afficher les collaborateurs" : "Cabinet non disponible";
-        toggleButton.setAttribute("aria-expanded", "false");
-        toggleButton.dataset.cabinetState = "closed";
+        if (isExecutiveLeader(minister)) {
+            const toggleButton = document.createElement("button");
+            toggleButton.type = "button";
+            toggleButton.className = "btn btn-primary modal-collaborators-toggle";
+            toggleButton.textContent = minister.id ? "Afficher les collaborateurs" : "Cabinet non disponible";
+            toggleButton.setAttribute("aria-expanded", "false");
+            toggleButton.dataset.cabinetState = "closed";
 
-        if (!minister.id) {
-            toggleButton.disabled = true;
-            toggleButton.setAttribute("aria-disabled", "true");
-        }
+            if (!minister.id) {
+                toggleButton.disabled = true;
+                toggleButton.setAttribute("aria-disabled", "true");
+            }
 
-        const metaSection = modalBody.querySelector(".modal-meta");
-        if (metaSection) {
-            metaSection.insertAdjacentElement("afterend", toggleButton);
-        } else {
-            modalBody.appendChild(toggleButton);
-        }
+            const metaSection = modalBody.querySelector(".modal-meta");
+            if (metaSection) {
+                metaSection.insertAdjacentElement("afterend", toggleButton);
+            } else {
+                modalBody.appendChild(toggleButton);
+            }
 
-        if (minister.id) {
-            toggleButton.addEventListener("click", async () => {
-                if (isExecutiveLeader(minister)) {
+            if (minister.id) {
+                toggleButton.addEventListener("click", async () => {
                     await toggleExecutiveCabinet(minister, toggleButton);
-                } else {
-                    await switchToCabinetView(minister);
-                }
+                });
+            }
+        } else {
+            showCabinetInlineForMinister(minister).catch((error) => {
+                console.warn("[onepage] Impossible d'afficher le cabinet :", error);
             });
         }
     }
