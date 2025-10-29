@@ -2543,8 +2543,8 @@ body.print-all .toolbar {
     gap: 0.35rem;
     padding: 0.25rem 0.75rem;
     border-radius: 999px;
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--timeline-entry-color);
     background: color-mix(in srgb, var(--timeline-entry-color) 15%, rgba(255, 255, 255, 0.9));
@@ -2553,8 +2553,8 @@ body.print-all .toolbar {
 
 .timeline__event-badge::before {
     content: "";
-    width: 0.45rem;
-    height: 0.45rem;
+    width: 0.4rem;
+    height: 0.4rem;
     border-radius: 50%;
     background: currentColor;
 }

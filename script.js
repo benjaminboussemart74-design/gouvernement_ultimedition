@@ -528,7 +528,7 @@ const createCareerTimelineFragment = (entries) => {
         event.className = 'timeline__event';
         event.setAttribute('role', 'listitem');
 
-        const color = step.color ? String(step.color).trim() : '';
+        const color = step.color ? String(step.color).trim() : "";
         if (color) {
             event.style.setProperty('--timeline-entry-color', color);
         }
@@ -565,7 +565,7 @@ const createCareerTimelineFragment = (entries) => {
             event.appendChild(header);
         }
 
-        const organisation = step.org ? String(step.org).trim() : '';
+        const organisation = step.org ? String(step.org).trim() : "";
         if (organisation) {
             const org = document.createElement('p');
             org.className = 'timeline__event-organisation';
@@ -573,7 +573,7 @@ const createCareerTimelineFragment = (entries) => {
             event.appendChild(org);
         }
 
-        const description = step.description ? String(step.description).trim() : '';
+        const description = step.description ? String(step.description).trim() : "";
         if (description) {
             const desc = document.createElement('p');
             desc.className = 'timeline__event-description';
@@ -601,6 +601,14 @@ const populateCareerModule = (entries, accentColor = null) => {
         renderTimelineLegend([], accentColor || null);
         modalCareerSection.hidden = true;
         return false;
+    }
+
+    if (accentColor) {
+        modalCareerSection?.style.setProperty("--timeline-color", accentColor);
+        modalCareerRoot.style.setProperty("--timeline-default-color", accentColor);
+    } else {
+        modalCareerSection?.style.removeProperty("--timeline-color");
+        modalCareerRoot.style.removeProperty("--timeline-default-color");
     }
 
     modalCareerRoot.innerHTML = '';
