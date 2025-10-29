@@ -128,14 +128,6 @@ async function run() {
         <div class="modal-module modal-module--description">
           <p class="modal-description" id="modal-description"></p>
         </div>
-        <div class="modal-module modal-module--mission">
-          <dl class="modal-meta">
-            <div class="modal-meta-item">
-              <dt>Mission</dt>
-              <dd id="modal-mission"></dd>
-            </div>
-          </dl>
-        </div>
         <section class="modal-module modal-module--career" hidden>
           <h4 class="modal-module-title">Carrière</h4>
           <ul class="modal-career-list" id="modal-career-list"></ul>
@@ -154,7 +146,6 @@ async function run() {
   const titleEl = doc.getElementById('modal-title');
   const portfolioEl = doc.getElementById('modal-portfolio');
   const descEl = doc.getElementById('modal-description');
-  const missionEl = doc.getElementById('modal-mission');
   const careerSection = doc.querySelector('.modal-module--career');
   const careerList = doc.getElementById('modal-career-list');
 
@@ -163,7 +154,6 @@ async function run() {
   const jobTitle = person.job_title || person.job || person.role || '';
   const portfolio = person.portfolio || person.poste || '';
   const bio = person.bio || person.description || '';
-  const mission = person.mission || '';
   const photo = person.photo || person.avatar_url || person.photo_url || '';
 
   if (photoEl && photo) photoEl.setAttribute('src', photo);
@@ -171,7 +161,7 @@ async function run() {
   if (titleEl) titleEl.textContent = fullName || '';
   if (portfolioEl) portfolioEl.textContent = portfolio || '';
   if (descEl) descEl.textContent = bio || '';
-  if (missionEl) missionEl.textContent = mission || '';
+  // mission field removed from modal; no assignment
 
   if (Array.isArray(careers) && careers.length > 0) {
     careerSection.removeAttribute('hidden');

@@ -195,13 +195,68 @@ const modalElements = {
     title: document.getElementById("modal-title"),
     portfolio: document.getElementById("modal-portfolio"),
     description: document.getElementById("modal-description"),
-    mission: document.getElementById("modal-mission"),
 };
 // Career elements (optional; shown only when data exists)
 const modalCareerSection = document.querySelector('.modal-module--career');
 const modalCareerRoot = document.getElementById('modal-career-root');
 const modalCareerLegend = document.getElementById('modal-career-legend');
 const modalDelegatesList = document.getElementById("modal-delegates");
+
+// Ensure the modal busy overlay is visible for at least 2 seconds
+let __modalBusySince = 0;
+let __modalBusyClearTimer = null;
+const setModalBusy = (busy) => {
+    const content = modal?.querySelector('.modal-content');
+    if (!content) return;
+    if (busy) {
+        if (__modalBusyClearTimer) {
+            clearTimeout(__modalBusyClearTimer);
+            __modalBusyClearTimer = null;
+        }
+        __modalBusySince = Date.now();
+        content.setAttribute('aria-busy', 'true');
+        return;
+    }
+
+    const elapsed = Date.now() - __modalBusySince;
+    const remaining = Math.max(0, 2000 - elapsed);
+    if (remaining > 0) {
+        if (__modalBusyClearTimer) clearTimeout(__modalBusyClearTimer);
+        __modalBusyClearTimer = setTimeout(() => {
+            content.setAttribute('aria-busy', 'false');
+            __modalBusyClearTimer = null;
+        }, remaining);
+    } else {
+        content.setAttribute('aria-busy', 'false');
+    }
+};
+
+// Ensure the main grid busy overlay is visible for at least 2 seconds
+let __gridBusySince = 0;
+let __gridBusyClearTimer = null;
+const setGridBusy = (busy) => {
+    if (!grid) return;
+    if (busy) {
+        if (__gridBusyClearTimer) {
+            clearTimeout(__gridBusyClearTimer);
+            __gridBusyClearTimer = null;
+        }
+        __gridBusySince = Date.now();
+        grid.setAttribute('aria-busy', 'true');
+        return;
+    }
+    const elapsed = Date.now() - __gridBusySince;
+    const remaining = Math.max(0, 2000 - elapsed);
+    if (remaining > 0) {
+        if (__gridBusyClearTimer) clearTimeout(__gridBusyClearTimer);
+        __gridBusyClearTimer = setTimeout(() => {
+            grid.setAttribute('aria-busy', 'false');
+            __gridBusyClearTimer = null;
+        }, remaining);
+    } else {
+        grid.setAttribute('aria-busy', 'false');
+    }
+};
 
 const initializeAdvancedSearchToggle = () => {
     if (!advancedToggleButton || !advancedSearchPanel) return null;
@@ -911,11 +966,11 @@ const buildCard = (minister) => {
 };
 
 const renderGrid = (items) => {
-    grid.setAttribute("aria-busy", "true");
+    setGridBusy(true);
     grid.innerHTML = "";
 
     if (!items.length) {
-        grid.setAttribute("aria-busy", "false");
+        setGridBusy(false);
         emptyState.hidden = false;
         return;
     }
@@ -929,7 +984,7 @@ const renderGrid = (items) => {
 
     grid.appendChild(fragment);
     updateMinistersGridLayout();
-    grid.setAttribute("aria-busy", "false");
+    setGridBusy(false);
 };
 
 const attachDelegatesToCore = () => {
@@ -1000,10 +1055,8 @@ const attachDelegatesToCore = () => {
 const applyFilters = () => {
     let basePool;
     if (currentRole === "all") {
-        // Show core ministers and ministres délégués together by default
-        // Avoid duplicates if a delegate is also present in coreMinisters
-        const delegatesToInclude = (delegateMinisters || []).filter((d) => !coreMinisters.some((c) => String(c.id) === String(d.id)));
-        basePool = coreMinisters.slice().concat(delegatesToInclude);
+        // Main grid: show only core ministers (exclude ministres délégués)
+        basePool = coreMinisters.slice();
     } else if (currentRole === "secretary") {
         basePool = delegateMinisters.filter((minister) => DELEGATE_ROLES.has(minister.role));
     } else {
@@ -1780,6 +1833,9 @@ const renderCabinetSection = (minister, collaborators, gradeLookup) => {
     section.setAttribute("role", "region");
     section.setAttribute("aria-label", "Cabinet du ministre");
     section.setAttribute("aria-live", "polite");
+    if (minister && minister.accentColor) {
+        section.style.setProperty('--minister-accent', String(minister.accentColor));
+    }
 
     const panel = document.createElement("div");
     panel.className = "cabinet-panel";
@@ -1896,9 +1952,20 @@ const createExecutiveCard = (member, options = {}) => {
     const name = document.createElement("h4");
     name.className = "executive-card__name";
     name.textContent = member?.name || "Collaborateur·rice";
+    // Badge row (grade/role)
+    const roleLine = member?.cabinetRole || member?.gradeLabel || null;
+    if (roleLine) {
+        const badges = document.createElement('div');
+        badges.className = 'executive-card__badges';
+        const badge = document.createElement('span');
+        badge.className = 'executive-card__badge';
+        badge.textContent = String(roleLine);
+        badges.appendChild(badge);
+        meta.appendChild(badges);
+    }
+
     meta.appendChild(name);
 
-    const roleLine = member?.cabinetRole || member?.gradeLabel || null;
     if (roleLine) {
         const role = document.createElement("p");
         role.className = "executive-card__role";
@@ -1937,6 +2004,9 @@ const createExecutiveCard = (member, options = {}) => {
 const buildExecutiveCabinetSection = (minister, collaborators, gradeLookup, options = {}) => {
     const section = document.createElement("section");
     section.className = "executive-cabinet";
+    if (minister && minister.accentColor) {
+        section.style.setProperty('--minister-accent', String(minister.accentColor));
+    }
     section.setAttribute("role", "region");
     section.setAttribute("aria-label", "Cabinet du Premier ministre");
 
@@ -2207,8 +2277,19 @@ const showCabinetInlineForMinister = async (minister) => {
     }
 
     const modalLayout = modalBody.querySelector(".modal-layout");
-    const parent = modalLayout?.parentElement || modalBody;
-    parent.insertBefore(placeholder, modalLayout ? modalLayout.nextSibling : null);
+    // Prefer inserting the collaborators section before the career module inside the layout
+    const careerSection = modalLayout ? modalLayout.querySelector('.modal-module--career') : null;
+    if (modalLayout && careerSection && careerSection.parentNode) {
+        careerSection.parentNode.insertBefore(placeholder, careerSection);
+    } else {
+        const parent = modalLayout?.parentElement || modalBody;
+        parent.insertBefore(placeholder, modalLayout ? modalLayout.nextSibling : null);
+    }
+
+    // mark modal so we can apply expanded styles when collaborators are visible
+    if (modal && !modal.classList.contains('modal--has-collaborators')) {
+        modal.classList.add('modal--has-collaborators');
+    }
 
     if (!minister.id) {
         return;
@@ -2254,10 +2335,15 @@ const showCabinetInlineForMinister = async (minister) => {
     }
 
     placeholder.replaceWith(finalSection);
+    // ensure the has-collaborators marker remains while the section is present
+    if (modal && !modal.classList.contains('modal--has-collaborators')) {
+        modal.classList.add('modal--has-collaborators');
+    }
 };
 
 const openModal = async (minister) => {
     if (!modal) return;
+    setModalBusy(true);
     // Ensure any cabinet overlay is hidden/cleared when opening detail view
     const modalContent = modal.querySelector('.modal-content');
     const overlay = modalContent?.querySelector('.cabinet-overlay');
@@ -2307,15 +2393,7 @@ const openModal = async (minister) => {
 
     modalElements.description.textContent = minister.description ?? "Ajoutez ici une biographie synthétique.";
 
-    const missionWrapper = modalElements.mission?.closest("div");
-    const missionText = (minister.mission ?? "").trim();
-    if (missionText) {
-        modalElements.mission.textContent = missionText;
-        if (missionWrapper) missionWrapper.hidden = false;
-    } else {
-        modalElements.mission.textContent = "";
-        if (missionWrapper) missionWrapper.hidden = true;
-    }
+    // mission field removed from modal — no longer displayed
 
     // Apply accent color to the career timeline (if available)
     if (modalCareerSection) {
@@ -2352,14 +2430,22 @@ const openModal = async (minister) => {
                         } else {
                             populateCareerModule([], accentColor);
                         }
+                        setModalBusy(false);
                     })
                     .catch(() => {
                         populateCareerModule([], accentColor);
+                        setModalBusy(false);
                     });
             } else {
                 populateCareerModule([], accentColor);
+                setModalBusy(false);
             }
+        } else {
+            setModalBusy(false);
         }
+    }
+    else {
+        setModalBusy(false);
     }
 
     if (modalBody) {
@@ -2403,33 +2489,68 @@ const openModal = async (minister) => {
 
         // Populate inline ministres délégués section inside the fiche modal
         try {
-            const delegatesSection = modal.querySelector('.modal-module--delegates');
-            if (delegatesSection && modalDelegatesList) {
-                // Determine linked delegates: prefer minister.delegates if already attached
-                let linkedDelegates = Array.isArray(minister.delegates) && minister.delegates.length ? minister.delegates.slice() : [];
-                if (!linkedDelegates.length && Array.isArray(delegateMinisters) && delegateMinisters.length) {
-                    linkedDelegates = delegateMinisters.filter((d) => {
-                        if (!d) return false;
-                        if (d.superiorId && minister.id && String(d.superiorId) === String(minister.id)) return true;
-                        if (minister.primaryMinistryId && d.primaryParentMinistryId && String(d.primaryParentMinistryId) === String(minister.primaryMinistryId)) return true;
-                        const keyA = normalise(minister.portfolio || minister.ministry || '');
-                        const keyB = normalise(d.portfolio || d.ministry || '');
-                        if (keyA && keyB && keyA === keyB) return true;
-                        try {
-                            const mCats = new Set((Array.isArray(minister.ministries) ? minister.ministries : []).map((m) => (m && (m.category || m.cat || m.type) ? normalise(m.category || m.cat || m.type) : '')).filter(Boolean));
-                            const dCats = new Set((Array.isArray(d.ministries) ? d.ministries : []).map((m) => (m && (m.category || m.cat || m.type) ? normalise(m.category || m.cat || m.type) : '')).filter(Boolean));
-                            for (const c of dCats) {
-                                if (mCats.has(c)) return true;
-                            }
-                        } catch (e) {
-                            // ignore
+            // Prefer to find an existing delegates section inside the modal
+            let delegatesSection = modal.querySelector('.modal-module--delegates');
+            // We'll query for a delegates list inside the modal (may not exist if section was removed)
+            let delegatesList = delegatesSection ? delegatesSection.querySelector('#modal-delegates') : null;
+
+            // Determine linked delegates: prefer minister.delegates if already attached
+            let linkedDelegates = Array.isArray(minister.delegates) && minister.delegates.length ? minister.delegates.slice() : [];
+            if (!linkedDelegates.length && Array.isArray(delegateMinisters) && delegateMinisters.length) {
+                linkedDelegates = delegateMinisters.filter((d) => {
+                    if (!d) return false;
+                    if (d.superiorId && minister.id && String(d.superiorId) === String(minister.id)) return true;
+                    if (minister.primaryMinistryId && d.primaryParentMinistryId && String(d.primaryParentMinistryId) === String(minister.primaryMinistryId)) return true;
+                    const keyA = normalise(minister.portfolio || minister.ministry || '');
+                    const keyB = normalise(d.portfolio || d.ministry || '');
+                    if (keyA && keyB && keyA === keyB) return true;
+                    try {
+                        const mCats = new Set((Array.isArray(minister.ministries) ? minister.ministries : []).map((m) => (m && (m.category || m.cat || m.type) ? normalise(m.category || m.cat || m.type) : '')).filter(Boolean));
+                        const dCats = new Set((Array.isArray(d.ministries) ? d.ministries : []).map((m) => (m && (m.category || m.cat || m.type) ? normalise(m.category || m.cat || m.type) : '')).filter(Boolean));
+                        for (const c of dCats) {
+                            if (mCats.has(c)) return true;
                         }
-                        return false;
-                    });
+                    } catch (e) {
+                        // ignore
+                    }
+                    return false;
+                });
+            }
+
+            // If no linked delegates, remove the delegates section from the modal (so it doesn't appear)
+            if (!Array.isArray(linkedDelegates) || !linkedDelegates.length) {
+                if (delegatesSection && delegatesSection.parentNode) {
+                    delegatesSection.parentNode.removeChild(delegatesSection);
+                }
+            } else {
+                // Ensure delegates section exists; create it if needed
+                if (!delegatesSection) {
+                    delegatesSection = document.createElement('div');
+                    delegatesSection.className = 'modal-module modal-module--delegates';
+                    const h4 = document.createElement('h4');
+                    h4.className = 'modal-module-title';
+                    h4.textContent = 'Ministres délégués';
+                    delegatesSection.appendChild(h4);
+                    delegatesList = document.createElement('div');
+                    delegatesList.id = 'modal-delegates';
+                    delegatesList.className = 'modal-delegates-list';
+                    delegatesList.setAttribute('role', 'list');
+                    delegatesSection.appendChild(delegatesList);
+
+                    // Insert delegates section before career section if present, otherwise append to modal layout
+                    const careerSec = modal.querySelector('.modal-module--career');
+                    const layout = modal.querySelector('.modal-layout') || modal.querySelector('.modal-body') || modal;
+                    if (careerSec && careerSec.parentNode) {
+                        careerSec.parentNode.insertBefore(delegatesSection, careerSec);
+                    } else if (layout) {
+                        layout.appendChild(delegatesSection);
+                    }
                 }
 
-                modalDelegatesList.innerHTML = '';
-                if (Array.isArray(linkedDelegates) && linkedDelegates.length) {
+                // Populate delegates list
+                delegatesList = delegatesList || delegatesSection.querySelector('#modal-delegates');
+                if (delegatesList) {
+                    delegatesList.innerHTML = '';
                     linkedDelegates.forEach((delegate) => {
                         const btn = document.createElement('button');
                         btn.type = 'button';
@@ -2456,11 +2577,8 @@ const openModal = async (minister) => {
                             openModal(delegate);
                         });
 
-                        modalDelegatesList.appendChild(btn);
+                        delegatesList.appendChild(btn);
                     });
-                    delegatesSection.hidden = false;
-                } else {
-                    delegatesSection.hidden = true;
                 }
             }
         } catch (e) {
@@ -2478,6 +2596,8 @@ const closeModal = () => {
     modal.hidden = true;
     modal.setAttribute("hidden", "");
     modal.classList.remove("modal--cabinet-active", "modal--cabinet-mode");
+    // remove collaborators marker when closing
+    modal.classList.remove('modal--has-collaborators');
     const modalBody = modal.querySelector('.modal-body');
     if (modalBody) {
         modalBody.hidden = false;
@@ -2807,7 +2927,7 @@ const fetchMinistersFromFallback = async () => {
 };
 
 const loadMinisters = async () => {
-    grid.setAttribute("aria-busy", "true");
+    setGridBusy(true);
     emptyState.hidden = true;
 
     let dataLoaded = false;
@@ -2882,7 +3002,7 @@ const loadMinisters = async () => {
         coreMinisters = [];
         delegateMinisters = [];
         grid.innerHTML = "";
-        grid.setAttribute("aria-busy", "false");
+        setGridBusy(false);
         emptyState.hidden = false;
         emptyState.textContent =
             "Aucune donnée disponible. Vérifiez la configuration Supabase ou ajoutez un fichier data/ministers.json.";

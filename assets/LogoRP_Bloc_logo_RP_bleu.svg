@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="600" height="200" viewBox="0 0 600 200" role="img" aria-label="Logo RumeurPublique">
-  <rect width="100%" height="100%" fill="#0D6EAF" rx="12"/>
-  <g fill="#fff" font-family="Arial, Helvetica, sans-serif" font-weight="700">
-    <text x="36" y="78" font-size="48">LogoRP</text>
-    <text x="36" y="128" font-size="20">Bloc — Rumeur Publique</text>
-  </g>
-</svg>
