@@ -2587,6 +2587,35 @@ body.print-all .toolbar {
     color: var(--color-poivre);
 }
 
+/* Timeline legend */
+.timeline-legend {
+    margin-block-start: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    align-items: center;
+}
+.timeline-legend[hidden] { display: none !important; }
+.timeline-legend__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--color-sesame);
+    background: rgba(255, 255, 255, 0.65);
+    border: 1px solid rgba(17, 23, 39, 0.08);
+    border-radius: 999px;
+    padding: 0.25rem 0.6rem 0.25rem 0.4rem;
+}
+.timeline-legend__dot {
+    inline-size: 0.65rem;
+    block-size: 0.65rem;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0 2px #fff inset, 0 0 0 1px rgba(17,23,39,0.15);
+}
+.timeline-legend__label { line-height: 1; }
+
 @media (min-width: 768px) {
     .timeline {
         gap: 2.5rem;

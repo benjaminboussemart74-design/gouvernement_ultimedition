@@ -544,12 +544,18 @@ const CAREER_CATEGORY_LABELS = {
     'administration': 'Administration',
     'other': 'Autre',
     'misc': 'Autre',
+    // Requested mappings
+    'political': 'Politique',
+    'civil society': 'Société civile',
+    'academic': 'Académique',
+    'professional': 'Professionnel',
 };
 
 const translateCareerCategory = (raw) => {
     const val = (raw ?? '').toString().trim();
     if (!val) return '';
-    const key = normalise(val);
+    // Normalize hyphens/underscores to spaces for more robust matching
+    const key = normalise(val.replace(/[-_]+/g, ' '));
     return CAREER_CATEGORY_LABELS[key] || val;
 };
 
