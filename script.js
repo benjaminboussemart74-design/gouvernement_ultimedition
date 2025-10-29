@@ -786,7 +786,6 @@ const buildCard = (minister) => {
     card.setAttribute("role", "listitem");
     card.dataset.role = minister.role ?? "";
     if (minister.id != null) card.dataset.personId = String(minister.id);
-
     const roleKey = minister.role || "";
     if (roleKey === "leader") {
         card.classList.add("is-leader");
@@ -794,8 +793,24 @@ const buildCard = (minister) => {
     }
 
     if (minister.accentColor) {
-        card.style.setProperty("--accent-color", minister.accentColor);
-    }
+        // prefer party color when available, fallback to ministry accentColor
+        const partyLabel = mapPartyLabel(minister.party == null ? "" : String(minister.party).trim()) || "";
+        const PARTY_COLORS = {
+            "Renaissance": "#0055A4",
+            "Horizons": "#1E90FF",
+            "MoDem": "#F2A900",
+            "PRV": "#00A86B",
+            "Centristes": "#8A2BE2",
+            "UDI": "#0A4D8C",
+            "LR": "#0055A4",
+            "RN": "#2E3348",
+            "Reconquête": "#E10600",
+            "Patriotes": "#7A0019",
+            "PS": "#E61F5A",
+            "Génération.s": "#6CC02B",
+            "EELV": "#2FA34A",
+        };
+        }
 
     const left = document.createElement("div");
     left.className = "mc-left";
@@ -2352,11 +2367,6 @@ const openModal = async (minister) => {
     }
     modal.classList.remove('modal--cabinet-mode', 'modal--cabinet-active');
     activeMinister = minister;
-    if (minister?.accentColor) {
-        modal.style.setProperty('--minister-accent', String(minister.accentColor));
-    } else {
-        modal.style.removeProperty('--minister-accent');
-    }
     const modalBody = modal.querySelector(".modal-body");
     if (modalBody) {
         modalBody.hidden = false;
