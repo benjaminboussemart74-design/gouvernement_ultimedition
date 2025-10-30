@@ -1,29 +1,52 @@
-// Minimal Supabase fetcher for minister nodes
-// Uses ESM CDN import of supabase-js v2
+(function (global) {
+  if (!global) {
+    return;
+  }
 
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+  let cachedClient = null;
 
-const supabaseUrl = window.SUPABASE_URL;
-const supabaseKey = window.SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+  function resolveClient() {
+    if (cachedClient) {
+      return cachedClient;
+    }
+    if (!global.supabase || typeof global.supabase.createClient !== 'function') {
+      throw new Error('Supabase client factory is not available.');
+    }
+    const url = typeof global.SUPABASE_URL === 'string' ? global.SUPABASE_URL : '';
+    const key = typeof global.SUPABASE_ANON_KEY === 'string' ? global.SUPABASE_ANON_KEY : '';
+    if (!url || !key) {
+      throw new Error('Supabase configuration is missing.');
+    }
+    cachedClient = global.supabase.createClient(url, key);
+    return cachedClient;
+  }
 
-export async function fetchMinisterNodes() {
-  const { data, error } = await supabase
-    .from("vw_ministernode")
-    .select("person_id, full_name, is_leader, ministry_name, color, photo_url")
-    .order("is_leader", { ascending: false })
-    .order("full_name", { ascending: true });
+  async function fetchMinisterNodes() {
+    const client = resolveClient();
+    const { data, error } = await client
+      .from('vw_ministernode')
+      .select('person_id, full_name, is_leader, ministry_name, color, photo_url')
+      .order('is_leader', { ascending: false })
+      .order('full_name', { ascending: true });
 
-  if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
-  return (data ?? []).map((row) => ({
-    id: row.person_id,
-    name: row.full_name,
-    role: row.is_leader ? "leader" : "minister",
-    portfolio: row.ministry_name,
-    photo: row.photo_url ?? null,
-    color: row.color ?? null,
-    isLeader: !!row.is_leader,
-  }));
-}
+    return (Array.isArray(data) ? data : []).map((row) => ({
+      id: row.person_id,
+      name: row.full_name,
+      role: row.is_leader ? 'leader' : 'minister',
+      portfolio: row.ministry_name,
+      photo: row.photo_url ?? null,
+      color: row.color ?? null,
+      isLeader: !!row.is_leader,
+    }));
+  }
 
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { fetchMinisterNodes };
+  } else {
+    global.fetchMinisterNodes = fetchMinisterNodes;
+  }
+})(typeof globalThis !== 'undefined' ? globalThis : this);

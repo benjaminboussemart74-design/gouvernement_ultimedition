@@ -173,7 +173,7 @@
 
   <!-- Charger la config locale Supabase (optionnelle) et le client JS Supabase -->
   <script src="config/supabase.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+  <script src="config/supabase-lite-client.js"></script>
 
   <script>
     // Exemple de données plates suivant la logique SQL : id, name, role, superior_id (chaîne de subordination), collab_grade
@@ -204,7 +204,7 @@
         return null;
       }
 
-      // createClient est exposé par le bundle UMD comme `supabase.createClient`
+      // createClient est exposé par le client léger local via `supabase.createClient`
       if (!window.supabase || typeof window.supabase.createClient !== 'function'){
         console.warn('Client Supabase non disponible dans le scope global.');
         return null;

@@ -4,3 +4,5 @@
 # Node / editor folders (safe defaults)
 node_modules/
 .vscode/
+config/supabase.local.json
+.env
