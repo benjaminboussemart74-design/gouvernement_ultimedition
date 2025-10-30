@@ -11,8 +11,8 @@ node scripts/test_supabase_careers.js
 ```
 
 What the script does
-- Reads `config/supabase.js` (looks for `window.SUPABASE_URL` and `window.SUPABASE_ANON_KEY`).
-- Uses `window.SUPABASE_CAREERS_TABLE` if present, otherwise defaults to `person_careers`.
+- Loads `config/supabase.js` (which itself reads environment variables, `config/supabase.local.json` or runtime metadata) to obtain `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
+- Uses the configured careers table if available, otherwise defaults to `person_careers`.
 - Calls the Supabase REST `GET /rest/v1/<table>?select=*&limit=50` with the anon key in `apikey` and `Authorization` header.
 - Prints the number of rows and a sample of up to 5 rows.
 

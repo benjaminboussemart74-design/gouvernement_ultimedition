@@ -7,29 +7,27 @@
     node scripts/test_modal_population.js
 */
 
-const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const { URL } = require('url');
 
 const configPath = path.resolve(process.cwd(), 'config', 'supabase.js');
-if (!fs.existsSync(configPath)) {
-  console.error('config/supabase.js not found. Run from project root.');
+let supabaseConfig;
+try {
+  // eslint-disable-next-line import/no-dynamic-require, global-require
+  supabaseConfig = require(configPath);
+} catch (err) {
+  console.error('Unable to load config/supabase.js:', err.message);
   process.exit(2);
 }
-const raw = fs.readFileSync(configPath, 'utf8');
-function extractVar(name, src) {
-  const re = new RegExp(name.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&') + "\\s*=\\s*['\"]([^'\"]+)['\"]");
-  const m = src.match(re);
-  return m ? m[1] : null;
-}
-const SUPABASE_URL = extractVar('window.SUPABASE_URL', raw) || extractVar('SUPABASE_URL', raw);
-const SUPABASE_ANON_KEY = extractVar('window.SUPABASE_ANON_KEY', raw) || extractVar('SUPABASE_ANON_KEY', raw);
-const SUPABASE_PERSONS_TABLE = extractVar('window.SUPABASE_MINISTERS_TABLE', raw) || extractVar('SUPABASE_MINISTERS_TABLE', raw) || 'persons';
-const SUPABASE_CAREERS_TABLE = extractVar('window.SUPABASE_CAREERS_TABLE', raw) || extractVar('SUPABASE_CAREERS_TABLE', raw) || 'person_careers';
+
+const SUPABASE_URL = supabaseConfig && supabaseConfig.url ? supabaseConfig.url : '';
+const SUPABASE_ANON_KEY = supabaseConfig && supabaseConfig.anonKey ? supabaseConfig.anonKey : '';
+const SUPABASE_PERSONS_TABLE = supabaseConfig && supabaseConfig.ministersTable ? supabaseConfig.ministersTable : 'persons';
+const SUPABASE_CAREERS_TABLE = supabaseConfig && supabaseConfig.careersTable ? supabaseConfig.careersTable : 'person_careers';
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error('Missing SUPABASE_URL or SUPABASE_ANON_KEY in config/supabase.js');
+  console.error('Missing Supabase credentials. Provide SUPABASE_URL and SUPABASE_ANON_KEY via environment variables or config/supabase.local.json.');
   process.exit(3);
 }
 

@@ -28,26 +28,44 @@ if (!fs.existsSync(indexPath) || !fs.existsSync(scriptPath) || !fs.existsSync(co
 
 let indexHtml = fs.readFileSync(indexPath, 'utf8');
 const scriptJs = fs.readFileSync(scriptPath, 'utf8');
-const configRaw = fs.readFileSync(configPath, 'utf8');
 
-// Strip external resource tags to avoid jsdom trying to fetch them from localhost
-indexHtml = indexHtml
-  .replace(/<link[^>]*href=["']styles\.css["'][^>]*>/i, '')
-  .replace(/<script[^>]*src=["']https:\/\/unpkg\.com\/[@\w\-\.\/=@:]+["'][^>]*><\/script>/gi, '')
-  .replace(/<script[^>]*src=["']config\/supabase\.js["'][^>]*><\/script>/gi, '')
-  .replace(/<script[^>]*src=["']script\.js["'][^>]*><\/script>/gi, '');
+function sanitizeIndexHtml(html) {
+  const dom = new JSDOM(html, { runScripts: 'outside-only', url: 'http://localhost' });
+  const { document } = dom.window;
 
-function extractVar(name, src) {
-  const re = new RegExp(name.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&') + "\\s*=\\s*['\"]([^'\"]+)['\"]");
-  const m = src.match(re);
-  return m ? m[1] : null;
+  const selectorsToStrip = [
+    'link[rel="stylesheet"]',
+    'link[rel="preconnect"]',
+    'link[rel="preload"]',
+    'link[rel="modulepreload"]',
+    'link[rel="dns-prefetch"]',
+    'script',
+  ];
+
+  selectorsToStrip.forEach((selector) => {
+    const nodes = document.querySelectorAll(selector);
+    nodes.forEach((node) => node.parentNode && node.parentNode.removeChild(node));
+  });
+
+  return dom.serialize();
 }
 
-const SUPABASE_URL = extractVar('window.SUPABASE_URL', configRaw) || extractVar('SUPABASE_URL', configRaw);
-const SUPABASE_ANON_KEY = extractVar('window.SUPABASE_ANON_KEY', configRaw) || extractVar('SUPABASE_ANON_KEY', configRaw);
+indexHtml = sanitizeIndexHtml(indexHtml);
+
+let supabaseConfig;
+try {
+  // eslint-disable-next-line global-require, import/no-dynamic-require
+  supabaseConfig = require(configPath);
+} catch (err) {
+  console.error('Unable to load config/supabase.js:', err.message);
+  process.exit(3);
+}
+
+const SUPABASE_URL = supabaseConfig && supabaseConfig.url ? supabaseConfig.url : '';
+const SUPABASE_ANON_KEY = supabaseConfig && supabaseConfig.anonKey ? supabaseConfig.anonKey : '';
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error('Supabase URL/Key not found in config/supabase.js');
+  console.error('Supabase URL/Key not found. Configure SUPABASE_URL and SUPABASE_ANON_KEY via environment variables or config/supabase.local.json.');
   process.exit(3);
 }
 
@@ -81,7 +99,12 @@ function createFakeSupabaseClient(baseUrl, anonKey) {
   Query.prototype.eq = function (col, val) { this._filters.push({ type: 'eq', col, val }); return this; };
   Query.prototype.in = function (col, arr) { this._filters.push({ type: 'in', col, val: arr }); return this; };
   Query.prototype.ilike = function (col, pattern) { this._filters.push({ type: 'ilike', col, val: pattern }); return this; };
-  Query.prototype.order = function (col, opts) { const dir = opts && opts.ascending === false ? 'desc' : 'asc'; this._orders.push({ col, dir }); return this; };
+  Query.prototype.order = function (col, opts) {
+    const dir = opts && opts.ascending === false ? 'desc' : 'asc';
+    const foreign = opts && typeof opts.foreignTable === 'string' ? opts.foreignTable : null;
+    this._orders.push({ col, dir, foreign });
+    return this;
+  };
   Query.prototype.limit = function (n) { this._limit = n; return this; };
 
   // make it awaitable: implement then
@@ -104,9 +127,11 @@ function createFakeSupabaseClient(baseUrl, anonKey) {
         }
       });
       if (this._orders.length) {
-        // only first order supported
-        const o = this._orders[0];
-        params.push(`order=${encodeURIComponent(o.col)}.${o.dir}`);
+        this._orders.forEach((o) => {
+          if (!o || !o.col) return;
+          const prefix = o.foreign ? `${encodeURIComponent(o.foreign)}.` : '';
+          params.push(`order=${prefix}${encodeURIComponent(o.col)}.${o.dir}`);
+        });
       }
       if (this._limit != null) params.push(`limit=${encodeURIComponent(String(this._limit))}`);
 

@@ -101,6 +101,43 @@
     return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
   }
 
+  function resolveSafeImageSource(value, fallback){
+    const fallbackValue = fallback || '';
+    if (!value || typeof value !== 'string') {
+      return { src: fallbackValue, isFallback: true };
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return { src: fallbackValue, isFallback: true };
+    }
+    const lowered = trimmed.toLowerCase();
+    if (lowered.startsWith('javascript:') || lowered.startsWith('data:text/html')) {
+      return { src: fallbackValue, isFallback: true };
+    }
+    if (/^data:image\//i.test(trimmed)) {
+      return { src: trimmed, isFallback: false };
+    }
+    if (/^https?:\/\//i.test(trimmed)) {
+      return { src: trimmed, isFallback: false };
+    }
+    if (trimmed.startsWith('/')) {
+      return { src: trimmed, isFallback: false };
+    }
+    const base = (typeof window !== 'undefined' && typeof window.SUPABASE_URL === 'string') ? window.SUPABASE_URL.replace(/\/$/, '') : '';
+    if (base) {
+      if (trimmed.startsWith('storage/v1/object/public/')) {
+        return { src: `${base}/${trimmed.replace(/^\/+/, '')}`, isFallback: false };
+      }
+      if (/^[A-Za-z0-9_-]+\/.+/.test(trimmed)) {
+        return { src: `${base}/storage/v1/object/public/${trimmed.replace(/^\/+/, '')}`, isFallback: false };
+      }
+    }
+    if (/^[A-Za-z0-9/_\.-]+\.(png|jpe?g|gif|webp|avif|svg)$/i.test(trimmed)) {
+      return { src: trimmed, isFallback: false };
+    }
+    return { src: fallbackValue, isFallback: true };
+  }
+
   function getInitials(value){
     return (value || '')
       .split(/\s+/)
@@ -113,10 +150,11 @@
   function renderAvatar(person, size){
     const dim = size || 72;
     const safeName = escapeHTML(person.full_name || '');
-    const src = person.photo_url ? person.photo_url : generateAvatarDataUrl(person.full_name, dim);
+    const fallbackData = generateAvatarDataUrl(person.full_name, dim);
+    const { src, isFallback } = resolveSafeImageSource(person.photo_url || '', fallbackData);
     const style = `width:${dim}px;height:${dim}px;object-fit:cover;`;
     const initials = escapeHTML(getInitials(person.full_name));
-    if (person.photo_url){
+    if (!isFallback){
       return `<img src="${src}" alt="${safeName}" style="${style}" onerror="this.style.display='none';if(this.nextElementSibling){this.nextElementSibling.classList.remove('is-hidden');}"><div class="mini-initial is-hidden" aria-hidden="true">${initials}</div>`;
     }
     return `<div class="mini-initial" aria-hidden="true">${initials}</div>`;
