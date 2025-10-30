@@ -111,7 +111,11 @@
       return { src: fallbackValue, isFallback: true };
     }
     const lowered = trimmed.toLowerCase();
-    if (lowered.startsWith('javascript:') || lowered.startsWith('data:text/html')) {
+    if (
+      lowered.startsWith('javascript:') ||
+      lowered.startsWith('vbscript:') ||
+      (lowered.startsWith('data:') && !lowered.startsWith('data:image/'))
+    ) {
       return { src: fallbackValue, isFallback: true };
     }
     if (/^data:image\//i.test(trimmed)) {
