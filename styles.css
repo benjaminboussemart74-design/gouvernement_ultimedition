@@ -1297,6 +1297,16 @@ body.print-all .toolbar {
     border-radius: 12px;
 }
 
+/* Ensure the CTA button is horizontally centered under the photo on
+   wider screens. On small screens the CTA becomes full-width (handled
+   by the existing mobile media query). */
+@media (min-width: 861px) {
+    .mc-right .minister-cta {
+        display: inline-block;
+        margin: 0 auto;
+    }
+}
+
 .minister-role {
     font-size: 0.9rem;
     color: var(--color-sesame);
