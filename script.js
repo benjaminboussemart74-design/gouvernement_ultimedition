@@ -636,6 +636,7 @@ const formatBiographyPeriod = (entry) => {
     const startText = entry.startText || '';
     const endText = entry.endText || '';
 
+    // Prefer explicit textual start/end when present
     if (startText && endText) {
         return `${startText} – ${endText}`;
     }
@@ -645,10 +646,8 @@ const formatBiographyPeriod = (entry) => {
     if (!startText && endText) {
         return endText;
     }
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
-};
 
+    // Fallback to formatted dates when available
     const startLabel = hasStartDate ? biographyDateFormatter.format(entry.startDate) : '';
     const endLabel = hasEndDate ? biographyDateFormatter.format(entry.endDate) : '';
 
