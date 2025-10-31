@@ -14,14 +14,14 @@
     --color-citron: #FCEE88;
     --color-peche: #F0A08C;
 
-    --gradient-header: linear-gradient(135deg, var(--color-aubergine), var(--color-prune));
+    --gradient-header: linear-gradient(135deg, var(--color-curacao), var(--color-panthere));
     --accent-primary: var(--color-curacao);
     --accent-secondary: var(--color-lavande);
     --radius-base: 10px;
     --shadow-soft: 0 20px 45px rgba(39, 8, 59, 0.12);
     --shadow-hover: 0 28px 60px rgba(75, 37, 121, 0.18);
 
-    /* --- Couleurs des partis (palette Rumeur / mapping local) --- */
+    /* corriger les couleurs de renaissance trouver plusieurs bleus moins moche pour les droitoss*/
     /* Centre / majorités */
     --party-renaissance: #FFD700;    /* Jaune doré - Renaissance */
     --party-horizons: #0055A4;       /* Bleu institutionnel - Horizons */
@@ -68,7 +68,7 @@
     font-display: swap;
 }
 
-/* Apply Havelock Inline to ministry short names and related badges */
+/* Les titres de ministres sont affichés en Havelock Inline mais il faut modifier ça  */
 .mc-ministry,
 .mc-ministry-badge,
 .ministry-label,
@@ -123,7 +123,7 @@ h4,
 h5,
 h6 {
     color: var(--color-encre);
-    line-height: 1.15;
+    line-height: 1;
     margin: 0 0 0.75rem;
     font-weight: 700;
 }
@@ -144,7 +144,7 @@ a:focus {
 
 .site-header {
     background: var(--gradient-header);
-    color: var(--color-guimauve);
+    color: var(--color-panthere);
     padding: 3.5rem clamp(1.5rem, 3vw, 3.5rem) 2rem;
     display: grid;
     gap: 3rem;
@@ -185,7 +185,7 @@ a:focus {
     padding: 0.4rem 0.9rem;
     border-radius: var(--radius-base);
     background: rgba(100, 215, 205, 0.18);
-    color: var(--color-guimauve);
+    color: var(--color-panthere);
     font-size: 0.85rem;
     font-weight: 500;
     text-transform: uppercase;
@@ -204,7 +204,7 @@ a:focus {
 .brand-title h1 {
     font-size: clamp(2.25rem, 4vw, 3.4rem);
     color: var(--color-guimauve);
-    margin-bottom: 0.75rem;
+    margin-bottom: 4rem;
 }
 
 .brand-baseline {
@@ -282,7 +282,7 @@ a:focus {
     .header-logo-panel img { max-width: 260px; }
 }
 
-/* --- Large hero backdrop logo (bleu) --- */
+/* --- Large hero backdrop logo (bleu) plus utile le modifier--- */
 .hero-bg-logo {
     position: absolute;
     inset: 0;
@@ -501,6 +501,7 @@ main > * { position: relative; z-index: 2; }
         max-width: 100%;
     }
 }
+/* Impremerie ajuster le style graphique et comprendre comme ça marche rajouter logo de la boite et les nouveaux élements */
 
 @media print {
     .modal-footer-cta { display: none; }
@@ -508,7 +509,7 @@ main > * { position: relative; z-index: 2; }
 }
 .header-suggestion[aria-selected="true"], .header-suggestion:hover { background: rgba(100,215,205,0.06); }
 
-/* Avatar in suggestion */
+/* Avatar de suggestion qui n'est pas très beau, et ne respecte pas la charte grapihque, à l'avenir le changer par un truc plus beau ? */
 .header-suggestion img.avatar {
     width: 56px;
     height: 56px;
@@ -597,7 +598,7 @@ main {
 
 .section-title {
     font-size: clamp(2rem, 4vw, 2.6rem);
-    font-weight: 700;
+    font-weight: 2000;
 }
 
 .section-subtitle {
@@ -626,18 +627,17 @@ main {
 
 .toolbar {
     background: var(--color-guimauve);
-    border-radius: var(--radius-base);
     padding: clamp(1.4rem, 4vw, 2rem);
     display: grid;
     gap: clamp(1rem, 3vw, 1.6rem);
     box-shadow: var(--shadow-soft);
     border: 1px solid rgba(62, 62, 61, 0.08);
 }
-
+/* modification nécéssaire problème d'alignement incompréhensible des deux barres*/
 .toolbar-compact {
     display: grid;
     gap: 0.75rem;
-    align-items: start;
+    align-items: center ;
 }
 
 .toolbar-search-group {
@@ -646,7 +646,7 @@ main {
 }
 
 .toolbar-compact .toolbar-search-group {
-    width: 100%;
+    width: 40%;
 }
 
 .toolbar-advanced {
@@ -1237,10 +1237,10 @@ body.print-all .toolbar {
 
 /* Actions dans la carte (ex: bouton délégués) */
 .card-actions { margin-top: 0.5rem; }
-/* Badges de parti — utilitaire simple */
+/* Badges de parti — forcément si j'oublie le margin-top */
 .party-badge {
     display: inline-block;
-    margin-top: 0.3rem;
+    margin-top:0 rem;
     background: var(--color-perle);
     color: var(--color-encre);
     font-size: 0.8rem;
@@ -1358,11 +1358,11 @@ body.print-all .toolbar {
     margin-top: 0;
 }
 
-/* Keep party badge visual mapping defined above; only adjust spacing here */
+/* Keep party badge visual mapping defined above; only adjust spacing here * effectivement si je modifie pas le pading rien n'est aligné/
 .mc-meta .party-badge {
     display: inline-flex;
     align-items: center;
-    margin-top: 0.2rem;
+    margin-top: 0rem;
 }
 
 /* Indicateur de rang/importance */
@@ -1541,6 +1541,10 @@ body.print-all .toolbar {
     box-shadow: 0 24px 48px rgba(17, 23, 39, 0.15);
     display: grid;
     gap: 1.5rem;
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: 100%;
+    justify-items: center;
 }
 
 .modal-collaborators.is-hidden {
@@ -1637,6 +1641,9 @@ body.print-all .toolbar {
     background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,246,248,0.98));
     border: 1px solid rgba(17, 23, 39, 0.08);
     box-shadow: 0 22px 48px rgba(17, 23, 39, 0.10);
+    width: min(100%, 1100px);
+    margin-inline: auto;
+    justify-items: stretch;
 }
 
 .cabinet-panel-header {
@@ -1685,6 +1692,8 @@ body.print-all .toolbar {
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.85);
     border: 1px solid rgba(17, 23, 39, 0.08);
+    width: min(100%, 520px);
+    margin-inline: auto;
 }
 
 .cabinet-tree-hero-avatar {
@@ -1729,36 +1738,63 @@ body.print-all .toolbar {
     align-items: center;
     gap: 1.25rem;
     width: 100%;
+    max-width: min(100%, 1080px);
+    margin-inline: auto;
 }
 
 .cabinet-tree-level {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     justify-content: center;
+    justify-items: center;
+    align-items: stretch;
     gap: 0.9rem 1rem;
     width: 100%;
+}
+
+.cabinet-tree-level[data-depth="0"] {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
 .cabinet-tree-connector {
     width: 100%;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(17, 23, 39, 0.12), transparent);
+    background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 35%, rgba(17, 23, 39, 0.12)),
+        transparent
+    );
 }
 
 /* Node cards */
 .cabinet-node {
-    background: rgba(255, 255, 255, 0.94);
+    --cabinet-node-accent: var(--minister-accent, var(--color-curacao));
+    --cabinet-node-text: var(--color-encre);
+    --cabinet-node-muted: var(--color-sesame);
+    --cabinet-node-link: color-mix(in srgb, var(--cabinet-node-accent) 38%, var(--color-panthere) 62%);
+    --cabinet-node-surface: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--cabinet-node-accent) 12%, rgba(255, 255, 255, 0.98)),
+        rgba(248, 248, 252, 0.94)
+    );
+    --cabinet-node-border: color-mix(in srgb, var(--cabinet-node-accent) 18%, rgba(148, 163, 184, 0.45));
+    --cabinet-node-grade-surface: color-mix(in srgb, var(--cabinet-node-accent) 14%, rgba(255, 255, 255, 0.92));
+    --cabinet-node-grade-border: color-mix(in srgb, var(--cabinet-node-accent) 26%, rgba(17, 23, 39, 0.12));
+    --cabinet-node-grade-color: var(--cabinet-node-accent);
+    background: var(--cabinet-node-surface);
     border-radius: 14px;
-    border: 1px solid rgba(148, 163, 184, 0.35);
+    border: 1px solid var(--cabinet-node-border);
     padding: 0.9rem 1rem;
     min-width: 180px;
-    max-width: 240px;
+    max-width: 260px;
     text-align: center;
-    box-shadow: 0 18px 34px rgba(17, 23, 39, 0.16);
+    box-shadow: 0 18px 34px color-mix(in srgb, var(--cabinet-node-accent) 14%, rgba(17, 23, 39, 0.16));
     display: grid;
     gap: 0.45rem;
     position: relative;
-    color: var(--color-encre);
+    color: var(--cabinet-node-text);
+    overflow: hidden;
 }
 
 .cabinet-node-avatar {
@@ -1778,27 +1814,83 @@ body.print-all .toolbar {
     display: inline-block;
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--color-encre);
-    background: rgba(100, 215, 205, 0.16);
-    border: 1px solid rgba(17, 23, 39, 0.12);
+    color: var(--cabinet-node-grade-color);
+    background: var(--cabinet-node-grade-surface);
+    border: 1px solid var(--cabinet-node-grade-border);
     border-radius: 999px;
     padding: 0.15rem 0.5rem;
 }
 
 .cabinet-node-name {
     font-weight: 700;
+    color: var(--cabinet-node-text);
 }
 
 .cabinet-node-title,
 .cabinet-node-role {
     margin: 0;
-    color: var(--color-sesame);
+    color: var(--cabinet-node-muted);
     font-size: 0.9rem;
 }
 
 .cabinet-node-email {
     font-size: 0.85rem;
-    color: var(--color-panthere);
+    color: var(--cabinet-node-link);
+}
+
+.cabinet-node[data-grade="direcab"],
+.cabinet-node[data-grade="direcab-adj"] {
+    --cabinet-node-text: #ffffff;
+    --cabinet-node-muted: rgba(255, 255, 255, 0.86);
+    --cabinet-node-link: rgba(255, 255, 255, 0.86);
+    --cabinet-node-grade-color: rgba(255, 255, 255, 0.94);
+    --cabinet-node-grade-surface: rgba(255, 255, 255, 0.22);
+    --cabinet-node-grade-border: rgba(255, 255, 255, 0.45);
+}
+
+.cabinet-node[data-grade="direcab"] {
+    --cabinet-node-accent: var(--minister-accent, var(--color-curacao));
+    --cabinet-node-surface: linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--cabinet-node-accent) 88%, #ffffff 12%),
+        color-mix(in srgb, var(--cabinet-node-accent) 68%, #ffffff 32%)
+    );
+    --cabinet-node-border: color-mix(in srgb, var(--cabinet-node-accent) 52%, rgba(255, 255, 255, 0.35));
+    box-shadow: 0 30px 60px color-mix(in srgb, var(--cabinet-node-accent) 32%, rgba(15, 23, 42, 0.24));
+}
+
+.cabinet-node[data-grade="direcab-adj"] {
+    --cabinet-node-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 78%, #7c3aed 22%);
+    --cabinet-node-surface: linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--cabinet-node-accent) 78%, #ffffff 22%),
+        color-mix(in srgb, var(--cabinet-node-accent) 56%, #ffffff 44%)
+    );
+    --cabinet-node-border: color-mix(in srgb, var(--cabinet-node-accent) 46%, rgba(255, 255, 255, 0.38));
+    box-shadow: 0 26px 52px color-mix(in srgb, var(--cabinet-node-accent) 26%, rgba(15, 23, 42, 0.2));
+}
+
+.cabinet-node[data-grade="chefcab"] {
+    --cabinet-node-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 68%, #0ea5e9 32%);
+}
+
+.cabinet-node[data-grade="chefcabadj"] {
+    --cabinet-node-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 58%, #38bdf8 42%);
+}
+
+.cabinet-node[data-grade="chefpole"] {
+    --cabinet-node-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 52%, #14b8a6 48%);
+    --cabinet-node-muted: color-mix(in srgb, var(--cabinet-node-accent) 24%, var(--color-sesame) 76%);
+}
+
+.cabinet-node[data-grade="conseiller"] {
+    --cabinet-node-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 30%, #475569 70%);
+    --cabinet-node-muted: color-mix(in srgb, var(--cabinet-node-accent) 26%, var(--color-sesame) 74%);
+    --cabinet-node-link: color-mix(in srgb, var(--cabinet-node-accent) 36%, rgba(15, 23, 42, 0.72));
+}
+
+.cabinet-tree-level[data-depth="0"] .cabinet-node:not([data-grade="direcab"]):not([data-grade="direcab-adj"]) {
+    box-shadow: 0 26px 52px color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 24%, rgba(15, 23, 42, 0.2));
 }
 
 @media (max-width: 600px) {
@@ -1875,6 +1967,9 @@ body.print-all .toolbar {
     background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(242,242,244,0.98));
     border: 1px solid rgba(17, 23, 39, 0.06);
     box-shadow: var(--shadow-soft);
+    width: min(100%, 1180px);
+    margin-inline: auto;
+    justify-items: stretch;
 }
 
 .executive-cabinet__hero {
@@ -1882,6 +1977,7 @@ body.print-all .toolbar {
     align-items: center;
     gap: 1.25rem;
     flex-wrap: wrap;
+    justify-content: space-between;
 }
 
 .executive-cabinet__hero-portrait {
@@ -2006,37 +2102,53 @@ body.print-all .toolbar {
     display: grid;
     gap: 1.1rem;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    align-items: stretch;
 }
 
 .executive-card-grid--compact {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    align-items: stretch;
 }
 
 .executive-card {
     --executive-avatar-size: 64px;
+    --executive-card-accent: var(--minister-accent, var(--color-curacao));
+    --executive-card-text: var(--color-encre);
+    --executive-card-muted: var(--color-sesame);
+    --executive-card-contact: color-mix(in srgb, var(--executive-card-accent) 46%, var(--color-lavande) 54%);
+    --executive-card-badge-color: var(--executive-card-accent);
     display: flex;
     align-items: center;
     gap: 1rem;
     padding: 0.9rem 1.1rem;
     border-radius: 14px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,246,248,0.98));
-    border: 1px solid rgba(17,23,39,0.06);
-    box-shadow: 0 16px 36px rgba(17, 23, 39, 0.08);
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--executive-card-accent) 8%, rgba(255, 255, 255, 0.98)),
+        rgba(246, 246, 248, 0.98)
+    );
+    border: 1px solid color-mix(in srgb, var(--executive-card-accent) 20%, rgba(17,23,39,0.06));
+    box-shadow: 0 16px 36px color-mix(in srgb, var(--executive-card-accent) 14%, rgba(17, 23, 39, 0.08));
     transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .executive-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 32px 60px rgba(15, 23, 42, 0.16);
+    box-shadow: 0 32px 60px color-mix(in srgb, var(--executive-card-accent) 24%, rgba(15, 23, 42, 0.16));
 }
 
 .executive-card--head {
     --executive-avatar-size: 76px;
-    background: linear-gradient(160deg,
-        color-mix(in srgb, var(--minister-accent, #2563eb) 88%, #ffffff 12%),
-        color-mix(in srgb, var(--minister-accent, #2563eb) 72%, #ffffff 28%)
+    --executive-card-text: #ffffff;
+    --executive-card-muted: rgba(255, 255, 255, 0.82);
+    --executive-card-contact: rgba(255, 255, 255, 0.85);
+    --executive-card-badge-color: rgba(15, 23, 42, 0.85);
+    background: linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--executive-card-accent) 88%, #ffffff 12%),
+        color-mix(in srgb, var(--executive-card-accent) 70%, #ffffff 30%)
     );
-    border-color: color-mix(in srgb, var(--minister-accent, #2563eb) 42%, #ffffff 58%);
+    border-color: color-mix(in srgb, var(--executive-card-accent) 48%, #ffffff 52%);
     color: #ffffff;
 }
 
@@ -2091,21 +2203,48 @@ body.print-all .toolbar {
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.02em;
-    color: var(--minister-accent, var(--color-curacao));
-    background: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 12%, rgba(255, 255, 255, 0.95));
-    border: 1px solid color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 35%, rgba(17, 23, 39, 0.08));
+    color: var(--executive-card-badge-color, var(--executive-card-accent));
+    background: color-mix(in srgb, var(--executive-card-accent) 14%, rgba(255, 255, 255, 0.95));
+    border: 1px solid color-mix(in srgb, var(--executive-card-accent) 35%, rgba(17, 23, 39, 0.08));
 }
 .executive-card--head .executive-card__badge {
-    color: #0f172a;
+    color: var(--executive-card-badge-color, #0f172a);
     background: rgba(255, 255, 255, 0.92);
     border-color: rgba(255, 255, 255, 0.55);
+}
+
+.executive-card[data-grade="direcab"] {
+    --executive-card-accent: var(--minister-accent, var(--color-curacao));
+}
+
+.executive-card[data-grade="direcab-adj"] {
+    --executive-card-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 78%, #7c3aed 22%);
+}
+
+.executive-card[data-grade="chefcab"] {
+    --executive-card-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 68%, #0ea5e9 32%);
+}
+
+.executive-card[data-grade="chefcabadj"] {
+    --executive-card-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 58%, #38bdf8 42%);
+}
+
+.executive-card[data-grade="chefpole"] {
+    --executive-card-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 52%, #14b8a6 48%);
+    --executive-card-muted: color-mix(in srgb, var(--executive-card-accent) 24%, var(--color-sesame) 76%);
+}
+
+.executive-card[data-grade="conseiller"] {
+    --executive-card-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 30%, #475569 70%);
+    --executive-card-muted: color-mix(in srgb, var(--executive-card-accent) 28%, var(--color-sesame) 72%);
+    --executive-card-contact: color-mix(in srgb, var(--executive-card-accent) 52%, var(--color-panthere) 48%);
 }
 
 .executive-card__name {
     margin: 0;
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--color-encre);
+    color: var(--executive-card-text);
 }
 
 .executive-card--head .executive-card__name {
@@ -2115,31 +2254,31 @@ body.print-all .toolbar {
 .executive-card__role {
     margin: 0;
     font-size: 0.95rem;
-    color: var(--color-poivre);
+    color: var(--executive-card-muted);
 }
 
 .executive-card__detail {
     margin: 0;
     font-size: 0.85rem;
-    color: var(--color-sesame);
+    color: var(--executive-card-muted);
 }
 
 .executive-card__context {
     margin: 0;
     font-size: 0.8rem;
-    color: var(--color-sesame);
+    color: var(--executive-card-muted);
     font-style: italic;
 }
 
 .executive-card__contact {
     font-size: 0.86rem;
-    color: var(--minister-accent, var(--color-lavande));
+    color: var(--executive-card-contact);
     word-break: break-word;
 }
 
 .executive-card__contact:hover,
 .executive-card__contact:focus {
-    color: var(--color-lavande);
+    color: color-mix(in srgb, var(--executive-card-contact) 55%, var(--executive-card-accent) 45%);
     text-decoration: underline;
 }
 
@@ -2581,116 +2720,150 @@ body.print-all .toolbar {
 
 .modal-module--biography {
     --biography-accent: var(--color-curacao);
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 1.4rem 1.2rem;
-    box-shadow: 0 22px 45px rgba(17, 23, 39, 0.12);
-    border: 1px solid rgba(17, 23, 39, 0.06);
 }
 
 .modal-module--biography .modal-module-title {
-    margin: 0 0 0.5rem;
+    margin: 0;
 }
 
 .modal-biography {
     display: grid;
-    gap: 0.9rem;
+    gap: 1.75rem;
 }
 
 .biography-groups {
     display: grid;
-    gap: 1rem;
+    gap: 1.5rem;
     margin: 0;
 }
 
 .biography-group {
     display: grid;
-    gap: 0.3rem;
-    padding: 0.65rem 0.8rem;
-    background: rgba(17, 23, 39, 0.02);
-    border-radius: 12px;
+    gap: 1rem;
 }
 
 .biography-group__title {
     margin: 0;
-    font-size: 0.85rem;
-    letter-spacing: 0.06em;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     font-weight: 600;
     color: var(--biography-accent);
 }
 
 .biography-list {
+    list-style: none;
     margin: 0;
     padding: 0;
-    list-style: none;
     display: grid;
-    gap: 0.2rem;
+    gap: 1rem;
 }
 
 .biography-entry {
     position: relative;
-    padding-left: 0.75rem;
-    color: var(--color-encre);
-    font-size: 0.92rem;
-    line-height: 1.35;
+    padding: 1.25rem 1.5rem 1.25rem 2.75rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(17, 23, 39, 0.08);
+    box-shadow: 0 18px 45px rgba(17, 23, 39, 0.12);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    --biography-entry-color: var(--biography-accent);
 }
 
 .biography-entry::before {
-    content: '•';
+    content: "";
     position: absolute;
-    left: 0;
-    top: 0.6em;
-    transform: translateY(-50%);
-    font-size: 0.55rem;
-    color: var(--biography-accent);
+    inset-inline-start: 1rem;
+    inset-block-start: 1.35rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background: var(--biography-entry-color);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--biography-entry-color) 20%, transparent);
 }
 
-.biography-entry__line {
-    margin: 0;
+.biography-entry:hover,
+.biography-entry:focus-within {
+    transform: translateY(-4px);
+    box-shadow: 0 26px 60px rgba(17, 23, 39, 0.22);
+}
+
+.biography-entry__header {
     display: flex;
-    gap: 0.45rem;
-    align-items: baseline;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .biography-entry__period {
+    margin: 0;
     font-weight: 600;
-    color: var(--biography-accent);
-    flex: 0 0 auto;
     font-size: 0.85rem;
-    min-width: 110px;
-    white-space: nowrap;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--biography-entry-color);
 }
 
-.biography-entry__text {
-    font-weight: 500;
+.biography-entry__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--biography-entry-color);
+    background: color-mix(in srgb, var(--biography-entry-color) 18%, rgba(255, 255, 255, 0.92));
+    border: 1px solid color-mix(in srgb, var(--biography-entry-color) 55%, rgba(17, 23, 39, 0.08));
+}
+
+.biography-entry__badge::before {
+    content: "";
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.biography-entry__title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
     color: var(--color-encre);
-    flex: 1;
 }
 
-@media (min-width: 720px) {
+.biography-entry__org {
+    margin: 0.35rem 0 0;
+    font-size: 0.95rem;
+    color: var(--color-sesame);
+}
+
+.biography-entry__details {
+    margin: 0.75rem 0 0;
+    padding-inline-start: 1.3rem;
+    display: grid;
+    gap: 0.35rem;
+    color: var(--color-poivre);
+    font-size: 0.95rem;
+}
+
+.biography-entry__details li::marker {
+    color: var(--biography-entry-color);
+}
+
+@media (min-width: 768px) {
     .biography-groups {
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 0.9rem;
-    }
-
-    .biography-group {
-        padding: 0.75rem 0.95rem;
-    }
-}
-
-@media (max-width: 600px) {
-    .modal-module--biography {
-        border-radius: 14px;
-        padding: 1.1rem 1rem;
+        gap: 1.75rem;
     }
 
     .biography-entry {
-        font-size: 0.9rem;
+        padding-inline-start: 3rem;
     }
 
-    .biography-entry__period {
-        min-width: 90px;
+    .biography-entry::before {
+        inset-inline-start: 1.2rem;
     }
 }
 

@@ -1,3 +1,5 @@
+/* Permet l'initialisation de la configuration Supabase à partir de diverses sources, doc le plus important et le seul que j'identifie 
+comme sensible dans le code, il est dans gitignore donc pas de commit */
 (function (global) {
   if (!global) {
     return;

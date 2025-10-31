@@ -102,6 +102,18 @@ const ensureImageSource = (value, fallback = "assets/placeholder-minister.svg") 
     return trimmed || fallback;
 };
 
+// Basic HTML-escape to avoid XSS when injecting with innerHTML
+function escapeHTML(value) {
+    if (value == null) return "";
+    return String(value).replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+    }[ch]));
+}
+
 // Mapping des valeurs `party` (valeurs possibles depuis Supabase) vers
 // les étiquettes utilisées par les sélecteurs CSS `[data-party="$LABEL"]`.
 const PARTY_MAP = new Map([
@@ -527,207 +539,63 @@ const biographyDateFormatter = new Intl.DateTimeFormat('fr-FR', {
     year: 'numeric',
 });
 
-const parseBiographyDate = (value) => {
-    if (!value) return null;
-    if (value instanceof Date) {
-        return Number.isNaN(value.getTime()) ? null : value;
-    }
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
-};
-
-const toBiographyText = (value) => (value == null ? '' : String(value).trim());
-
-const formatBiographyPeriodLabel = ({ startDate, endDate, startText, endText, isCurrent }) => {
-    const startTextValue = toBiographyText(startText);
-    const endTextValue = toBiographyText(endText);
-
-    if (startTextValue && endTextValue) {
-        return `${startTextValue} – ${endTextValue}`;
-    }
-    if (startTextValue && !endTextValue) {
-        return startTextValue;
-    }
-    if (!startTextValue && endTextValue) {
-        return endTextValue;
-    }
-
-    const hasStartDate = startDate instanceof Date && !Number.isNaN(startDate.getTime());
-    const hasEndDate = endDate instanceof Date && !Number.isNaN(endDate.getTime());
-    const startLabel = hasStartDate ? biographyDateFormatter.format(startDate) : '';
-    const endLabel = hasEndDate ? biographyDateFormatter.format(endDate) : '';
-
-    if (startLabel && endLabel) {
-        return startLabel === endLabel ? startLabel : `${startLabel} – ${endLabel}`;
-    }
-    if (startLabel) {
-        return isCurrent ? `${startLabel} – présent` : `Depuis ${startLabel}`;
-    }
-    if (endLabel) {
-        return `Jusqu'à ${endLabel}`;
-    }
-    return '';
-};
-
-const hasBiographyDetailContent = (detail) => {
-    if (!detail) return false;
-    const text = typeof detail.text === 'string' ? detail.text.trim() : '';
-    if (text) return true;
-    if (Array.isArray(detail.children)) {
-        return detail.children.some(hasBiographyDetailContent);
-    }
-    return false;
-};
-
 const normalizeBiographyDetails = (value) => {
-    const parseDetail = (input) => {
-        if (input == null) return [];
-
-        if (Array.isArray(input)) {
-            return input.flatMap((entry) => parseDetail(entry));
-        }
-
-        if (typeof input === 'object') {
-            const nested = [
-                ...parseDetail(input.items),
-                ...parseDetail(input.children),
-                ...parseDetail(input.details),
-            ];
-
-            const startDate = parseBiographyDate(
-                input.start_date || input.startDate || input.start,
-            );
-            const endDate = parseBiographyDate(input.end_date || input.endDate || input.end);
-            const startText = toBiographyText(input.start_text || input.startText);
-            const endText = toBiographyText(input.end_text || input.endText);
-            const explicitPeriod = toBiographyText(input.period || input.period_text);
-            const period = explicitPeriod || formatBiographyPeriodLabel({
-                startDate,
-                endDate,
-                startText,
-                endText,
-                isCurrent: Boolean(input.is_current ?? input.isCurrent),
-            });
-
-            const title = toBiographyText(
-                input.title
-                    || input.role
-                    || input.label
-                    || input.function
-                    || input.position
-                    || input.text
-                    || input.name,
-            );
-            const organisation = toBiographyText(
-                input.org
-                    || input.organisation
-                    || input.organization
-                    || input.entity
-                    || input.body
-                    || input.institution,
-            );
-            const location = toBiographyText(input.location || input.city || input.region);
-            const description = toBiographyText(
-                input.description || input.detail || input.notes || input.comment,
-            );
-            const valueText = toBiographyText(input.value || input.summary);
-
-            const descriptorParts = [];
-            if (title && organisation && organisation !== title) {
-                descriptorParts.push(`${title} — ${organisation}`);
-            } else if (title) {
-                descriptorParts.push(title);
-            } else if (organisation) {
-                descriptorParts.push(organisation);
-            }
-
-            if (location) {
-                descriptorParts.push(location);
-            }
-
-            if (valueText && (descriptorParts.length === 0 || valueText !== descriptorParts[descriptorParts.length - 1])) {
-                descriptorParts.push(valueText);
-            }
-
-            if (description) {
-                descriptorParts.push(description);
-            }
-
-            let text = descriptorParts.filter(Boolean).join(' • ');
-            if (period) {
-                text = text ? `${period} : ${text}` : period;
-            }
-
-            const detail = {
-                text: text.trim(),
-                isCurrent: Boolean(input.is_current ?? input.isCurrent),
-            };
-
-            if (nested.length) {
-                detail.children = nested.filter(hasBiographyDetailContent);
-            }
-
-            if (!hasBiographyDetailContent(detail)) {
-                return nested;
-            }
-
-            return [detail];
-        }
-
-        if (typeof input === 'string') {
-            const trimmed = input.trim();
-            if (!trimmed) return [];
-            if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || trimmed.startsWith('{')) {
-                try {
-                    const parsed = JSON.parse(trimmed);
-                    return parseDetail(parsed);
-                } catch (error) {
-                    // Ignore JSON parsing errors and fallback to simple splitting
+    if (!value) return [];
+    if (Array.isArray(value)) {
+        return value
+            .map((entry) => {
+                if (entry == null) return '';
+                if (typeof entry === 'object') {
+                    if (typeof entry.text === 'string') return entry.text;
+                    return Object.values(entry)
+                        .map((v) => (v == null ? '' : String(v)))
+                        .join(' ');
                 }
-            }
-            const sanitized = trimmed.replace(/[•●○◦·]/g, '\n');
-            return sanitized
-                .split(/\r?\n+/)
-                .map((line) => line.replace(/^[\s\-–—•●○◦·]+/, '').trim())
-                .filter(Boolean)
-                .map((line) => ({ text: line }));
+                return String(entry);
+            })
+            .map((entry) => entry.trim())
+            .filter(Boolean);
+    }
+    if (typeof value === 'object') {
+        if (Array.isArray(value.items)) {
+            return normalizeBiographyDetails(value.items);
         }
-
-        const text = toBiographyText(input);
-        return text ? [{ text }] : [];
-    };
-
-    const details = parseDetail(value).filter(hasBiographyDetailContent);
-    return details;
-};
-
-const flattenBiographyDetails = (items) => {
-    const acc = [];
-    const visit = (nodes) => {
-        if (!Array.isArray(nodes)) return;
-        nodes.forEach((node) => {
-            if (!node || typeof node !== 'object') return;
-            const text = typeof node.text === 'string' ? node.text.trim() : '';
-            if (text) {
-                acc.push(text);
+        return normalizeBiographyDetails(Object.values(value));
+    }
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) return [];
+        if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || trimmed.startsWith('{')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                return normalizeBiographyDetails(parsed);
+            } catch (error) {
+                // Silently ignore JSON parse errors and fallback to plain text splitting
             }
-            if (Array.isArray(node.children) && node.children.length) {
-                visit(node.children);
-            }
-        });
-    };
-
-    visit(items);
-    return acc;
+        }
+        const sanitized = trimmed.replace(/[•●○◦·]/g, '\n');
+        return sanitized
+            .split(/\r?\n+/)
+            .map((line) => line.replace(/^[\s\-–—•●○◦·]+/, '').trim())
+            .filter(Boolean);
+    }
+    return [];
 };
 
 const normalizeBiographyEntries = (rows) => {
+    const toDate = (value) => {
+        if (!value) return null;
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? null : date;
+    };
+    const toText = (value) => (value == null ? '' : String(value).trim());
+
     return (Array.isArray(rows) ? rows : [])
         .map((row) => {
-            const startDate = parseBiographyDate(row.start_date || row.startDate || row.start);
-            const endDate = parseBiographyDate(row.end_date || row.endDate || row.end);
-            const startNullsafe = parseBiographyDate(row.start_date_nullsafe || row.startDateNullsafe);
-            const createdAt = parseBiographyDate(row.created_at || row.createdAt);
+            const startDate = toDate(row.start_date || row.startDate || row.start);
+            const endDate = toDate(row.end_date || row.endDate || row.end);
+            const startNullsafe = toDate(row.start_date_nullsafe || row.startDateNullsafe);
+            const createdAt = toDate(row.created_at || row.createdAt);
             const sortWeight = Number.isFinite(row.sort_weight) ? row.sort_weight : 0;
             const dateQuality = Number.isFinite(row.date_quality) ? row.date_quality : 99;
             const sortSource = startDate || startNullsafe || endDate || createdAt;
@@ -739,20 +607,16 @@ const normalizeBiographyEntries = (rows) => {
                 }
             }
 
-            const details = normalizeBiographyDetails(row.details);
-            const detailTexts = flattenBiographyDetails(details);
-
             return {
                 id: row.id || null,
-                category: toBiographyText(row.category),
-                title: toBiographyText(row.title),
-                org: toBiographyText(row.org),
-                details,
-                detailTexts,
+                category: toText(row.category),
+                title: toText(row.title),
+                org: toText(row.org),
+                details: normalizeBiographyDetails(row.details),
                 startDate,
                 endDate,
-                startText: toBiographyText(row.start_text),
-                endText: toBiographyText(row.end_text),
+                startText: toText(row.start_text),
+                endText: toText(row.end_text),
                 isCurrent: Boolean(row.is_current),
                 isUndated: Boolean(row.is_undated),
                 sortWeight,
@@ -762,22 +626,44 @@ const normalizeBiographyEntries = (rows) => {
                 color: row.color ? String(row.color).trim() : null,
             };
         })
-        .filter((entry) => {
-            if (entry.category || entry.title || entry.org) return true;
-            if (Array.isArray(entry.detailTexts) && entry.detailTexts.length) return true;
-            return Array.isArray(entry.details) && entry.details.some(hasBiographyDetailContent);
-        });
+        .filter((entry) => entry.category || entry.title || entry.org || entry.details.length);
 };
 
 const formatBiographyPeriod = (entry) => {
     if (!entry) return '';
-    return formatBiographyPeriodLabel({
-        startDate: entry.startDate,
-        endDate: entry.endDate,
-        startText: entry.startText,
-        endText: entry.endText,
-        isCurrent: entry.isCurrent,
-    });
+    const hasStartDate = entry.startDate instanceof Date && !Number.isNaN(entry.startDate.getTime());
+    const hasEndDate = entry.endDate instanceof Date && !Number.isNaN(entry.endDate.getTime());
+    const startText = entry.startText || '';
+    const endText = entry.endText || '';
+
+    // Prefer explicit textual start/end when present
+    if (startText && endText) {
+        return `${startText} – ${endText}`;
+    }
+    if (startText && !endText) {
+        return startText;
+    }
+    if (!startText && endText) {
+        return endText;
+    }
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+};
+
+    // Fallback to formatted dates when available
+    const startLabel = hasStartDate ? biographyDateFormatter.format(entry.startDate) : '';
+    const endLabel = hasEndDate ? biographyDateFormatter.format(entry.endDate) : '';
+
+    if (startLabel && endLabel) {
+        return startLabel === endLabel ? startLabel : `${startLabel} – ${endLabel}`;
+    }
+    if (startLabel) {
+        return entry.isCurrent ? `${startLabel} – présent` : `Depuis ${startLabel}`;
+    }
+    if (endLabel) {
+        return `Jusqu'à ${endLabel}`;
+    }
+    return '';
 };
 
 const createBiographyEntryElement = (entry) => {
@@ -785,66 +671,58 @@ const createBiographyEntryElement = (entry) => {
     item.className = 'biography-entry';
     item.setAttribute('role', 'listitem');
 
+    if (entry.color) {
+        item.style.setProperty('--biography-entry-color', entry.color);
+    }
+
     const period = formatBiographyPeriod(entry);
-    const descriptorParts = [];
+    if (period || entry.isCurrent) {
+        const header = document.createElement('div');
+        header.className = 'biography-entry__header';
+        if (period) {
+            const periodEl = document.createElement('p');
+            periodEl.className = 'biography-entry__period';
+            const needsColon = entry.title || entry.org || entry.details.length;
+            periodEl.textContent = needsColon ? `${period} :` : period;
+            header.appendChild(periodEl);
+        }
+        if (entry.isCurrent) {
+            const badge = document.createElement('span');
+            badge.className = 'biography-entry__badge';
+            badge.textContent = 'En cours';
+            header.appendChild(badge);
+        }
+        item.appendChild(header);
+    }
+
     if (entry.title) {
-        descriptorParts.push(entry.title);
+        const title = document.createElement('p');
+        title.className = 'biography-entry__title';
+        title.textContent = entry.title;
+        item.appendChild(title);
     }
 
-    const normalizedCategory = normalise(entry.category || '');
-    const normalizedTitle = normalise(entry.title || '');
-    const orgText = entry.org;
-    if (orgText) {
-        const normalizedOrg = normalise(orgText);
-        const isRedundantOrg = !normalizedOrg
-            || normalizedOrg === normalizedCategory
-            || normalizedOrg === normalizedTitle
-            || normalizedOrg === 'gouvernement';
-        if (!isRedundantOrg) {
-            descriptorParts.push(orgText);
-        }
+    if (entry.org) {
+        const org = document.createElement('p');
+        org.className = 'biography-entry__org';
+        org.textContent = entry.org;
+        item.appendChild(org);
     }
 
-    let descriptor = descriptorParts.join(', ').trim();
-    if (!descriptor && entry.org && normalise(entry.org) !== 'gouvernement') {
-        descriptor = entry.org;
-    }
-    if (!descriptor) {
-        descriptor = 'Parcours';
-    }
-
-    const detailTexts = Array.isArray(entry.detailTexts) ? entry.detailTexts.filter(Boolean) : [];
-    if (detailTexts.length) {
-        const uniqueDetails = Array.from(new Set(detailTexts.map((text) => text.trim()).filter(Boolean)));
-        if (uniqueDetails.length) {
-            descriptor += ` (${uniqueDetails.join(' ; ')})`;
-        }
+    if (entry.details && entry.details.length) {
+        const detailsList = document.createElement('ul');
+        detailsList.className = 'biography-entry__details';
+        entry.details.forEach((detail) => {
+            const detailItem = document.createElement('li');
+            detailItem.textContent = detail;
+            detailsList.appendChild(detailItem);
+        });
+        item.appendChild(detailsList);
     }
 
-    if (entry.isCurrent && !descriptor.toLowerCase().includes('en cours')) {
-        descriptor += ' (en cours)';
+    if (!item.childElementCount) {
+        item.textContent = entry.title || entry.org || 'Parcours';
     }
-
-    const trimmedDescriptor = descriptor.trim();
-    const needsPeriod = trimmedDescriptor && !/[.!?…)]$/.test(trimmedDescriptor);
-    const finalDescriptor = needsPeriod ? `${trimmedDescriptor}.` : trimmedDescriptor;
-
-    const line = document.createElement('p');
-    line.className = 'biography-entry__line';
-
-    if (period) {
-        const periodEl = document.createElement('span');
-        periodEl.className = 'biography-entry__period';
-        periodEl.textContent = period;
-        line.appendChild(periodEl);
-    }
-
-    const descriptorEl = document.createElement('span');
-    descriptorEl.className = 'biography-entry__text';
-    descriptorEl.textContent = finalDescriptor;
-    line.appendChild(descriptorEl);
-
-    item.appendChild(line);
 
     return item;
 };
@@ -1324,18 +1202,22 @@ const renderCollaboratorsTemplate = (collaborators) => `
       <h4>Collaborateurs</h4>
       <div class="collaborators-list">
         ${collaborators
-            .map(
-                (c) => `
+            .map((c) => {
+                const fullName = escapeHTML(c.full_name ?? 'Collaborateur·rice');
+                const role = escapeHTML(c.cabinet_role || 'Collaborateur');
+                const grade = c.collab_grade ? `<p class="collab-grade">${escapeHTML(c.collab_grade)}</p>` : '';
+                const photo = ensureImageSource(c.photo_url);
+                const alt = c.full_name ? `Portrait de ${escapeHTML(c.full_name)}` : 'Portrait collaborateur';
+                return `
           <div class="collaborator-card">
-            <img src="${ensureImageSource(c.photo_url)}" class="collaborator-photo" alt="${c.full_name ? `Portrait de ${c.full_name}` : 'Portrait collaborateur'}" onerror="this.onerror=null;this.src='assets/placeholder-minister.svg';">
+            <img src="${photo}" class="collaborator-photo" alt="${alt}" onerror="this.onerror=null;this.src='assets/placeholder-minister.svg';">
             <div>
-              <p class="collab-name">${c.full_name ?? 'Collaborateur·rice'}</p>
-              <p class="collab-role">${c.cabinet_role || 'Collaborateur'}</p>
-              ${c.collab_grade ? `<p class="collab-grade">${c.collab_grade}</p>` : ''}
+              <p class="collab-name">${fullName}</p>
+              <p class="collab-role">${role}</p>
+              ${grade}
             </div>
-          </div>
-        `
-            )
+          </div>`;
+            })
             .join("")}
       </div>`;
 
@@ -1628,22 +1510,47 @@ const CABINET_GRADE_ALIASES = [
     ["dircab", "direcab"],
     ["directeurdecabinet", "direcab"],
     ["directricedecabinet", "direcab"],
+    ["directeurducabinet", "direcab"],
+    ["directriceducabinet", "direcab"],
     ["chefcab", "chefcab"],
     ["chefdecabinet", "chefcab"],
+    ["cheffedecabinet", "chefcab"],
+    ["chefducabinet", "chefcab"],
+    ["cheffeducabinet", "chefcab"],
     ["direcabadj", "direcab-adj"],
     ["directeuradjointdecabinet", "direcab-adj"],
+    ["directeurdecabinetadjoint", "direcab-adj"],
+    ["directeurducabinetadjoint", "direcab-adj"],
+    ["directeurdecabinetadjointe", "direcab-adj"],
+    ["directeurducabinetadjointe", "direcab-adj"],
     ["diradj", "direcab-adj"],
     ["chefcabadj", "chefcabadj"],
     ["adjointaucheffedecabinet", "chefcabadj"],
     ["chefadj", "chefcabadj"],
+    ["chefdecabinetadjoint", "chefcabadj"],
+    ["chefducabinetadjoint", "chefcabadj"],
+    ["cheffedecabinetadjoint", "chefcabadj"],
+    ["cheffeducabinetadjoint", "chefcabadj"],
+    ["directricedecabinetadjointe", "direcab-adj"],
+    ["directriceducabinetadjointe", "direcab-adj"],
+    ["directricedecabinetadjoint", "direcab-adj"],
+    ["directriceducabinetadjoint", "direcab-adj"],
+    ["cheffedecabinetadjointe", "chefcabadj"],
+    ["cheffeducabinetadjointe", "chefcabadj"],
     ["chefpole", "chefpole"],
     ["chefdepole", "chefpole"],
+    ["chefpoleadjoint", "chefpole"],
+    ["chefpoleadjointe", "chefpole"],
     ["conseiller", "conseiller"],
     ["conseillere", "conseiller"],
     ["conseillerspecial", "conseiller"],
     ["conseillerspeciale", "conseiller"],
     ["conseillertechnique", "conseiller"],
     ["conseilleretechnique", "conseiller"],
+    ["conseillerprincipal", "conseiller"],
+    ["conseillereprincipale", "conseiller"],
+    ["conseillertechniqueprincipal", "conseiller"],
+    ["conseilleretechniqueprincipale", "conseiller"],
 ];
 
 const FALLBACK_COLLAB_GRADES = [
@@ -1832,7 +1739,6 @@ const normaliseCabinetMembers = (collaborators, gradeLookup) => {
         .filter((node) => node?.id)
         .sort(compareCabinetMembers);
 };
-
 const createCabinetNodeCard = (member) => {
     const card = document.createElement("article");
     card.className = "cabinet-node";
@@ -2112,6 +2018,12 @@ const createExecutiveCard = (member, options = {}) => {
     if (member?.id != null) {
         card.dataset.personId = String(member.id);
     }
+    if (member?.gradeKey) {
+        card.dataset.grade = member.gradeKey;
+    }
+    if (Number.isFinite(member?.gradeRank)) {
+        card.dataset.gradeRank = String(member.gradeRank);
+    }
 
     const avatar = document.createElement("div");
     avatar.className = "executive-card__avatar";
@@ -2131,32 +2043,44 @@ const createExecutiveCard = (member, options = {}) => {
     const name = document.createElement("h4");
     name.className = "executive-card__name";
     name.textContent = member?.name || "Collaborateur·rice";
-    // Badge row (grade/role)
-    const roleLine = member?.cabinetRole || member?.gradeLabel || null;
-    if (roleLine) {
-        const badges = document.createElement('div');
-        badges.className = 'executive-card__badges';
-        const badge = document.createElement('span');
-        badge.className = 'executive-card__badge';
-        badge.textContent = String(roleLine);
+
+    const gradeLabel = member?.gradeLabel?.trim() || null;
+    const cabinetRole = member?.cabinetRole?.trim() || null;
+    const jobTitle = member?.jobTitle?.trim() || null;
+    const gradeValue = gradeLabel ? normalise(gradeLabel) : null;
+    const roleValue = cabinetRole ? normalise(cabinetRole) : null;
+    const jobValue = jobTitle ? normalise(jobTitle) : null;
+    const primaryRole = cabinetRole || jobTitle || null;
+    const primaryRoleValue = primaryRole ? normalise(primaryRole) : null;
+
+    if (gradeLabel) {
+        const badges = document.createElement("div");
+        badges.className = "executive-card__badges";
+        const badge = document.createElement("span");
+        badge.className = "executive-card__badge";
+        badge.textContent = gradeLabel;
         badges.appendChild(badge);
         meta.appendChild(badges);
     }
 
     meta.appendChild(name);
 
-    if (roleLine) {
+    if (primaryRole && (!gradeValue || gradeValue !== primaryRoleValue)) {
         const role = document.createElement("p");
         role.className = "executive-card__role";
-        role.textContent = roleLine;
+        role.textContent = primaryRole;
         meta.appendChild(role);
     }
 
-    const jobLine = member?.jobTitle;
-    if (jobLine && jobLine !== roleLine) {
+    if (
+        jobTitle &&
+        cabinetRole &&
+        jobValue !== roleValue &&
+        (!gradeValue || jobValue !== gradeValue)
+    ) {
         const detail = document.createElement("p");
         detail.className = "executive-card__detail";
-        detail.textContent = jobLine;
+        detail.textContent = jobTitle;
         meta.appendChild(detail);
     }
 
