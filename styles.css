@@ -2579,178 +2579,118 @@ body.print-all .toolbar {
     grid-column: 1 / -1;
 }
 
-.modal-module--career {
-    --timeline-color: var(--color-curacao);
+.modal-module--biography {
+    --biography-accent: var(--color-curacao);
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 1.4rem 1.2rem;
+    box-shadow: 0 22px 45px rgba(17, 23, 39, 0.12);
+    border: 1px solid rgba(17, 23, 39, 0.06);
 }
 
-.modal-module--career .modal-module-title {
+.modal-module--biography .modal-module-title {
+    margin: 0 0 0.5rem;
+}
+
+.modal-biography {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.biography-groups {
+    display: grid;
+    gap: 1rem;
     margin: 0;
 }
 
-.modal-career-timeline {
-    --timeline-track-color: linear-gradient(180deg, rgba(100, 215, 205, 0.55), rgba(105, 135, 255, 0.55));
-    --timeline-default-color: var(--timeline-color, var(--color-curacao));
+.biography-group {
     display: grid;
-    gap: 1.5rem;
+    gap: 0.3rem;
+    padding: 0.65rem 0.8rem;
+    background: rgba(17, 23, 39, 0.02);
+    border-radius: 12px;
 }
 
-.timeline {
-    position: relative;
-    display: grid;
-    gap: 2rem;
+.biography-group__title {
     margin: 0;
-    padding: 1rem 0 1rem 1.75rem;
-    list-style: none;
-}
-
-.timeline::before {
-    content: "";
-    position: absolute;
-    inset-block: 0.5rem;
-    inset-inline-start: 0.55rem;
-    width: 3px;
-    border-radius: 999px;
-    background: var(--timeline-track-color);
-}
-
-.timeline__event {
-    --timeline-entry-color: var(--timeline-default-color);
-    position: relative;
-    display: grid;
-    gap: 0.85rem;
-    padding: 1.25rem 1.5rem 1.5rem;
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.78);
-    border: 1px solid rgba(17, 23, 39, 0.08);
-    border-inline-start: 4px solid var(--timeline-entry-color);
-    box-shadow: 0 20px 50px rgba(17, 23, 39, 0.15);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.timeline__event::before {
-    content: "";
-    position: absolute;
-    inset-inline-start: -1.1rem;
-    inset-block-start: 1.35rem;
-    width: 1rem;
-    height: 1rem;
-    border-radius: 999px;
-    background: #fff;
-    border: 3px solid var(--timeline-entry-color);
-    box-shadow: 0 0 0 5px rgba(17, 23, 39, 0.08);
-}
-
-.timeline__event:hover,
-.timeline__event:focus-within {
-    transform: translateY(-4px);
-    box-shadow: 0 26px 60px rgba(17, 23, 39, 0.22);
-}
-
-.timeline__event--current {
-    border-inline-start-width: 6px;
-    box-shadow: 0 30px 70px rgba(17, 23, 39, 0.25);
-}
-
-.timeline__event-date {
-    margin: 0;
-    font-weight: 600;
-    color: var(--timeline-entry-color);
+    font-size: 0.85rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    font-size: 0.85rem;
-}
-
-.timeline__event-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 999px;
-    font-size: 0.72rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--timeline-entry-color);
-    background: color-mix(in srgb, var(--timeline-entry-color) 15%, rgba(255, 255, 255, 0.9));
-    border: 1px solid color-mix(in srgb, var(--timeline-entry-color) 55%, rgba(17, 23, 39, 0.08));
-}
-
-.timeline__event-badge::before {
-    content: "";
-    width: 0.4rem;
-    height: 0.4rem;
-    border-radius: 50%;
-    background: currentColor;
-}
-
-.timeline__event-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.timeline__event-title {
-    margin: 0;
-    font-size: 1.1rem;
-    color: var(--color-encre);
     font-weight: 600;
+    color: var(--biography-accent);
 }
 
-.timeline__event-organisation {
+.biography-list {
     margin: 0;
-    font-size: 0.95rem;
-    color: var(--color-sesame);
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.2rem;
 }
 
-.timeline__event-description {
+.biography-entry {
+    position: relative;
+    padding-left: 0.75rem;
+    color: var(--color-encre);
+    font-size: 0.92rem;
+    line-height: 1.35;
+}
+
+.biography-entry::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    transform: translateY(-50%);
+    font-size: 0.55rem;
+    color: var(--biography-accent);
+}
+
+.biography-entry__line {
     margin: 0;
-    font-size: 0.95rem;
-    line-height: 1.6;
-    color: var(--color-poivre);
-}
-
-/* Timeline legend */
-.timeline-legend {
-    margin-block-start: 0.75rem;
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1rem;
-    align-items: center;
+    gap: 0.45rem;
+    align-items: baseline;
 }
-.timeline-legend[hidden] { display: none !important; }
-.timeline-legend__item {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
+
+.biography-entry__period {
+    font-weight: 600;
+    color: var(--biography-accent);
+    flex: 0 0 auto;
     font-size: 0.85rem;
-    color: var(--color-sesame);
-    background: rgba(255, 255, 255, 0.65);
-    border: 1px solid rgba(17, 23, 39, 0.08);
-    border-radius: 999px;
-    padding: 0.25rem 0.6rem 0.25rem 0.4rem;
+    min-width: 110px;
+    white-space: nowrap;
 }
-.timeline-legend__dot {
-    inline-size: 0.65rem;
-    block-size: 0.65rem;
-    border-radius: 50%;
-    background: currentColor;
-    box-shadow: 0 0 0 2px #fff inset, 0 0 0 1px rgba(17,23,39,0.15);
-}
-.timeline-legend__label { line-height: 1; }
 
-@media (min-width: 768px) {
-    .timeline {
-        gap: 2.5rem;
-        padding-inline-start: 2.5rem;
+.biography-entry__text {
+    font-weight: 500;
+    color: var(--color-encre);
+    flex: 1;
+}
+
+@media (min-width: 720px) {
+    .biography-groups {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 0.9rem;
     }
 
-    .timeline::before {
-        inset-inline-start: 1.1rem;
+    .biography-group {
+        padding: 0.75rem 0.95rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .modal-module--biography {
+        border-radius: 14px;
+        padding: 1.1rem 1rem;
     }
 
-    .timeline__event::before {
-        inset-inline-start: -1.6rem;
+    .biography-entry {
+        font-size: 0.9rem;
+    }
+
+    .biography-entry__period {
+        min-width: 90px;
     }
 }
 

@@ -67,6 +67,9 @@ const MINISTER_ROLES = new Set([
 const DELEGATE_ROLES = new Set(["minister-delegate", "ministre-delegue", "secretary"]);
 const CORE_ROLES = new Set(["leader", "minister", "minister-state"]);
 const FALLBACK_DATA_URL = "data/ministers.json";
+const SUPABASE_BIOGRAPHY_VIEW = (typeof globalThis !== 'undefined' && globalThis.SUPABASE_BIOGRAPHY_VIEW)
+    ? globalThis.SUPABASE_BIOGRAPHY_VIEW
+    : 'biography_entries_view';
 
 const ensureImageSource = (value, fallback = "assets/placeholder-minister.svg") => {
     if (!value) return fallback;
@@ -197,9 +200,8 @@ const modalElements = {
     description: document.getElementById("modal-description"),
 };
 // Career elements (optional; shown only when data exists)
-const modalCareerSection = document.querySelector('.modal-module--career');
-const modalCareerRoot = document.getElementById('modal-career-root');
-const modalCareerLegend = document.getElementById('modal-career-legend');
+const modalBiographySection = document.querySelector('.modal-module--biography');
+const modalBiographyRoot = document.getElementById('modal-biography-root');
 const modalDelegatesList = document.getElementById("modal-delegates");
 
 // Ensure the modal busy overlay is visible for at least 2 seconds
@@ -503,269 +505,431 @@ function normalise(value) {
     );
 }
 
-// Normalize raw career entries from Supabase (person_careers)
-// into a consistent shape for rendering in the modal timeline.
-const normalizeCareerSteps = (arr) => {
-    const toDate = (v) => {
-        if (!v) return null;
-        // Accept ISO date strings or YYYY
-        const d = new Date(v);
-        return isNaN(d.getTime()) ? null : d;
-    };
-    const fmt = (v) => (v == null ? "" : String(v).trim());
-    const fmtColor = (v) => {
-        const value = fmt(v);
-        return value || null;
-    };
-    const items = (Array.isArray(arr) ? arr : [])
-        .map((c) => {
-            const start = c.start_date || c.start || c.begin || null;
-            const end = c.end_date || c.end || null;
-            const title = c.title || c.position || c.job_title || "";
-            const org = c.organisation || c.organization || c.org || c.company || "";
-            const color = c.color || c.colour || c.category_color || c.ministry_color || null;
-            const description =
-                c.description || c.details || c.summary || c.notes || c.comment || c.description_text || "";
-            const category = c.category || c.category_label || c.domain || c.type || c.scope || "";
-            return {
-                startRaw: start,
-                endRaw: end,
-                startDate: toDate(start),
-                endDate: toDate(end),
-                title: fmt(title),
-                org: fmt(org),
-                description: fmt(description),
-                category: fmt(category),
-                color: color ? String(color).trim() : null,
-            };
-        })
-        .filter((it) => it.title || it.org || it.description || it.startRaw || it.endRaw || it.category);
-    items.sort((a, b) => {
-        const aTime = a.startDate ? a.startDate.getTime() : 0;
-        const bTime = b.startDate ? b.startDate.getTime() : 0;
-        return bTime - aTime; // desc
-    });
-    return items;
+
+const BIOGRAPHY_CATEGORY_ORDER = [
+    'Gouvernement',
+    'Assemblée nationale',
+    'Sénat',
+    'Parti politique',
+    'Mandats locaux',
+    'Collectivités locales',
+    'Vie professionnelle',
+    'Administrations et associations',
+    'Formation académique',
+];
+
+const BIOGRAPHY_CATEGORY_ORDER_MAP = new Map(
+    BIOGRAPHY_CATEGORY_ORDER.map((label, idx) => [normalise(label), idx])
+);
+
+const biographyDateFormatter = new Intl.DateTimeFormat('fr-FR', {
+    month: 'long',
+    year: 'numeric',
+});
+
+const parseBiographyDate = (value) => {
+    if (!value) return null;
+    if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? null : value;
+    }
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
 };
 
-// Format one career period as a compact label (years only)
-const formatCareerPeriod = (it) => {
-    const extractYear = (raw, dateObj) => {
-        if (dateObj instanceof Date && !isNaN(dateObj.getTime())) return String(dateObj.getFullYear());
-        if (typeof raw === 'string') {
-            const m = raw.match(/(\d{4})/);
-            if (m) return m[1];
-        }
-        return '';
-    };
-    const y1 = extractYear(it.startRaw, it.startDate);
-    const y2 = extractYear(it.endRaw, it.endDate);
-    if (y1) return y2 ? `${y1} → ${y2}` : `${y1} → présent`;
-    return y2 ? `jusqu'à ${y2}` : '';
-};
+const toBiographyText = (value) => (value == null ? '' : String(value).trim());
 
-// Translate common career categories to French
-const CAREER_CATEGORY_LABELS = {
-    // Normalized (lowercase no accents) → French label
-    'government': 'Gouvernement',
-    'cabinet': 'Cabinet',
-    'ministerial cabinet': 'Cabinet ministériel',
-    'parliament': 'Parlement',
-    'assembly': 'Assemblée',
-    'senate': 'Sénat',
-    'local government': 'Collectivités locales',
-    'city': 'Collectivité locale',
-    'region': 'Région',
-    'department': 'Département',
-    'european union': 'Union européenne',
-    'europe': 'Union européenne',
-    'ngo': 'ONG',
-    'nonprofit': 'Association',
-    'think tank': 'Think tank',
-    'advisory': 'Conseil',
-    'advisor': 'Conseiller',
-    'board': "Conseil d'administration",
-    'private sector': 'Secteur privé',
-    'company': 'Entreprise',
-    'corporate': 'Entreprise',
-    'consulting': 'Conseil',
-    'communication': 'Communication',
-    'press': 'Presse',
-    'media': 'Médias',
-    'education': 'Formation',
-    'university': 'Université',
-    'school': 'École',
-    'civil service': 'Fonction publique',
-    'administration': 'Administration',
-    'other': 'Autre',
-    'misc': 'Autre',
-    // Requested mappings
-    'political': 'Politique',
-    'civil society': 'Société civile',
-    'academic': 'Académique',
-    'professional': 'Professionnel',
-};
+const formatBiographyPeriodLabel = ({ startDate, endDate, startText, endText, isCurrent }) => {
+    const startTextValue = toBiographyText(startText);
+    const endTextValue = toBiographyText(endText);
 
-const translateCareerCategory = (raw) => {
-    const val = (raw ?? '').toString().trim();
-    if (!val) return '';
-    // Normalize hyphens/underscores to spaces for more robust matching
-    const key = normalise(val.replace(/[-_]+/g, ' '));
-    return CAREER_CATEGORY_LABELS[key] || val;
-};
-
-// Build or update a legend for timeline colors
-const renderTimelineLegend = (steps, accentColor = null) => {
-    if (!modalCareerLegend) return;
-    const items = Array.isArray(steps) ? steps : [];
-    // Build unique label → color mapping
-    const map = new Map();
-    items.forEach((s) => {
-        const labelRaw = s?.category || '';
-        const label = translateCareerCategory(labelRaw) || 'Sans catégorie';
-        const color = (s?.color || '').toString().trim() || accentColor || '';
-        const key = `${label}__${color}`;
-        if (!map.has(key)) map.set(key, { label, color });
-    });
-
-    // If nothing meaningful, hide legend
-    if (map.size === 0) {
-        modalCareerLegend.innerHTML = '';
-        modalCareerLegend.hidden = true;
-        return;
+    if (startTextValue && endTextValue) {
+        return `${startTextValue} – ${endTextValue}`;
+    }
+    if (startTextValue && !endTextValue) {
+        return startTextValue;
+    }
+    if (!startTextValue && endTextValue) {
+        return endTextValue;
     }
 
-    // Create fragment
-    const frag = document.createDocumentFragment();
-    map.forEach(({ label, color }) => {
-        const item = document.createElement('span');
-        item.className = 'timeline-legend__item';
-        if (color) item.style.color = color;
+    const hasStartDate = startDate instanceof Date && !Number.isNaN(startDate.getTime());
+    const hasEndDate = endDate instanceof Date && !Number.isNaN(endDate.getTime());
+    const startLabel = hasStartDate ? biographyDateFormatter.format(startDate) : '';
+    const endLabel = hasEndDate ? biographyDateFormatter.format(endDate) : '';
 
-        const dot = document.createElement('span');
-        dot.className = 'timeline-legend__dot';
-        item.appendChild(dot);
-
-        const text = document.createElement('span');
-        text.className = 'timeline-legend__label';
-        text.textContent = label;
-        item.appendChild(text);
-
-        frag.appendChild(item);
-    });
-
-    modalCareerLegend.innerHTML = '';
-    modalCareerLegend.appendChild(frag);
-    modalCareerLegend.hidden = false;
+    if (startLabel && endLabel) {
+        return startLabel === endLabel ? startLabel : `${startLabel} – ${endLabel}`;
+    }
+    if (startLabel) {
+        return isCurrent ? `${startLabel} – présent` : `Depuis ${startLabel}`;
+    }
+    if (endLabel) {
+        return `Jusqu'à ${endLabel}`;
+    }
+    return '';
 };
 
-// Build a CodePen-like timeline fragment
-const createCareerTimelineFragment = (entries) => {
-    const frag = document.createDocumentFragment();
-    const steps = (Array.isArray(entries) ? entries : []).filter((step) => {
-        if (!step) return false;
-        const hasTitle = Boolean(step.title && String(step.title).trim());
-        const hasOrg = Boolean(step.org && String(step.org).trim());
-        const hasDescription = Boolean(step.description && String(step.description).trim());
-        const hasPeriod = Boolean(formatCareerPeriod(step));
-        return hasTitle || hasOrg || hasDescription || hasPeriod;
-    });
-
-    steps.forEach((step, index) => {
-        const event = document.createElement('article');
-        event.className = 'timeline__event';
-        event.setAttribute('role', 'listitem');
-
-        const color = step.color ? String(step.color).trim() : "";
-        if (color) {
-            event.style.setProperty('--timeline-entry-color', color);
-        }
-
-        if (index === 0) {
-            event.classList.add('timeline__event--current');
-        }
-
-        const period = formatCareerPeriod(step);
-        if (period) {
-            const date = document.createElement('p');
-            date.className = 'timeline__event-date';
-            date.textContent = period;
-            event.appendChild(date);
-        }
-
-        const title = step.title ? String(step.title).trim() : '';
-        const category = step.category ? String(step.category).trim() : '';
-        if (title || category) {
-            const header = document.createElement('div');
-            header.className = 'timeline__event-header';
-            if (title) {
-                const heading = document.createElement('h5');
-                heading.className = 'timeline__event-title';
-                heading.textContent = title;
-                header.appendChild(heading);
-            }
-            if (category) {
-                const badge = document.createElement('span');
-                badge.className = 'timeline__event-badge';
-                badge.textContent = translateCareerCategory(category);
-                header.appendChild(badge);
-            }
-            event.appendChild(header);
-        }
-
-        const organisation = step.org ? String(step.org).trim() : "";
-        if (organisation) {
-            const org = document.createElement('p');
-            org.className = 'timeline__event-organisation';
-            org.textContent = organisation;
-            event.appendChild(org);
-        }
-
-        const description = step.description ? String(step.description).trim() : "";
-        if (description) {
-            const desc = document.createElement('p');
-            desc.className = 'timeline__event-description';
-            desc.textContent = description;
-            event.appendChild(desc);
-        }
-
-        if (!event.childElementCount) {
-            event.removeAttribute('role');
-            event.textContent = 'Étape de carrière';
-        }
-
-        frag.appendChild(event);
-    });
-
-    return frag;
+const hasBiographyDetailContent = (detail) => {
+    if (!detail) return false;
+    const text = typeof detail.text === 'string' ? detail.text.trim() : '';
+    if (text) return true;
+    if (Array.isArray(detail.children)) {
+        return detail.children.some(hasBiographyDetailContent);
+    }
+    return false;
 };
 
-const populateCareerModule = (entries, accentColor = null) => {
-    if (!modalCareerSection || !modalCareerRoot) return false;
-    const steps = (Array.isArray(entries) ? entries : []).filter((step) => step && (step.title || step.org || step.description || step.startRaw || step.endRaw || step.category));
+const normalizeBiographyDetails = (value) => {
+    const parseDetail = (input) => {
+        if (input == null) return [];
 
-    if (!steps.length) {
-        modalCareerRoot.innerHTML = '';
-        renderTimelineLegend([], accentColor || null);
-        modalCareerSection.hidden = true;
+        if (Array.isArray(input)) {
+            return input.flatMap((entry) => parseDetail(entry));
+        }
+
+        if (typeof input === 'object') {
+            const nested = [
+                ...parseDetail(input.items),
+                ...parseDetail(input.children),
+                ...parseDetail(input.details),
+            ];
+
+            const startDate = parseBiographyDate(
+                input.start_date || input.startDate || input.start,
+            );
+            const endDate = parseBiographyDate(input.end_date || input.endDate || input.end);
+            const startText = toBiographyText(input.start_text || input.startText);
+            const endText = toBiographyText(input.end_text || input.endText);
+            const explicitPeriod = toBiographyText(input.period || input.period_text);
+            const period = explicitPeriod || formatBiographyPeriodLabel({
+                startDate,
+                endDate,
+                startText,
+                endText,
+                isCurrent: Boolean(input.is_current ?? input.isCurrent),
+            });
+
+            const title = toBiographyText(
+                input.title
+                    || input.role
+                    || input.label
+                    || input.function
+                    || input.position
+                    || input.text
+                    || input.name,
+            );
+            const organisation = toBiographyText(
+                input.org
+                    || input.organisation
+                    || input.organization
+                    || input.entity
+                    || input.body
+                    || input.institution,
+            );
+            const location = toBiographyText(input.location || input.city || input.region);
+            const description = toBiographyText(
+                input.description || input.detail || input.notes || input.comment,
+            );
+            const valueText = toBiographyText(input.value || input.summary);
+
+            const descriptorParts = [];
+            if (title && organisation && organisation !== title) {
+                descriptorParts.push(`${title} — ${organisation}`);
+            } else if (title) {
+                descriptorParts.push(title);
+            } else if (organisation) {
+                descriptorParts.push(organisation);
+            }
+
+            if (location) {
+                descriptorParts.push(location);
+            }
+
+            if (valueText && (descriptorParts.length === 0 || valueText !== descriptorParts[descriptorParts.length - 1])) {
+                descriptorParts.push(valueText);
+            }
+
+            if (description) {
+                descriptorParts.push(description);
+            }
+
+            let text = descriptorParts.filter(Boolean).join(' • ');
+            if (period) {
+                text = text ? `${period} : ${text}` : period;
+            }
+
+            const detail = {
+                text: text.trim(),
+                isCurrent: Boolean(input.is_current ?? input.isCurrent),
+            };
+
+            if (nested.length) {
+                detail.children = nested.filter(hasBiographyDetailContent);
+            }
+
+            if (!hasBiographyDetailContent(detail)) {
+                return nested;
+            }
+
+            return [detail];
+        }
+
+        if (typeof input === 'string') {
+            const trimmed = input.trim();
+            if (!trimmed) return [];
+            if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || trimmed.startsWith('{')) {
+                try {
+                    const parsed = JSON.parse(trimmed);
+                    return parseDetail(parsed);
+                } catch (error) {
+                    // Ignore JSON parsing errors and fallback to simple splitting
+                }
+            }
+            const sanitized = trimmed.replace(/[•●○◦·]/g, '\n');
+            return sanitized
+                .split(/\r?\n+/)
+                .map((line) => line.replace(/^[\s\-–—•●○◦·]+/, '').trim())
+                .filter(Boolean)
+                .map((line) => ({ text: line }));
+        }
+
+        const text = toBiographyText(input);
+        return text ? [{ text }] : [];
+    };
+
+    const details = parseDetail(value).filter(hasBiographyDetailContent);
+    return details;
+};
+
+const flattenBiographyDetails = (items) => {
+    const acc = [];
+    const visit = (nodes) => {
+        if (!Array.isArray(nodes)) return;
+        nodes.forEach((node) => {
+            if (!node || typeof node !== 'object') return;
+            const text = typeof node.text === 'string' ? node.text.trim() : '';
+            if (text) {
+                acc.push(text);
+            }
+            if (Array.isArray(node.children) && node.children.length) {
+                visit(node.children);
+            }
+        });
+    };
+
+    visit(items);
+    return acc;
+};
+
+const normalizeBiographyEntries = (rows) => {
+    return (Array.isArray(rows) ? rows : [])
+        .map((row) => {
+            const startDate = parseBiographyDate(row.start_date || row.startDate || row.start);
+            const endDate = parseBiographyDate(row.end_date || row.endDate || row.end);
+            const startNullsafe = parseBiographyDate(row.start_date_nullsafe || row.startDateNullsafe);
+            const createdAt = parseBiographyDate(row.created_at || row.createdAt);
+            const sortWeight = Number.isFinite(row.sort_weight) ? row.sort_weight : 0;
+            const dateQuality = Number.isFinite(row.date_quality) ? row.date_quality : 99;
+            const sortSource = startDate || startNullsafe || endDate || createdAt;
+            let sortTimestamp = Number.NEGATIVE_INFINITY;
+            if (sortSource instanceof Date) {
+                const time = sortSource.getTime();
+                if (!Number.isNaN(time)) {
+                    sortTimestamp = time;
+                }
+            }
+
+            const details = normalizeBiographyDetails(row.details);
+            const detailTexts = flattenBiographyDetails(details);
+
+            return {
+                id: row.id || null,
+                category: toBiographyText(row.category),
+                title: toBiographyText(row.title),
+                org: toBiographyText(row.org),
+                details,
+                detailTexts,
+                startDate,
+                endDate,
+                startText: toBiographyText(row.start_text),
+                endText: toBiographyText(row.end_text),
+                isCurrent: Boolean(row.is_current),
+                isUndated: Boolean(row.is_undated),
+                sortWeight,
+                dateQuality,
+                sortTimestamp,
+                createdAt,
+                color: row.color ? String(row.color).trim() : null,
+            };
+        })
+        .filter((entry) => {
+            if (entry.category || entry.title || entry.org) return true;
+            if (Array.isArray(entry.detailTexts) && entry.detailTexts.length) return true;
+            return Array.isArray(entry.details) && entry.details.some(hasBiographyDetailContent);
+        });
+};
+
+const formatBiographyPeriod = (entry) => {
+    if (!entry) return '';
+    return formatBiographyPeriodLabel({
+        startDate: entry.startDate,
+        endDate: entry.endDate,
+        startText: entry.startText,
+        endText: entry.endText,
+        isCurrent: entry.isCurrent,
+    });
+};
+
+const createBiographyEntryElement = (entry) => {
+    const item = document.createElement('li');
+    item.className = 'biography-entry';
+    item.setAttribute('role', 'listitem');
+
+    const period = formatBiographyPeriod(entry);
+    const descriptorParts = [];
+    if (entry.title) {
+        descriptorParts.push(entry.title);
+    }
+
+    const normalizedCategory = normalise(entry.category || '');
+    const normalizedTitle = normalise(entry.title || '');
+    const orgText = entry.org;
+    if (orgText) {
+        const normalizedOrg = normalise(orgText);
+        const isRedundantOrg = !normalizedOrg
+            || normalizedOrg === normalizedCategory
+            || normalizedOrg === normalizedTitle
+            || normalizedOrg === 'gouvernement';
+        if (!isRedundantOrg) {
+            descriptorParts.push(orgText);
+        }
+    }
+
+    let descriptor = descriptorParts.join(', ').trim();
+    if (!descriptor && entry.org && normalise(entry.org) !== 'gouvernement') {
+        descriptor = entry.org;
+    }
+    if (!descriptor) {
+        descriptor = 'Parcours';
+    }
+
+    const detailTexts = Array.isArray(entry.detailTexts) ? entry.detailTexts.filter(Boolean) : [];
+    if (detailTexts.length) {
+        const uniqueDetails = Array.from(new Set(detailTexts.map((text) => text.trim()).filter(Boolean)));
+        if (uniqueDetails.length) {
+            descriptor += ` (${uniqueDetails.join(' ; ')})`;
+        }
+    }
+
+    if (entry.isCurrent && !descriptor.toLowerCase().includes('en cours')) {
+        descriptor += ' (en cours)';
+    }
+
+    const trimmedDescriptor = descriptor.trim();
+    const needsPeriod = trimmedDescriptor && !/[.!?…)]$/.test(trimmedDescriptor);
+    const finalDescriptor = needsPeriod ? `${trimmedDescriptor}.` : trimmedDescriptor;
+
+    const line = document.createElement('p');
+    line.className = 'biography-entry__line';
+
+    if (period) {
+        const periodEl = document.createElement('span');
+        periodEl.className = 'biography-entry__period';
+        periodEl.textContent = period;
+        line.appendChild(periodEl);
+    }
+
+    const descriptorEl = document.createElement('span');
+    descriptorEl.className = 'biography-entry__text';
+    descriptorEl.textContent = finalDescriptor;
+    line.appendChild(descriptorEl);
+
+    item.appendChild(line);
+
+    return item;
+};
+
+const populateBiographyModule = (entries, accentColor = null) => {
+    if (!modalBiographySection || !modalBiographyRoot) return false;
+
+    const normalized = normalizeBiographyEntries(entries);
+
+    if (!normalized.length) {
+        modalBiographyRoot.innerHTML = '';
+        modalBiographySection.hidden = true;
+        modalBiographySection.style.removeProperty('--biography-accent');
         return false;
     }
 
     if (accentColor) {
-        modalCareerSection?.style.setProperty("--timeline-color", accentColor);
-        modalCareerRoot.style.setProperty("--timeline-default-color", accentColor);
+        modalBiographySection.style.setProperty('--biography-accent', accentColor);
     } else {
-        modalCareerSection?.style.removeProperty("--timeline-color");
-        modalCareerRoot.style.removeProperty("--timeline-default-color");
+        modalBiographySection.style.removeProperty('--biography-accent');
     }
 
-    modalCareerRoot.innerHTML = '';
-    modalCareerRoot.setAttribute('role', 'list');
-    modalCareerRoot.appendChild(createCareerTimelineFragment(steps));
-    renderTimelineLegend(steps, accentColor || null);
-    modalCareerSection.hidden = false;
+    const groups = new Map();
+    normalized.forEach((entry) => {
+        const category = entry.category || 'Autres';
+        if (!groups.has(category)) {
+            groups.set(category, []);
+        }
+        groups.get(category).push(entry);
+    });
+
+    const sortedGroups = Array.from(groups.entries()).sort((a, b) => {
+        const orderA = BIOGRAPHY_CATEGORY_ORDER_MAP.get(normalise(a[0])) ?? BIOGRAPHY_CATEGORY_ORDER.length;
+        const orderB = BIOGRAPHY_CATEGORY_ORDER_MAP.get(normalise(b[0])) ?? BIOGRAPHY_CATEGORY_ORDER.length;
+        if (orderA !== orderB) return orderA - orderB;
+        return a[0].localeCompare(b[0], 'fr', { sensitivity: 'base' });
+    });
+
+    const frag = document.createDocumentFragment();
+
+    sortedGroups.forEach(([category, items]) => {
+        const group = document.createElement('article');
+        group.className = 'biography-group';
+        group.setAttribute('role', 'listitem');
+
+        const heading = document.createElement('h5');
+        heading.className = 'biography-group__title';
+        heading.textContent = category;
+        group.appendChild(heading);
+
+        const list = document.createElement('ul');
+        list.className = 'biography-list';
+
+        items.sort((a, b) => {
+            const weightDiff = (a.sortWeight ?? 0) - (b.sortWeight ?? 0);
+            if (weightDiff !== 0) return weightDiff;
+
+            const qualityDiff = (a.dateQuality ?? 99) - (b.dateQuality ?? 99);
+            if (qualityDiff !== 0) return qualityDiff;
+
+            const timeDiff = (b.sortTimestamp ?? Number.NEGATIVE_INFINITY) - (a.sortTimestamp ?? Number.NEGATIVE_INFINITY);
+            if (timeDiff !== 0) return timeDiff;
+
+            const endDiff = ((b.endDate && b.endDate.getTime()) || Number.NEGATIVE_INFINITY)
+                - ((a.endDate && a.endDate.getTime()) || Number.NEGATIVE_INFINITY);
+            if (endDiff !== 0) return endDiff;
+
+            return (a.title || '').localeCompare(b.title || '', 'fr', { sensitivity: 'base' });
+        });
+
+        items.forEach((entry) => {
+            const element = createBiographyEntryElement(entry);
+            list.appendChild(element);
+        });
+
+        group.appendChild(list);
+        frag.appendChild(group);
+    });
+
+    modalBiographyRoot.innerHTML = '';
+    modalBiographyRoot.appendChild(frag);
+    modalBiographySection.hidden = false;
     return true;
 };
+
 
 const ensureSupabaseClient = () => {
     try {
@@ -2292,10 +2456,10 @@ const showCabinetInlineForMinister = async (minister) => {
     }
 
     const modalLayout = modalBody.querySelector(".modal-layout");
-    // Prefer inserting the collaborators section before the career module inside the layout
-    const careerSection = modalLayout ? modalLayout.querySelector('.modal-module--career') : null;
-    if (modalLayout && careerSection && careerSection.parentNode) {
-        careerSection.parentNode.insertBefore(placeholder, careerSection);
+    // Prefer inserting the collaborators section before the biographie module inside the layout
+    const biographySection = modalLayout ? modalLayout.querySelector('.modal-module--biography') : null;
+    if (modalLayout && biographySection && biographySection.parentNode) {
+        biographySection.parentNode.insertBefore(placeholder, biographySection);
     } else {
         const parent = modalLayout?.parentElement || modalBody;
         parent.insertBefore(placeholder, modalLayout ? modalLayout.nextSibling : null);
@@ -2410,56 +2574,46 @@ const openModal = async (minister) => {
 
     // mission field removed from modal — no longer displayed
 
-    // Apply accent color to the career timeline (if available)
-    if (modalCareerSection) {
-        if (minister.accentColor) {
-            modalCareerSection.style.setProperty('--timeline-color', minister.accentColor);
-        } else {
-            modalCareerSection.style.removeProperty('--timeline-color');
-        }
-    }
-
-    // Career timeline (best-effort)
-    if (modalCareerSection && modalCareerRoot) {
+    // Biographie (affichage en listes)
+    if (modalBiographySection && modalBiographyRoot) {
         const accentColor = minister.accentColor || null;
-        const careerItems = Array.isArray(minister.career) ? minister.career : [];
-        const hasLocalData = populateCareerModule(careerItems, accentColor);
-        if (!hasLocalData) {
-            // Try lazy-load via REST if nested relation wasn't present
+        const biographyItems = Array.isArray(minister.biography) ? minister.biography : [];
+        const hasLocalBiography = populateBiographyModule(biographyItems, accentColor);
+        if (!hasLocalBiography) {
             const client = ensureSupabaseClient();
             if (client && minister.id != null) {
                 client
-                    .from('person_careers')
+                    .from(SUPABASE_BIOGRAPHY_VIEW)
                     .select('*')
                     .eq('person_id', minister.id)
-                    .order('start_date', { ascending: false })
+                    .order('category', { ascending: true })
+                    .order('sort_weight', { ascending: true })
+                    .order('start_date_nullsafe', { ascending: false })
+                    .order('created_at', { ascending: false })
                     .then(({ data, error }) => {
+                        let normalized = [];
                         if (!error && Array.isArray(data) && data.length) {
-                            const normalized = normalizeCareerSteps(data);
-                            if (populateCareerModule(normalized, accentColor)) {
-                                // Also store on the minister object for subsequent opens
-                                minister.career = normalized;
-                            } else {
-                                populateCareerModule([], accentColor);
-                            }
+                            normalized = normalizeBiographyEntries(data);
+                        }
+                        if (populateBiographyModule(normalized, accentColor)) {
+                            minister.biography = normalized;
                         } else {
-                            populateCareerModule([], accentColor);
+                            populateBiographyModule([], accentColor);
                         }
                         setModalBusy(false);
                     })
                     .catch(() => {
-                        populateCareerModule([], accentColor);
+                        populateBiographyModule([], accentColor);
                         setModalBusy(false);
                     });
             } else {
-                populateCareerModule([], accentColor);
+                populateBiographyModule([], accentColor);
                 setModalBusy(false);
             }
         } else {
             setModalBusy(false);
         }
-    }
-    else {
+    } else {
         setModalBusy(false);
     }
 
@@ -2552,11 +2706,11 @@ const openModal = async (minister) => {
                     delegatesList.setAttribute('role', 'list');
                     delegatesSection.appendChild(delegatesList);
 
-                    // Insert delegates section before career section if present, otherwise append to modal layout
-                    const careerSec = modal.querySelector('.modal-module--career');
+                    // Insert delegates section before biography section if present, otherwise append to modal layout
+                    const biographySec = modal.querySelector('.modal-module--biography');
                     const layout = modal.querySelector('.modal-layout') || modal.querySelector('.modal-body') || modal;
-                    if (careerSec && careerSec.parentNode) {
-                        careerSec.parentNode.insertBefore(delegatesSection, careerSec);
+                    if (biographySec && biographySec.parentNode) {
+                        biographySec.parentNode.insertBefore(delegatesSection, biographySec);
                     } else if (layout) {
                         layout.appendChild(delegatesSection);
                     }
@@ -2765,12 +2919,10 @@ const fetchMinistersFromSupabase = async () => {
                 role_label,
                 is_primary,
                 ministries(id, short_name, name, color, parent_ministry_id)
-             ),
-             person_careers(*)`
+             )`
         )
         .order("role", { ascending: true })
-        .order("full_name", { ascending: true })
-        .order("start_date", { ascending: false, foreignTable: "person_careers" });
+        .order("full_name", { ascending: true });
 
     if (personsError) {
         throw personsError;
@@ -2779,6 +2931,34 @@ const fetchMinistersFromSupabase = async () => {
     const validPersons = (persons || []).filter((person) => MINISTER_ROLES.has(person.role));
     if (!validPersons.length) {
         return [];
+    }
+
+    const personIds = validPersons.map((person) => person.id).filter((id) => id != null);
+    let biographyByPerson = new Map();
+    if (personIds.length) {
+        try {
+            const { data: biographyRows, error: biographyError } = await client
+                .from(SUPABASE_BIOGRAPHY_VIEW)
+                .select('*')
+                .in('person_id', personIds)
+                .order('category', { ascending: true })
+                .order('sort_weight', { ascending: true })
+                .order('start_date_nullsafe', { ascending: false })
+                .order('created_at', { ascending: false });
+            if (!biographyError && Array.isArray(biographyRows)) {
+                biographyByPerson = biographyRows.reduce((map, row) => {
+                    if (!row || row.person_id == null) return map;
+                    const list = map.get(row.person_id) || [];
+                    list.push(row);
+                    map.set(row.person_id, list);
+                    return map;
+                }, new Map());
+            } else if (biographyError) {
+                console.warn('[onepage] Erreur lors du chargement de biography_entries_view :', biographyError);
+            }
+        } catch (error) {
+            console.warn('[onepage] Impossible de charger les entrées de biographie', error);
+        }
     }
 
     return validPersons.map((person) => {
@@ -2816,23 +2996,8 @@ const fetchMinistersFromSupabase = async () => {
             ...ministriesLabels.map((entry) => entry.roleLabel || "")
         ];
 
-        const normalizedCareer = (() => {
-            if (Array.isArray(person.person_careers)) {
-                return normalizeCareerSteps(person.person_careers);
-            }
-            if (Array.isArray(person.career)) {
-                return normalizeCareerSteps(person.career);
-            }
-            if (typeof person.career === "string") {
-                try {
-                    const parsed = JSON.parse(person.career);
-                    return normalizeCareerSteps(parsed);
-                } catch (_) {
-                    return [];
-                }
-            }
-            return [];
-        })();
+        const biographyEntries = biographyByPerson.get(person.id) || [];
+        const normalizedBiography = normalizeBiographyEntries(biographyEntries);
 
         return {
             id: person.id,
@@ -2851,7 +3016,7 @@ const fetchMinistersFromSupabase = async () => {
             primaryMinistryId: primaryMinistry?.id || null,
             primaryParentMinistryId: primaryMinistry?.parent_ministry_id || null,
             searchIndex: searchIndexParts.filter(Boolean).join(" "),
-            career: normalizedCareer
+            biography: normalizedBiography
         };
     });
 };
@@ -2935,6 +3100,7 @@ const fetchMinistersFromView = async () => {
         description: leaderDescriptions.get(row.person_id) || "",
         primaryMinistryId: row.ministry_name ? (ministryIdByName.get(row.ministry_name) || null) : null,
         ministries: row.ministry_name ? [{ label: row.ministry_name, isPrimary: true }] : [],
+        biography: [],
     }));
 };
 
@@ -2944,7 +3110,13 @@ const fetchMinistersFromFallback = async () => {
         throw new Error(`Impossible de charger les données (${response.status})`);
     }
     const payload = await response.json();
-    return Array.isArray(payload) ? payload : [];
+    if (!Array.isArray(payload)) return [];
+    return payload.map((item) => {
+        if (item && typeof item === 'object' && !Array.isArray(item)) {
+            return Object.assign({ biography: [] }, item);
+        }
+        return item;
+    });
 };
 
 const loadMinisters = async () => {
