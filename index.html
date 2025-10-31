@@ -7,7 +7,7 @@
     =============================
     - Header : Branding, navigation, hero
     - Main : Sections (Présentation, Ministres, Programme, Contact)
-    - Footer : Mentions légales, navigation secondaire
+    - Footer : Mentions légales à retravailler, juste copier celle du site rumeur ? 
     - Modale : Fiche ministre
     - Script : Interactions JS
 -->
@@ -16,6 +16,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title></title>
+    <!-- Supabase runtime configuration (public anon key only) -->
+    <meta name="supabase-url" content="https://yyquczbuhxbfnefwgxxc.supabase.co" />
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cXVjemJ1aHhiZm5lZndneHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3ODI5NjcsImV4cCI6MjA3NTM1ODk2N30.0IDUEP96IQQ4Ylz-YoTY1UzoySLT9Wq2YLC2zAb7jds" />
     <!-- Font & CSS -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -24,6 +27,7 @@
 </head>
 <body>
     <!-- ================= HEADER ================= -->
+     <!revoir la manière dont le header s'affiche, l'affichage des collabs au sein des pages parce que là c'est hyper moche>
     <header class="site-header" id="top">
         <!-- Header simplified: only the logo (branding moved here) -->
         <div class="brand-block">
@@ -55,8 +59,7 @@
                     font-family: "XO Pretty Havelock", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
                 }
                 </style>
-                <h2 class="section-title xo-font">Gouvernement Lecornu II</h2>
-                <p class="section-subtitle"></p>
+                <h1 class="section-title xo-font">Gouvernement Lecornu II</h1>
             </div>
             <div class="toolbar" role="region" aria-label="Outils de filtrage des ministres">
                 <div class="toolbar-compact">
@@ -73,6 +76,7 @@
                         </label>
                     </div>
                     <button
+   
                         id="advanced-search-toggle"
                         class="toolbar-advanced-toggle"
                         type="button"
@@ -80,7 +84,8 @@
                         aria-controls="advanced-search-panel"
                         data-open-label="Ouvrir la recherche avancée"
                         data-close-label="Fermer la recherche avancée"
-                    >
+                    
+    <!-- ================= ca on supprime pour le moment ================= -->
                         <span class="toggle-label">Ouvrir la recherche avancée</span>
                         <svg class="toggle-icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -118,7 +123,7 @@
                         <label class="sort-control" for="sort-order">
                             <span class="sort-label">Trier</span>
                             <select id="sort-order" name="sort-order">
-                                <option value="role">Importance ministérielle</option>
+                                <option value="role">Ordre protocolaire</option>
                                 <option value="alpha">Ordre alphabétique</option>
                                 <option value="portfolio">Nom du portefeuille</option>
                             </select>
@@ -131,7 +136,6 @@
                         <label class="toggle-control" for="filter-bio">
                             <input type="checkbox" id="filter-bio" name="filter-bio" />
                             <span class="toggle-shape" aria-hidden="true"></span>
-                            <span class="toggle-text">Bio disponible</span>
                         </label>
                         <button class="toolbar-reset" id="filters-reset" type="button">Réinitialiser</button>
                     </div>
@@ -203,11 +207,10 @@
                         <h4 class="modal-module-title">Ministres délégués</h4>
                         <div id="modal-delegates" class="modal-delegates-list" role="list"></div>
                     </div>
-                    <section class="modal-module modal-module--career" hidden>
-                        <div class="modal-career-timeline" role="region" aria-labelledby="modal-career-title">
-                            <h4 class="modal-module-title" id="modal-career-title">Carrière</h4>
-                            <div id="modal-career-root" class="timeline" role="list"></div>
-                            <div id="modal-career-legend" class="timeline-legend" aria-label="Légende des couleurs" hidden></div>
+                    <section class="modal-module modal-module--biography" hidden>
+                        <div class="modal-biography" role="region" aria-labelledby="modal-biography-title">
+                            <h4 class="modal-module-title" id="modal-biography-title">Biographie</h4>
+                            <div id="modal-biography-root" class="biography-groups" role="list"></div>
                         </div>
                     </section>
                     <div class="modal-module modal-module--export">
@@ -234,8 +237,10 @@
 
     <!-- ================= SCRIPTS ================= -->
     <!-- Supabase configuration and lightweight client -->
-    <script src="config/supabase.js"></script>
-    <script src="config/supabase-lite-client.js"></script>
-    <script src="script.js"></script>
+    <!-- Optional local override (gitignored): create config/supabase.local.js to set __SUPABASE_CONFIG__. 404 is fine in prod. -->
+    <script src="config/supabase.local.js?v=14a6c69" onerror="void 0"></script>
+    <script src="config/supabase.js?v=14a6c69"></script>
+    <script src="config/supabase-lite-client.js?v=14a6c69"></script>
+    <script src="script.js?v=14a6c69"></script>
 </body>
 </html>
