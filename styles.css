@@ -1213,10 +1213,7 @@ body.print-all .toolbar {
     min-width: 0;
 }
 
-/* Si la fiche ne contient pas d'étiquettes/ministries, centrer
-   l'ensemble des éléments de gauche (nom, méta, badge de parti)
-   pour que le badge de parti apparaisse centré vis‑à‑vis de la
-   photo/logo située à droite. Utilise :has() lorsqu'il est dispo. */
+/* J'ai centré les étiquettes des ministres selon le logo, je ne sais pas si c'est une bonne idée voir retour Marie */
 .minister-card:not(:has(.mc-ministries)) .mc-left {
     display: flex;
     flex-direction: column;
@@ -1272,6 +1269,7 @@ body.print-all .toolbar {
 .party-badge[data-party="UDI"]             { background-color: var(--party-udi); }
 .party-badge[data-party="LR"]              { background-color: var(--party-lr); color: #F2F2F2; }
 .party-badge[data-party="DLF"]             { background-color: var(--party-dlf); color: #F2F2F2; }
+.party-badge[data-party="Sans étiquette"]  { background-color: #d1d5db; color: var(--color-encre); }
 .party-badge[data-party="RN"]              { background-color: var(--party-rn); color: #F2F2F2; }
 .party-badge[data-party="Reconquête"]      { background-color: var(--party-reconquete); color: #F2F2F2; }
 .party-badge[data-party="Patriotes"]       { background-color: var(--party-patriotes); color: #F2F2F2; }

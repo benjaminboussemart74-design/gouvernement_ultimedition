@@ -166,7 +166,15 @@ const mapPartyLabel = (raw) => {
 
 
 const createPartyBadge = (partyName) => {
-    if (!partyName) return null;
+    // If no party provided, create an explicit "Sans étiquette" badge
+    if (!partyName) {
+        const empty = document.createElement("span");
+        empty.className = "party-badge no-party";
+        empty.textContent = "Sans étiquette";
+        empty.setAttribute("data-party", "Sans étiquette");
+        return empty;
+    }
+
     const badge = document.createElement("span");
     badge.className = "party-badge";
     const mapped = mapPartyLabel(partyName);
