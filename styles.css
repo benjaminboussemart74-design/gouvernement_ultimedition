@@ -14,14 +14,14 @@
     --color-citron: #FCEE88;
     --color-peche: #F0A08C;
 
-    --gradient-header: linear-gradient(135deg, var(--color-aubergine), var(--color-prune));
+    --gradient-header: linear-gradient(135deg, var(--color-curacao), var(--color-panthere));
     --accent-primary: var(--color-curacao);
     --accent-secondary: var(--color-lavande);
     --radius-base: 10px;
     --shadow-soft: 0 20px 45px rgba(39, 8, 59, 0.12);
     --shadow-hover: 0 28px 60px rgba(75, 37, 121, 0.18);
 
-    /* --- Couleurs des partis (palette Rumeur / mapping local) --- */
+    /* corriger les couleurs de renaissance trouver plusieurs bleus moins moche pour les droitoss*/
     /* Centre / majorités */
     --party-renaissance: #FFD700;    /* Jaune doré - Renaissance */
     --party-horizons: #0055A4;       /* Bleu institutionnel - Horizons */
@@ -68,7 +68,7 @@
     font-display: swap;
 }
 
-/* Apply Havelock Inline to ministry short names and related badges */
+/* Les titres de ministres sont affichés en Havelock Inline mais il faut modifier ça  */
 .mc-ministry,
 .mc-ministry-badge,
 .ministry-label,
@@ -123,7 +123,7 @@ h4,
 h5,
 h6 {
     color: var(--color-encre);
-    line-height: 1.15;
+    line-height: 1;
     margin: 0 0 0.75rem;
     font-weight: 700;
 }
@@ -144,7 +144,7 @@ a:focus {
 
 .site-header {
     background: var(--gradient-header);
-    color: var(--color-guimauve);
+    color: var(--color-panthere);
     padding: 3.5rem clamp(1.5rem, 3vw, 3.5rem) 2rem;
     display: grid;
     gap: 3rem;
@@ -185,7 +185,7 @@ a:focus {
     padding: 0.4rem 0.9rem;
     border-radius: var(--radius-base);
     background: rgba(100, 215, 205, 0.18);
-    color: var(--color-guimauve);
+    color: var(--color-panthere);
     font-size: 0.85rem;
     font-weight: 500;
     text-transform: uppercase;
@@ -204,7 +204,7 @@ a:focus {
 .brand-title h1 {
     font-size: clamp(2.25rem, 4vw, 3.4rem);
     color: var(--color-guimauve);
-    margin-bottom: 0.75rem;
+    margin-bottom: 4rem;
 }
 
 .brand-baseline {
@@ -282,7 +282,7 @@ a:focus {
     .header-logo-panel img { max-width: 260px; }
 }
 
-/* --- Large hero backdrop logo (bleu) --- */
+/* --- Large hero backdrop logo (bleu) plus utile le modifier--- */
 .hero-bg-logo {
     position: absolute;
     inset: 0;
@@ -501,6 +501,7 @@ main > * { position: relative; z-index: 2; }
         max-width: 100%;
     }
 }
+/* Impremerie ajuster le style graphique et comprendre comme ça marche rajouter logo de la boite et les nouveaux élements */
 
 @media print {
     .modal-footer-cta { display: none; }
@@ -508,7 +509,7 @@ main > * { position: relative; z-index: 2; }
 }
 .header-suggestion[aria-selected="true"], .header-suggestion:hover { background: rgba(100,215,205,0.06); }
 
-/* Avatar in suggestion */
+/* Avatar de suggestion qui n'est pas très beau, et ne respecte pas la charte grapihque, à l'avenir le changer par un truc plus beau ? */
 .header-suggestion img.avatar {
     width: 56px;
     height: 56px;
@@ -597,7 +598,7 @@ main {
 
 .section-title {
     font-size: clamp(2rem, 4vw, 2.6rem);
-    font-weight: 700;
+    font-weight: 2000;
 }
 
 .section-subtitle {
@@ -626,18 +627,17 @@ main {
 
 .toolbar {
     background: var(--color-guimauve);
-    border-radius: var(--radius-base);
     padding: clamp(1.4rem, 4vw, 2rem);
     display: grid;
     gap: clamp(1rem, 3vw, 1.6rem);
     box-shadow: var(--shadow-soft);
     border: 1px solid rgba(62, 62, 61, 0.08);
 }
-
+/* modification nécéssaire problème d'alignement incompréhensible des deux barres*/
 .toolbar-compact {
     display: grid;
     gap: 0.75rem;
-    align-items: start;
+    align-items: center ;
 }
 
 .toolbar-search-group {
@@ -646,7 +646,7 @@ main {
 }
 
 .toolbar-compact .toolbar-search-group {
-    width: 100%;
+    width: 40%;
 }
 
 .toolbar-advanced {
@@ -1237,10 +1237,10 @@ body.print-all .toolbar {
 
 /* Actions dans la carte (ex: bouton délégués) */
 .card-actions { margin-top: 0.5rem; }
-/* Badges de parti — utilitaire simple */
+/* Badges de parti — forcément si j'oublie le margin-top */
 .party-badge {
     display: inline-block;
-    margin-top: 0.3rem;
+    margin-top:0 rem;
     background: var(--color-perle);
     color: var(--color-encre);
     font-size: 0.8rem;
@@ -1358,11 +1358,11 @@ body.print-all .toolbar {
     margin-top: 0;
 }
 
-/* Keep party badge visual mapping defined above; only adjust spacing here */
+/* Keep party badge visual mapping defined above; only adjust spacing here * effectivement si je modifie pas le pading rien n'est aligné/
 .mc-meta .party-badge {
     display: inline-flex;
     align-items: center;
-    margin-top: 0.2rem;
+    margin-top: 0rem;
 }
 
 /* Indicateur de rang/importance */

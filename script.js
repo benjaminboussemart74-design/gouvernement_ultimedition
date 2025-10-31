@@ -102,6 +102,18 @@ const ensureImageSource = (value, fallback = "assets/placeholder-minister.svg") 
     return trimmed || fallback;
 };
 
+// Basic HTML-escape to avoid XSS when injecting with innerHTML
+function escapeHTML(value) {
+    if (value == null) return "";
+    return String(value).replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+    }[ch]));
+}
+
 // Mapping des valeurs `party` (valeurs possibles depuis Supabase) vers
 // les étiquettes utilisées par les sélecteurs CSS `[data-party="$LABEL"]`.
 const PARTY_MAP = new Map([
@@ -1185,18 +1197,22 @@ const renderCollaboratorsTemplate = (collaborators) => `
       <h4>Collaborateurs</h4>
       <div class="collaborators-list">
         ${collaborators
-            .map(
-                (c) => `
+            .map((c) => {
+                const fullName = escapeHTML(c.full_name ?? 'Collaborateur·rice');
+                const role = escapeHTML(c.cabinet_role || 'Collaborateur');
+                const grade = c.collab_grade ? `<p class="collab-grade">${escapeHTML(c.collab_grade)}</p>` : '';
+                const photo = ensureImageSource(c.photo_url);
+                const alt = c.full_name ? `Portrait de ${escapeHTML(c.full_name)}` : 'Portrait collaborateur';
+                return `
           <div class="collaborator-card">
-            <img src="${ensureImageSource(c.photo_url)}" class="collaborator-photo" alt="${c.full_name ? `Portrait de ${c.full_name}` : 'Portrait collaborateur'}" onerror="this.onerror=null;this.src='assets/placeholder-minister.svg';">
+            <img src="${photo}" class="collaborator-photo" alt="${alt}" onerror="this.onerror=null;this.src='assets/placeholder-minister.svg';">
             <div>
-              <p class="collab-name">${c.full_name ?? 'Collaborateur·rice'}</p>
-              <p class="collab-role">${c.cabinet_role || 'Collaborateur'}</p>
-              ${c.collab_grade ? `<p class="collab-grade">${c.collab_grade}</p>` : ''}
+              <p class="collab-name">${fullName}</p>
+              <p class="collab-role">${role}</p>
+              ${grade}
             </div>
-          </div>
-        `
-            )
+          </div>`;
+            })
             .join("")}
       </div>`;
 
@@ -1693,7 +1709,6 @@ const normaliseCabinetMembers = (collaborators, gradeLookup) => {
         .filter((node) => node?.id)
         .sort(compareCabinetMembers);
 };
-
 const createCabinetNodeCard = (member) => {
     const card = document.createElement("article");
     card.className = "cabinet-node";
