@@ -4,7 +4,7 @@
 
 const path = require('path');
 const https = require('https');
-const { URL } = require('url');
+const { URL, URLSearchParams } = require('url');
 
 const personId = process.argv[2] || process.env.PERSON_ID;
 if (!personId) {
@@ -25,7 +25,7 @@ try {
 const SUPABASE_URL = supabaseConfig && supabaseConfig.url ? supabaseConfig.url : '';
 const SUPABASE_ANON_KEY = supabaseConfig && supabaseConfig.anonKey ? supabaseConfig.anonKey : '';
 const SUPABASE_PERSONS_TABLE = supabaseConfig && supabaseConfig.ministersTable ? supabaseConfig.ministersTable : 'persons';
-const SUPABASE_CAREERS_TABLE = supabaseConfig && supabaseConfig.careersTable ? supabaseConfig.careersTable : 'person_careers';
+const SUPABASE_BIOGRAPHY_VIEW = supabaseConfig && supabaseConfig.biographyView ? supabaseConfig.biographyView : 'biography_entries_view';
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error('Missing Supabase credentials. Provide SUPABASE_URL et SUPABASE_ANON_KEY via environnement ou config/supabase.local.json.');
@@ -68,16 +68,20 @@ async function fetchPersonById(id) {
   return data[0] || null;
 }
 
-async function fetchCareersFor(id) {
-  const endpoint = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/${SUPABASE_CAREERS_TABLE}`;
-  const q = `${endpoint}?person_id=eq.${id}&order=start_date.desc`;
+async function fetchBiographyFor(id) {
+  const endpoint = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/${SUPABASE_BIOGRAPHY_VIEW}`;
+  const params = new URLSearchParams({
+    person_id: `eq.${id}`,
+    order: 'category.asc,sort_weight.asc,start_date_nullsafe.desc,created_at.desc',
+  });
+  const q = `${endpoint}?${params.toString()}`;
   const res = await httpGet(q, {
     apikey: SUPABASE_ANON_KEY,
     Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     Accept: 'application/json',
   });
   if (res.status < 200 || res.status >= 300) {
-    throw new Error(`careers request failed: ${res.status} ${res.statusText} - ${res.body}`);
+    throw new Error(`biography request failed: ${res.status} ${res.statusText} - ${res.body}`);
   }
   return JSON.parse(res.body);
 }
@@ -90,7 +94,7 @@ async function fetchCareersFor(id) {
       console.error('Person not found.');
       process.exit(5);
     }
-    const careers = await fetchCareersFor(personId).catch((e)=>{ console.warn('careers fetch failed:', e.message); return []; });
+    const biography = await fetchBiographyFor(personId).catch((e)=>{ console.warn('biography fetch failed:', e.message); return []; });
 
     const JSDOM = require('jsdom').JSDOM;
     const modalHTML = `
@@ -110,9 +114,11 @@ async function fetchCareersFor(id) {
           <div class="modal-module modal-module--description">
             <p class="modal-description" id="modal-description"></p>
           </div>
-          <section class="modal-module modal-module--career" hidden>
-            <h4 class="modal-module-title">Carrière</h4>
-            <ul class="modal-career-list" id="modal-career-list"></ul>
+          <section class="modal-module modal-module--biography" hidden>
+            <div class="modal-biography">
+              <h4 class="modal-module-title">Biographie</h4>
+              <div class="biography-groups" id="modal-biography-root"></div>
+            </div>
           </section>
         </div>
       </div>
@@ -126,8 +132,8 @@ async function fetchCareersFor(id) {
     const titleEl = doc.getElementById('modal-title');
     const portfolioEl = doc.getElementById('modal-portfolio');
     const descEl = doc.getElementById('modal-description');
-    const careerSection = doc.querySelector('.modal-module--career');
-    const careerList = doc.getElementById('modal-career-list');
+    const biographySection = doc.querySelector('.modal-module--biography');
+    const biographyRoot = doc.getElementById('modal-biography-root');
 
     const fullName = person.full_name || person.name || '';
     const jobTitle = person.job_title || person.job || person.role || '';
@@ -141,24 +147,41 @@ async function fetchCareersFor(id) {
     if (portfolioEl) portfolioEl.textContent = portfolio || '';
     if (descEl) descEl.textContent = bio || '';
 
-    if (Array.isArray(careers) && careers.length > 0) {
-      careerSection.removeAttribute('hidden');
-      careers.forEach((c) => {
-        const li = doc.createElement('li');
-        const sd = c.start_date || c.start || '';
-        const ed = c.end_date || c.end || '';
-        const period = sd ? (ed ? `${sd} → ${ed}` : `${sd} → présent`) : '';
-        const title = c.title || '';
-        const org = c.organisation || c.organization || '';
-        li.textContent = `${period} — ${title}${org ? ' — ' + org : ''}`;
-        careerList.appendChild(li);
+    if (Array.isArray(biography) && biography.length > 0 && biographyRoot) {
+      const groups = new Map();
+      biography.forEach((entry) => {
+        const category = entry && entry.category ? entry.category : 'Autres';
+        if (!groups.has(category)) groups.set(category, []);
+        groups.get(category).push(entry);
       });
+      groups.forEach((items, category) => {
+        const wrapper = doc.createElement('article');
+        wrapper.className = 'biography-group';
+        const heading = doc.createElement('h5');
+        heading.textContent = category;
+        wrapper.appendChild(heading);
+        const list = doc.createElement('ul');
+        list.className = 'biography-list';
+        items.forEach((entry) => {
+          const li = doc.createElement('li');
+          li.textContent = [
+            entry.start_text || entry.start_date || '',
+            entry.end_text || entry.end_date || '',
+            entry.title || '',
+            entry.org || '',
+          ].filter(Boolean).join(' — ');
+          list.appendChild(li);
+        });
+        wrapper.appendChild(list);
+        biographyRoot.appendChild(wrapper);
+      });
+      biographySection.removeAttribute('hidden');
     }
 
     console.log('--- Modal for person:', fullName, '('+personId+') ---');
     console.log('Job title:', jobTitle);
-    console.log('Careers fetched:', careers.length);
-    console.log('Career section visible:', !careerSection.hasAttribute('hidden'));
+    console.log('Biography entries fetched:', biography.length);
+    console.log('Biography section visible:', !biographySection.hasAttribute('hidden'));
     console.log('\n--- Rendered HTML snippet ---\n');
     console.log(dom.serialize());
 
