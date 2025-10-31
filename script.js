@@ -646,6 +646,9 @@ const formatBiographyPeriod = (entry) => {
     if (!startText && endText) {
         return endText;
     }
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+};
 
     // Fallback to formatted dates when available
     const startLabel = hasStartDate ? biographyDateFormatter.format(entry.startDate) : '';
