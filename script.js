@@ -822,6 +822,9 @@ const buildCard = (minister) => {
     card.className = "minister-card";
     card.setAttribute("role", "listitem");
     card.dataset.role = minister.role ?? "";
+    // expose normalized party on the card so CSS can style it (and so tests/selectors can read it)
+    const _partyLabelForCard = mapPartyLabel(minister.party == null ? "" : String(minister.party).trim()) || "";
+    if (_partyLabelForCard) card.dataset.party = _partyLabelForCard;
     if (minister.id != null) card.dataset.personId = String(minister.id);
     const roleKey = minister.role || "";
     if (roleKey === "leader") {
@@ -3196,8 +3199,77 @@ highlightFilter(currentRole);
 updateResultsSummary(0, 0);
 updateActiveFiltersHint(0, 0);
 
-// Safe bootstrap after DOM is ready to avoid null elements
+// C'est ici que le compteur prend la placr j'ai 200 ministres et collab vérifier que le chiffre est toujours bon
 let __appInitialized = false;
+// Lazy-created counters container element
+let __globalCountersEl = null;
+
+function ensureCountersContainer() {
+    if (__globalCountersEl && document.body.contains(__globalCountersEl)) return __globalCountersEl;
+    const meta = document.querySelector('.toolbar-meta');
+    if (!meta) return null;
+    const el = document.createElement('div');
+    el.className = 'toolbar-counters';
+    el.id = 'global-counters';
+    el.setAttribute('role', 'status');
+    meta.appendChild(el);
+    __globalCountersEl = el;
+    return el;
+}
+
+async function fetchCollaboratorCounters() {
+    const client = ensureSupabaseClient();
+    if (!client) return { dircab: 0, chefcab: 0, conseiller: 0, ok: false };
+    try {
+        const { data, error } = await client
+            .from('persons')
+            .select('collab_code, collab_grade')
+            .eq('role', 'collaborator');
+        if (error) throw error;
+        let dircab = 0, chefcab = 0, conseiller = 0;
+        (Array.isArray(data) ? data : []).forEach((row) => {
+            const code = String(row?.collab_code || '').toLowerCase();
+            const grade = String(row?.collab_grade || '').toLowerCase();
+            const isDir = code.includes('direcab') || code.includes('dircab') || grade.includes('directeur de cabinet');
+            const isChef = code.includes('chefcab') || grade.includes('chef de cabinet');
+            const isCons = code.includes('conseiller') || grade.includes('conseiller');
+            if (isDir) dircab++; else if (isChef) chefcab++; else if (isCons) conseiller++;
+        });
+        return { dircab, chefcab, conseiller, ok: true };
+    } catch (_) {
+        return { dircab: 0, chefcab: 0, conseiller: 0, ok: false };
+    }
+}
+
+async function updateGlobalCounters() {
+    const host = ensureCountersContainer();
+    if (!host) return;
+    const ministersCount = Array.isArray(coreMinisters) ? coreMinisters.length : 0;
+    host.innerHTML = '';
+    const makePill = (cls, label, value) => {
+        const pill = document.createElement('span');
+        pill.className = `counter-pill ${cls}`;
+        const dot = document.createElement('span');
+        dot.className = 'counter-pill__dot';
+        const text = document.createElement('span');
+        text.textContent = `${label}: ${value}`;
+        pill.appendChild(dot);
+        pill.appendChild(text);
+        return pill;
+    };
+    host.appendChild(makePill('counter-pill--ministers', 'Ministres', ministersCount));
+    // Try to fetch collaborator counters; if unavailable, skip gracefully
+    try {
+        const { dircab, chefcab, conseiller, ok } = await fetchCollaboratorCounters();
+        if (ok) {
+            host.appendChild(makePill('counter-pill--direcab', 'Directeurs de cabinet', dircab));
+            host.appendChild(makePill('counter-pill--chefcab', 'Chefs de cabinet', chefcab));
+            host.appendChild(makePill('counter-pill--conseiller', 'Conseillers', conseiller));
+        }
+    } catch (_) {
+        // ignore
+    }
+}
 const initApp = () => {
     if (__appInitialized) return;
     __appInitialized = true;
@@ -3212,7 +3284,9 @@ const initApp = () => {
     });
 
     // Lancer le chargement des données
-    loadMinisters().catch((err) => {
+    loadMinisters().then(() => {
+        try { updateGlobalCounters(); } catch (e) { /* ignore */ }
+    }).catch((err) => {
         console.error("[onepage] Echec du chargement initial", err);
         // Debug banner minimal pour diagnostiquer rapidement en front
         try {

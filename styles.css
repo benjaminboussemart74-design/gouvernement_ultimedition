@@ -636,6 +636,9 @@ main {
     gap: clamp(1rem, 3vw, 1.6rem);
     box-shadow: var(--shadow-soft);
     border: 1px solid rgba(62, 62, 61, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 20;
 }
 /* modification nécéssaire problème d'alignement incompréhensible des deux barres*/
 .toolbar-compact {
@@ -650,7 +653,7 @@ main {
 }
 
 .toolbar-compact .toolbar-search-group {
-    width: 40%;
+    width: clamp(260px, 56%, 640px);
 }
 
 .toolbar-advanced {
@@ -747,6 +750,10 @@ main {
         width: 100%;
         justify-content: center;
     }
+
+    .toolbar-compact .toolbar-search-group {
+        width: 100%;
+    }
 }
 
 body.print-all {
@@ -773,26 +780,36 @@ body.print-all .toolbar {
     color: var(--color-sesame);
 }
 
+/* Make the visual label for search discreet on wider screens (kept for a11y on small screens) */
+@media (min-width: 480px) {
+    .search-label { display: none; }
+}
+
 .search-field {
     position: relative;
     display: flex;
     align-items: center;
-    background: var(--color-perle);
+    background: rgba(255, 255, 255, 0.4);
     border-radius: var(--radius-base);
-    border: 1px solid rgba(62, 62, 61, 0.14);
-    padding: 0.25rem 0.85rem 0.25rem 2.4rem;
-    transition: border-color 160ms ease, box-shadow 160ms ease;
+    border: 1px solid rgba(62, 62, 61, 0.10);
+    padding: 0.35rem 1rem 0.35rem 2.2rem;
+    transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
+.search-field:hover,
 .search-field:focus-within {
     border-color: var(--color-curacao);
-    box-shadow: 0 0 0 3px rgba(100, 215, 205, 0.25);
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 0 0 2px rgba(100, 215, 205, 0.18);
 }
 
 .search-icon {
     position: absolute;
-    left: 0.95rem;
+    left: 0.8rem;
+    width: 16px;
+    height: 16px;
     color: var(--color-sesame);
+    opacity: 0.6;
     pointer-events: none;
 }
 
@@ -800,7 +817,7 @@ body.print-all .toolbar {
     border: none;
     background: transparent;
     font-family: inherit;
-    font-size: 1rem;
+    font-size: 1.05rem;
     color: var(--color-poivre);
     width: 100%;
     padding: 0.6rem 0;
@@ -812,6 +829,7 @@ body.print-all .toolbar {
 
 .search input::placeholder {
     color: var(--color-sesame);
+    opacity: 0.75;
 }
 
 .toolbar-meta {
@@ -819,6 +837,41 @@ body.print-all .toolbar {
     gap: 0.3rem;
     align-content: start;
 }
+
+/* Global counters strip */
+.toolbar-counters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.15rem;
+}
+
+.counter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--color-encre);
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(17, 23, 39, 0.08);
+}
+
+.counter-pill__dot {
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.counter-pill--ministers { color: var(--color-curacao); }
+.counter-pill--direcab { color: #2563eb; }
+.counter-pill--chefcab { color: #0ea5e9; }
+.counter-pill--conseiller { color: #14b8a6; }
 
 .results-count {
     display: flex;
@@ -1281,6 +1334,37 @@ body.print-all .toolbar {
 .party-badge[data-party="LFI"]             { background-color: var(--party-lfi); color: #F2F2F2; }
 .party-badge[data-party="NPA"]             { background-color: var(--party-npa); color: #F2F2F2; }
 .party-badge[data-party="LO"]              { background-color: var(--party-lo); color: #F2F2F2; }
+
+/* Apply party accent color to the whole minister card when available
+    The card sets `data-party` (via script.js) and the following rules map
+    that value to the corresponding --party-* variable by setting
+    --accent-color on the card. This variable is used throughout the
+    card styling (badges, backgrounds, borders, shadows). */
+.minister-card[data-party="Renaissance"]     { --accent-color: var(--party-renaissance); }
+.minister-card[data-party="Horizons"]        { --accent-color: var(--party-horizons); }
+.minister-card[data-party="MoDem"]           { --accent-color: var(--party-modem); }
+.minister-card[data-party="PRV"]             { --accent-color: var(--party-prv); }
+.minister-card[data-party="Centristes"]      { --accent-color: var(--party-centristes); }
+.minister-card[data-party="UDI"]             { --accent-color: var(--party-udi); }
+.minister-card[data-party="LR"]              { --accent-color: var(--party-lr); }
+.minister-card[data-party="DLF"]             { --accent-color: var(--party-dlf); }
+.minister-card[data-party="RN"]              { --accent-color: var(--party-rn); }
+.minister-card[data-party="Reconquête"]      { --accent-color: var(--party-reconquete); }
+.minister-card[data-party="Patriotes"]       { --accent-color: var(--party-patriotes); }
+.minister-card[data-party="PS"]              { --accent-color: var(--party-ps); }
+.minister-card[data-party="Place Publique"]  { --accent-color: var(--party-placepub); }
+.minister-card[data-party="Génération.s"]    { --accent-color: var(--party-generations); }
+.minister-card[data-party="EELV"]            { --accent-color: var(--party-eelv); }
+.minister-card[data-party="PCF"]             { --accent-color: var(--party-pcf); }
+.minister-card[data-party="LFI"]             { --accent-color: var(--party-lfi); }
+.minister-card[data-party="NPA"]             { --accent-color: var(--party-npa); }
+.minister-card[data-party="LO"]              { --accent-color: var(--party-lo); }
+.minister-card[data-party="PRG"]             { --accent-color: var(--party-prg); }
+.minister-card[data-party="POI"]             { --accent-color: var(--party-poi); }
+.minister-card[data-party="Volt"]            { --accent-color: var(--party-volt); }
+.minister-card[data-party="Animaliste"]      { --accent-color: var(--party-animaliste); }
+.minister-card[data-party="Regionalistes"]   { --accent-color: var(--party-regionalistes); }
+.minister-card[data-party="Sans étiquette"]  { --accent-color: #9CA3AF; }
 .party-badge[data-party="PRG"]             { background-color: var(--party-prg); }
 .party-badge[data-party="POI"]             { background-color: var(--party-poi); color: #F2F2F2; }
 .party-badge[data-party="Animaliste"]      { background-color: var(--party-animaliste); color: #111727; }
@@ -2794,12 +2878,21 @@ body.print-all .toolbar {
 }
 
 .modal-module--description {
+    --description-accent: var(--color-curacao);
     color: var(--color-poivre);
+    background: color-mix(in srgb, var(--description-accent) 5%, #ffffff);
+    border: 1px solid color-mix(in srgb, var(--description-accent) 16%, rgba(17, 23, 39, 0.08));
+    border-left: 5px solid var(--description-accent);
+    border-radius: 14px;
+    padding: 0.85rem 1rem 1rem;
+    box-shadow: 0 10px 22px rgba(17, 23, 39, 0.06);
 }
 
 .modal-description {
     margin: 0;
-    line-height: 1.55;
+    line-height: 1.6;
+    font-size: 1.15rem;
+    font-weight: 700;
 }
 
 .modal-module--export,
@@ -2809,10 +2902,30 @@ body.print-all .toolbar {
 
 .modal-module--biography {
     --biography-accent: var(--color-curacao);
+    background: color-mix(in srgb, var(--biography-accent) 6%, #ffffff);
+    border: 1px solid color-mix(in srgb, var(--biography-accent) 22%, rgba(17, 23, 39, 0.08));
+    border-left: 6px solid var(--biography-accent);
+    border-radius: 16px;
+    padding: 1rem 1.25rem 1.25rem;
+    box-shadow: 0 10px 26px rgba(17, 23, 39, 0.08);
 }
 
 .modal-module--biography .modal-module-title {
-    margin: 0;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-encre);
+    position: relative;
+}
+
+.modal-module--biography .modal-module-title::after {
+    content: "";
+    display: block;
+    width: 44px;
+    height: 3px;
+    margin-top: 6px;
+    border-radius: 2px;
+    background: var(--biography-accent);
 }
 
 .modal-biography {
