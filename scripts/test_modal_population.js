@@ -9,7 +9,7 @@
 
 const path = require('path');
 const https = require('https');
-const { URL } = require('url');
+const { URL, URLSearchParams } = require('url');
 
 const configPath = path.resolve(process.cwd(), 'config', 'supabase.js');
 let supabaseConfig;
@@ -24,7 +24,7 @@ try {
 const SUPABASE_URL = supabaseConfig && supabaseConfig.url ? supabaseConfig.url : '';
 const SUPABASE_ANON_KEY = supabaseConfig && supabaseConfig.anonKey ? supabaseConfig.anonKey : '';
 const SUPABASE_PERSONS_TABLE = supabaseConfig && supabaseConfig.ministersTable ? supabaseConfig.ministersTable : 'persons';
-const SUPABASE_CAREERS_TABLE = supabaseConfig && supabaseConfig.careersTable ? supabaseConfig.careersTable : 'person_careers';
+const SUPABASE_BIOGRAPHY_VIEW = supabaseConfig && supabaseConfig.biographyView ? supabaseConfig.biographyView : 'biography_entries_view';
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error('Missing Supabase credentials. Provide SUPABASE_URL and SUPABASE_ANON_KEY via environment variables or config/supabase.local.json.');
@@ -67,16 +67,20 @@ async function fetchOnePerson() {
   return data[0] || null;
 }
 
-async function fetchCareersFor(personId) {
-  const endpoint = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/${SUPABASE_CAREERS_TABLE}`;
-  const q = `${endpoint}?person_id=eq.${personId}&order=start_date.desc`;
+async function fetchBiographyFor(personId) {
+  const endpoint = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/${SUPABASE_BIOGRAPHY_VIEW}`;
+  const params = new URLSearchParams({
+    person_id: `eq.${personId}`,
+    order: 'category.asc,sort_weight.asc,start_date_nullsafe.desc,created_at.desc',
+  });
+  const q = `${endpoint}?${params.toString()}`;
   const res = await httpGet(q, {
     apikey: SUPABASE_ANON_KEY,
     Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     Accept: 'application/json',
   });
   if (res.status < 200 || res.status >= 300) {
-    throw new Error(`careers request failed: ${res.status} ${res.statusText} - ${res.body}`);
+    throw new Error(`biography request failed: ${res.status} ${res.statusText} - ${res.body}`);
   }
   return JSON.parse(res.body);
 }
@@ -84,7 +88,7 @@ async function fetchCareersFor(personId) {
 async function run() {
   console.log('Supabase:', SUPABASE_URL);
   console.log('Persons table:', SUPABASE_PERSONS_TABLE);
-  console.log('Careers table:', SUPABASE_CAREERS_TABLE);
+  console.log('Biography view:', SUPABASE_BIOGRAPHY_VIEW);
 
   const person = await fetchOnePerson();
   if (!person) {
@@ -93,11 +97,11 @@ async function run() {
   }
   console.log('Fetched person id:', person.id || '(no id field)');
 
-  let careers = [];
+  let biography = [];
   try {
-    careers = await fetchCareersFor(person.id);
+    biography = await fetchBiographyFor(person.id);
   } catch (err) {
-    console.warn('Could not fetch careers:', err.message);
+    console.warn('Could not fetch biography:', err.message);
   }
 
   // Lazily require jsdom (ensure installed)
@@ -126,9 +130,11 @@ async function run() {
         <div class="modal-module modal-module--description">
           <p class="modal-description" id="modal-description"></p>
         </div>
-        <section class="modal-module modal-module--career" hidden>
-          <h4 class="modal-module-title">Carrière</h4>
-          <ul class="modal-career-list" id="modal-career-list"></ul>
+        <section class="modal-module modal-module--biography" hidden>
+          <div class="modal-biography">
+            <h4 class="modal-module-title">Biographie</h4>
+            <div class="biography-groups" id="modal-biography-root"></div>
+          </div>
         </section>
       </div>
     </div>
@@ -144,8 +150,8 @@ async function run() {
   const titleEl = doc.getElementById('modal-title');
   const portfolioEl = doc.getElementById('modal-portfolio');
   const descEl = doc.getElementById('modal-description');
-  const careerSection = doc.querySelector('.modal-module--career');
-  const careerList = doc.getElementById('modal-career-list');
+  const biographySection = doc.querySelector('.modal-module--biography');
+  const biographyRoot = doc.getElementById('modal-biography-root');
 
   // Common field names in the app: full_name, job_title, portfolio, bio, mission, photo_url
   const fullName = person.full_name || person.name || person.display_name || '';
@@ -161,18 +167,41 @@ async function run() {
   if (descEl) descEl.textContent = bio || '';
   // mission field removed from modal; no assignment
 
-  if (Array.isArray(careers) && careers.length > 0) {
-    careerSection.removeAttribute('hidden');
-    careers.forEach((c) => {
-      const li = doc.createElement('li');
-      // format dates
-      const sd = c.start_date || c.start || '';
-      const ed = c.end_date || c.end || '';
-      const period = sd ? (ed ? `${sd} → ${ed}` : `${sd} → présent`) : '';
-      const title = c.title || c.position || '';
-      const org = c.organisation || c.organization || c.org || '';
-      li.textContent = `${period} — ${title}${org ? ' — ' + org : ''}`;
-      careerList.appendChild(li);
+  if (Array.isArray(biography) && biography.length > 0 && biographyRoot) {
+    biographySection.removeAttribute('hidden');
+    const groups = new Map();
+    biography.forEach((entry) => {
+      const category = entry && entry.category ? entry.category : 'Autres';
+      if (!groups.has(category)) groups.set(category, []);
+      groups.get(category).push(entry);
+    });
+    groups.forEach((items, category) => {
+      const wrapper = doc.createElement('article');
+      wrapper.className = 'biography-group';
+      const heading = doc.createElement('h5');
+      heading.textContent = category;
+      wrapper.appendChild(heading);
+      const list = doc.createElement('ul');
+      list.className = 'biography-list';
+      items.forEach((entry) => {
+        const parts = [];
+        const start = entry.start_text || entry.start_date || '';
+        const end = entry.end_text || entry.end_date || '';
+        if (start && end) {
+          parts.push(`${start} → ${end}`);
+        } else if (start) {
+          parts.push(start);
+        } else if (end) {
+          parts.push(end);
+        }
+        if (entry.title) parts.push(entry.title);
+        if (entry.org) parts.push(entry.org);
+        const item = doc.createElement('li');
+        item.textContent = parts.join(' — ');
+        list.appendChild(item);
+      });
+      wrapper.appendChild(list);
+      biographyRoot.appendChild(wrapper);
     });
   }
 
@@ -181,8 +210,8 @@ async function run() {
   console.log('\n--- Summary ---');
   console.log('Person:', fullName || '(no name)');
   console.log('Job title:', jobTitle || '(no job title)');
-  console.log('Careers rows fetched:', careers.length);
-  console.log('Career section visible:', !careerSection.hasAttribute('hidden'));
+  console.log('Biography rows fetched:', biography.length);
+  console.log('Biography section visible:', !biographySection.hasAttribute('hidden'));
 
   process.exit(0);
 }
