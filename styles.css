@@ -687,6 +687,12 @@ main {
     justify-self: start;
 }
 
+/* Hide the advanced search toggle button when requested */
+#advanced-search-toggle,
+.toolbar-advanced-toggle {
+    display: none !important;
+}
+
 .toolbar-advanced-toggle:hover,
 .toolbar-advanced-toggle:focus-visible {
     background: rgba(255, 255, 255, 1);
@@ -1208,8 +1214,8 @@ body.print-all .toolbar {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    /* Centre horizontalement les éléments (photo + bouton) pour que
-       le bouton "Voir la fiche" soit aligné sous la photo. */
+    /* Fonction qui permet Centre horizontalement les éléments (photo + bouton) pour que
+       le bouton "Voir la fiche" soit aligné sous la photo. Comme je suis un gros neuneu c'était flex-end */
     align-items: center;
     justify-content: flex-start;
     min-width: 0;
