@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Hiérarchie des collaborateurs</title>
-  <!-- Supabase runtime configuration (public anon key only). Inject at deploy time; don't commit real values. -->
-  <meta name="supabase-url" content="" />
-  <meta name="supabase-anon-key" content="" />
+  <!-- Supabase runtime configuration (public anon key only) -->
+  <meta name="supabase-url" content="https://yyquczbuhxbfnefwgxxc.supabase.co" />
+  <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cXVjemJ1aHhiZm5lZndneHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3ODI5NjcsImV4cCI6MjA3NTM1ODk2N30.0IDUEP96IQQ4Ylz-YoTY1UzoySLT9Wq2YLC2zAb7jds" />
   <style>
     :root{
       --bg:#f8fafc;
@@ -143,8 +143,8 @@
   </details>
 
   <!-- Charger la config locale Supabase (optionnelle) et le client JS Supabase -->
-  <!-- Optional local override (gitignored) -->
-  <script src="config/supabase.local.js"></script>
+  <!-- Optional local override (gitignored). 404 is fine in prod. -->
+  <script src="config/supabase.local.js" onerror="void 0"></script>
   <script src="config/supabase.js"></script>
   <script src="config/supabase-lite-client.js"></script>
 
