@@ -1,25 +1,41 @@
 :root {
-    --color-panthere: #002E5B;
-    --color-perle: #F2F2F2;
-    --color-guimauve: #ECEAED;
-    --color-sesame: #868895;
-    --color-poivre: #3E3E3D;
-    --color-encre: #111727;
-    --color-aubergine: #27083B;
-    --color-prune: #4B2579;
-    --color-framboise: #D1007B;
-    --color-lavande: #6987FF;
-    --color-curacao: #64D7CD;
-    --color-matcha: #4CCF78;
-    --color-citron: #FCEE88;
-    --color-peche: #F0A08C;
+    --marianne-blue: #000091;
+    --marianne-blue-light: #3A49A4;
+    --marianne-blue-soft: #D6DBF5;
+    --marianne-red: #E1000F;
+    --marianne-white: #ffffff;
+    --marianne-grey-50: #F5F6FA;
+    --marianne-grey-100: #ECEEF5;
+    --marianne-grey-200: #E1E4EE;
+    --marianne-grey-300: #CCD0E0;
+    --marianne-grey-500: #6B6F88;
+    --marianne-grey-700: #2E3255;
 
-    --gradient-header: linear-gradient(135deg, var(--color-aubergine), var(--color-prune));
-    --accent-primary: var(--color-curacao);
-    --accent-secondary: var(--color-lavande);
+    --color-panthere: var(--marianne-blue);
+    --color-perle: var(--marianne-grey-50);
+    --color-guimauve: var(--marianne-grey-100);
+    --color-sesame: var(--marianne-grey-500);
+    --color-poivre: var(--marianne-grey-700);
+    --color-encre: #0C1333;
+    --color-aubergine: #1A1F4B;
+    --color-prune: #242D63;
+    --color-framboise: #A4003A;
+    --color-lavande: #3A49A4;
+    --color-curacao: #1F7ABF;
+    --color-matcha: #2A9B74;
+    --color-citron: #F6E659;
+    --color-peche: #E6A28B;
+
+    --gradient-header: linear-gradient(135deg, var(--marianne-blue), #1A2B78);
+    --accent-primary: var(--marianne-blue);
+    --accent-secondary: var(--marianne-red);
     --radius-base: 10px;
-    --shadow-soft: 0 20px 45px rgba(39, 8, 59, 0.12);
-    --shadow-hover: 0 28px 60px rgba(75, 37, 121, 0.18);
+    --shadow-soft: 0 16px 32px rgba(9, 16, 61, 0.12);
+    --shadow-hover: 0 22px 45px rgba(9, 16, 61, 0.16);
+    --cabinet-cloud-one: none;
+    --cabinet-cloud-two: none;
+    --cabinet-cloud-three: none;
+    --cabinet-cloud-four: none;
 
     /* --- Couleurs des partis (palette Rumeur / mapping local) --- */
     /* Centre / majorités */
@@ -108,11 +124,11 @@
 body {
     margin: 0;
     min-height: 100vh;
-    font-family: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-family: "Marianne", "Marianne-Regular", "Roboto", "Segoe UI", sans-serif;
     font-weight: 300;
     background-color: var(--color-perle);
     color: var(--color-poivre);
-    line-height: 1.15;
+    line-height: 1.2;
     -webkit-font-smoothing: antialiased;
 }
 
@@ -1533,14 +1549,49 @@ body.print-all .toolbar {
 
 .modal-collaborators {
     margin-top: 1.75rem;
-    padding: 1.75rem;
-    border-radius: 18px;
-    border: 1px solid rgba(17, 23, 39, 0.08);
-    background: rgba(242, 244, 248, 0.85);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 24px 48px rgba(17, 23, 39, 0.15);
+    padding: clamp(1.5rem, 2vw, 2.25rem);
+    border-radius: 22px;
+    border: 1px solid rgba(17, 23, 39, 0.06);
+    background:
+        var(--cabinet-cloud-one),
+        var(--cabinet-cloud-two),
+        var(--cabinet-cloud-three),
+        var(--cabinet-cloud-four),
+        linear-gradient(180deg, rgba(250, 252, 255, 0.96), rgba(236, 234, 237, 0.94));
+    backdrop-filter: blur(14px);
+    box-shadow: 0 30px 60px rgba(17, 23, 39, 0.18);
     display: grid;
-    gap: 1.5rem;
+    gap: clamp(1.35rem, 2vw, 1.85rem);
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: 100%;
+    justify-items: center;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.modal-collaborators::before,
+.modal-collaborators::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.modal-collaborators::before {
+    background:
+        radial-gradient(circle at 20% 10%, rgba(100, 215, 205, 0.16), transparent 65%),
+        radial-gradient(circle at 82% 12%, rgba(209, 0, 123, 0.18), transparent 70%);
+    filter: blur(0.5px);
+}
+
+.modal-collaborators::after {
+    background:
+        radial-gradient(ellipse at bottom, rgba(105, 135, 255, 0.18), transparent 70%),
+        radial-gradient(circle at 8% 88%, rgba(240, 160, 140, 0.14), transparent 70%);
+    opacity: 0.85;
 }
 
 .modal-collaborators.is-hidden {
@@ -1619,82 +1670,84 @@ body.print-all .toolbar {
     background: rgba(255, 255, 255, 0.65);
 }
 
- .cabinet-node-avatar img {
-     width: 100%;
-     height: 100%;
-     object-fit: cover;
-     margin: 0 auto 0.25rem;
-     border: 2px solid rgba(255, 255, 255, 0.9);
-     box-shadow: 0 12px 24px rgba(17, 23, 39, 0.28);
- }
 
-/* New cabinet tree styles (enhanced modal section) */
+/* Cabinet tree styles – official, sober presentation */
 .modal-collaborators .cabinet-panel {
     display: grid;
-    gap: 1.25rem;
-    padding: 1.25rem 1.5rem;
+    gap: clamp(1.2rem, 2vw, 1.8rem);
+    padding: clamp(1.4rem, 2.4vw, 2.15rem) clamp(1.5rem, 3vw, 2.5rem);
     border-radius: 18px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,246,248,0.98));
-    border: 1px solid rgba(17, 23, 39, 0.08);
-    box-shadow: 0 22px 48px rgba(17, 23, 39, 0.10);
+    background: var(--marianne-white);
+    border: 1px solid var(--marianne-grey-300);
+    box-shadow: 0 16px 36px rgba(12, 19, 51, 0.12);
+    width: min(100%, 1120px);
+    margin-inline: auto;
+    position: relative;
 }
 
-.cabinet-panel-header {
-    position: relative;
-    display: grid;
-    gap: 0.35rem;
-    padding-left: 0.9rem;
-    align-items: baseline;
-}
-.cabinet-panel-header::before {
+.modal-collaborators .cabinet-panel::before {
     content: "";
     position: absolute;
+    top: 0;
     left: 0;
-    top: 0.2rem;
-    bottom: 0.2rem;
-    width: 6px;
-    border-radius: 6px;
+    right: 0;
+    height: 6px;
+    border-radius: 18px 18px 0 0;
     background: linear-gradient(
-        180deg,
-        var(--minister-accent, var(--color-lavande)),
-        color-mix(in srgb, var(--minister-accent, var(--color-lavande)) 64%, #ffffff 36%)
+        90deg,
+        var(--marianne-blue) 0%,
+        var(--marianne-blue) 33.33%,
+        var(--marianne-white) 33.33%,
+        var(--marianne-white) 66.66%,
+        var(--marianne-red) 66.66%,
+        var(--marianne-red) 100%
     );
 }
 
+.cabinet-panel-header {
+    display: grid;
+    gap: 0.35rem;
+    padding-left: 1.6rem;
+    border-left: 4px solid var(--marianne-blue);
+}
+
 .cabinet-panel-title {
-    font-size: 1.5rem;
-    font-weight: 800;
-    letter-spacing: 0.01em;
-    color: var(--color-encre);
+    font-size: clamp(1.35rem, 1.9vw, 1.65rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--marianne-blue);
     margin: 0;
+    font-family: "Marianne", "Marianne-Bold", "Roboto", sans-serif;
 }
 
 .cabinet-panel-context {
     margin: 0;
-    color: color-mix(in srgb, var(--minister-accent, var(--color-sesame)) 22%, var(--color-sesame) 78%);
-    font-size: 1rem;
+    color: var(--marianne-grey-500);
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
 }
 
-/* Hero (minister header inside cabinet panel) */
 .cabinet-tree-hero {
     display: grid;
-    grid-template-columns: 64px 1fr;
+    grid-template-columns: 72px 1fr;
     align-items: center;
-    gap: 0.9rem;
-    padding: 0.9rem 1rem;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(17, 23, 39, 0.08);
+    background: var(--marianne-grey-50);
+    border: 1px solid var(--marianne-grey-200);
+    border-left: 5px solid var(--marianne-blue);
 }
 
 .cabinet-tree-hero-avatar {
-    width: 64px;
-    height: 64px;
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
     object-fit: cover;
-    box-shadow: 0 12px 26px rgba(17, 23, 39, 0.18);
-    border: 3px solid rgba(255, 255, 255, 0.95);
-    background: rgba(255, 255, 255, 0.65);
+    border: 3px solid var(--marianne-white);
+    box-shadow: 0 10px 24px rgba(12, 19, 51, 0.18);
+    background: var(--marianne-white);
 }
 
 .cabinet-tree-hero-info {
@@ -1703,102 +1756,162 @@ body.print-all .toolbar {
 }
 
 .cabinet-tree-hero-name {
-    font-size: 1.05rem;
+    font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+    font-weight: 600;
+    margin: 0;
+    color: var(--color-encre);
 }
 
 .cabinet-tree-hero-role {
     margin: 0;
-    color: var(--color-sesame);
+    color: var(--marianne-grey-500);
+    font-size: 0.95rem;
 }
 
 .cabinet-tree-hero-count {
-    display: inline-block;
-    margin-top: 0.15rem;
-    font-size: 0.8rem;
-    color: var(--color-panthere);
-    background: rgba(100, 215, 205, 0.18);
-    border: 1px solid rgba(17, 23, 39, 0.1);
-    border-radius: 999px;
-    padding: 0.15rem 0.5rem;
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--marianne-blue);
 }
 
-/* Levels */
 .cabinet-tree {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.25rem;
-    width: 100%;
+    display: grid;
+    gap: clamp(1.1rem, 1.8vw, 1.6rem);
 }
 
 .cabinet-tree-level {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.9rem 1rem;
-    width: 100%;
+    display: grid;
+    gap: clamp(1rem, 1.6vw, 1.4rem);
+    justify-items: center;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    padding: clamp(0.9rem, 1.3vw, 1.15rem);
+    border-radius: 14px;
+    background: var(--marianne-grey-50);
+    border: 1px solid var(--marianne-grey-200);
+}
+
+.cabinet-tree-level[data-depth="0"] {
+    background: var(--marianne-white);
+    border-color: var(--marianne-blue-soft);
 }
 
 .cabinet-tree-connector {
-    width: 100%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(17, 23, 39, 0.12), transparent);
+    position: relative;
+    height: 32px;
 }
 
-/* Node cards */
+.cabinet-tree-connector::before {
+    content: "";
+    position: absolute;
+    left: 15%;
+    right: 15%;
+    top: 50%;
+    border-top: 1px solid var(--marianne-grey-300);
+}
+
 .cabinet-node {
-    background: rgba(255, 255, 255, 0.94);
-    border-radius: 14px;
-    border: 1px solid rgba(148, 163, 184, 0.35);
-    padding: 0.9rem 1rem;
-    min-width: 180px;
-    max-width: 240px;
-    text-align: center;
-    box-shadow: 0 18px 34px rgba(17, 23, 39, 0.16);
+    --cabinet-node-accent: var(--marianne-blue);
+    --cabinet-node-text: var(--color-encre);
+    --cabinet-node-muted: var(--marianne-grey-500);
+    background: var(--marianne-white);
+    padding: 1rem 1.1rem;
+    border-radius: 12px;
+    border: 1px solid var(--marianne-grey-300);
+    border-top: 5px solid var(--cabinet-node-accent);
+    box-shadow: 0 12px 26px rgba(12, 19, 51, 0.12);
+    width: min(100%, 260px);
     display: grid;
-    gap: 0.45rem;
-    position: relative;
-    color: var(--color-encre);
+    gap: 0.7rem;
+    justify-items: flex-start;
+}
+
+.cabinet-node::before,
+.cabinet-node::after {
+    content: none;
 }
 
 .cabinet-node-avatar {
-    width: 68px;
-    height: 68px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     overflow: hidden;
-    margin: 0 auto;
+    border: 2px solid var(--marianne-grey-200);
+    background: var(--marianne-grey-50);
+}
+
+.cabinet-node-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .cabinet-node-info {
     display: grid;
-    gap: 0.2rem;
+    gap: 0.3rem;
 }
 
 .cabinet-node-grade {
     display: inline-block;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    color: var(--color-encre);
-    background: rgba(100, 215, 205, 0.16);
-    border: 1px solid rgba(17, 23, 39, 0.12);
+    color: #ffffff;
+    background: var(--cabinet-node-accent);
     border-radius: 999px;
-    padding: 0.15rem 0.5rem;
+    padding: 0.2rem 0.55rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .cabinet-node-name {
-    font-weight: 700;
+    font-weight: 600;
+    color: var(--cabinet-node-text);
+    font-size: clamp(1rem, 1.35vw, 1.1rem);
+    margin: 0;
 }
 
 .cabinet-node-title,
 .cabinet-node-role {
     margin: 0;
-    color: var(--color-sesame);
+    color: var(--cabinet-node-muted);
     font-size: 0.9rem;
 }
 
 .cabinet-node-email {
-    font-size: 0.85rem;
-    color: var(--color-panthere);
+    font-size: 0.86rem;
+    color: var(--marianne-blue);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+.cabinet-node[data-grade="direcab"] {
+    --cabinet-node-accent: var(--marianne-blue);
+}
+
+.cabinet-node[data-grade="direcab-adj"] {
+    --cabinet-node-accent: #1B2B7D;
+}
+
+.cabinet-node[data-grade="chefcab"] {
+    --cabinet-node-accent: #243A8F;
+}
+
+.cabinet-node[data-grade="chefcabadj"] {
+    --cabinet-node-accent: #3F51A2;
+}
+
+.cabinet-node[data-grade="chefpole"] {
+    --cabinet-node-accent: #5C6BC0;
+}
+
+.cabinet-node[data-grade="conseiller"] {
+    --cabinet-node-accent: #8A93B8;
+}
+
+.cabinet-tree-level[data-depth="0"] .cabinet-node {
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
 }
 
 @media (max-width: 600px) {
@@ -1865,33 +1978,60 @@ body.print-all .toolbar {
     background: rgba(255, 255, 255, 0.65);
 }
 
+/* Executive cabinet styles */
 .executive-cabinet {
     display: grid;
-    gap: 1.5rem;
-    margin-bottom: 1.6rem;
-    padding: 1.5rem 1.65rem;
+    gap: clamp(1.2rem, 2vw, 1.8rem);
+    margin-bottom: 1.8rem;
+    padding: clamp(1.5rem, 2.6vw, 2.4rem);
     border-radius: 18px;
-    /* softer, neutral panel that matches site cards */
-    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(242,242,244,0.98));
-    border: 1px solid rgba(17, 23, 39, 0.06);
-    box-shadow: var(--shadow-soft);
+    background: var(--marianne-white);
+    border: 1px solid var(--marianne-grey-300);
+    box-shadow: 0 18px 42px rgba(12, 19, 51, 0.12);
+    width: min(100%, 1180px);
+    margin-inline: auto;
+    position: relative;
+}
+
+.executive-cabinet::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    border-radius: 18px 18px 0 0;
+    background: linear-gradient(
+        90deg,
+        var(--marianne-blue) 0%,
+        var(--marianne-blue) 33.33%,
+        var(--marianne-white) 33.33%,
+        var(--marianne-white) 66.66%,
+        var(--marianne-red) 66.66%,
+        var(--marianne-red) 100%
+    );
 }
 
 .executive-cabinet__hero {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
+    gap: 1.35rem;
     flex-wrap: wrap;
+    padding: 1.1rem 1.4rem;
+    border-radius: 12px;
+    border: 1px solid var(--marianne-grey-200);
+    border-left: 5px solid var(--marianne-blue);
+    background: var(--marianne-grey-50);
 }
 
 .executive-cabinet__hero-portrait {
-    width: 88px;
-    height: 88px;
-    border-radius: 14px;
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
     object-fit: cover;
-    box-shadow: 0 12px 30px rgba(17, 23, 39, 0.10);
-    border: 2px solid rgba(255, 255, 255, 0.95);
-    background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(242,242,244,0.9));
+    border: 3px solid var(--marianne-white);
+    box-shadow: 0 12px 28px rgba(12, 19, 51, 0.18);
+    background: var(--marianne-white);
 }
 
 .executive-cabinet__hero-meta {
@@ -1903,109 +2043,104 @@ body.print-all .toolbar {
 
 .executive-cabinet__title {
     margin: 0;
-    font-size: 1.4rem;
+    font-size: clamp(1.35rem, 2vw, 1.65rem);
     font-weight: 700;
-    color: var(--color-encre);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--marianne-blue);
+    font-family: "Marianne", "Marianne-Bold", "Roboto", sans-serif;
 }
 
 .executive-cabinet__subtitle {
     margin: 0;
     font-size: 0.95rem;
-    color: var(--color-sesame);
+    color: var(--marianne-grey-500);
 }
 
 .executive-cabinet__count {
     margin-left: auto;
-    padding: 0.35rem 0.95rem;
+    padding: 0.45rem 1.1rem;
     border-radius: 999px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--minister-accent, var(--color-lavande));
-    background: color-mix(in srgb, var(--minister-accent, var(--color-lavande)) 16%, rgba(255, 255, 255, 0.92));
-    border: 1px solid color-mix(in srgb, var(--minister-accent, var(--color-lavande)) 38%, rgba(17, 23, 39, 0.08));
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--marianne-white);
+    background: var(--marianne-blue);
+    border: none;
     align-self: flex-start;
+    box-shadow: 0 10px 22px rgba(12, 19, 51, 0.16);
 }
 
 .executive-cabinet__band,
 .executive-cabinet__others {
     display: grid;
     gap: 1rem;
-    padding: 1.1rem 1.25rem 1.25rem;
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.94);
-    border: 1px solid rgba(17, 23, 39, 0.08);
-    box-shadow: 0 24px 44px rgba(17, 23, 39, 0.1);
+    padding: 1.2rem 1.5rem;
+    border-radius: 12px;
+    background: var(--marianne-white);
+    border: 1px solid var(--marianne-grey-200);
+    border-left: 4px solid var(--marianne-blue);
+    box-shadow: 0 12px 28px rgba(12, 19, 51, 0.1);
 }
 
 .executive-cabinet__band-title,
 .executive-cabinet__poles-title,
 .executive-cabinet__others-title {
     margin: 0;
-    font-size: 1.15rem;
-    font-weight: 700;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
     color: var(--color-encre);
+    font-family: "Marianne", "Marianne-Bold", "Roboto", sans-serif;
 }
 
 .executive-cabinet__poles {
     display: grid;
-    gap: 1.25rem;
+    gap: clamp(1rem, 1.8vw, 1.45rem);
 }
 
 .executive-pole {
-    --executive-accent-color: var(--color-lavande);
-    --executive-accent-secondary: #4c64ff;
-    --executive-accent-soft: rgba(105, 135, 255, 0.06);
-    --executive-accent-strong: rgba(105, 135, 255, 0.12);
-    --executive-accent-contrast: #ffffff;
-    border-radius: 14px;
-    border: 1px solid rgba(17,23,39,0.06);
-    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,250,252,0.98));
-    box-shadow: 0 18px 36px rgba(17, 23, 39, 0.06);
-    padding: 1rem 1.1rem 1.1rem;
+    --executive-accent-color: var(--marianne-blue);
+    --executive-accent-soft: rgba(0, 0, 145, 0.12);
+    border-radius: 12px;
+    border: 1px solid var(--marianne-grey-200);
+    border-left: 4px solid var(--executive-accent-color);
+    background: var(--marianne-grey-50);
+    box-shadow: 0 12px 26px rgba(12, 19, 51, 0.1);
+    padding: 1.1rem 1.4rem;
     display: grid;
-    gap: 0.9rem;
-    position: relative;
-}
-
-/* subtle accent stripe on the left to tie with pole color */
-.executive-pole::before {
-    content: "";
-    position: absolute;
-    left: 0.6rem;
-    top: 0.6rem;
-    bottom: 0.6rem;
-    width: 6px;
-    border-radius: 6px;
-    background: linear-gradient(180deg, var(--executive-accent-color), var(--executive-accent-secondary));
-    opacity: 0.95;
+    gap: 1rem;
 }
 
 .executive-pole__title {
-    margin: 0 0 0 1.2rem; /* offset to account for accent stripe */
-    font-size: 1.15rem;
-    letter-spacing: 0.02em;
-    font-family: 'HavelockInlineXO', 'Space Grotesk', system-ui, sans-serif;
+    margin: 0;
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: var(--executive-accent-color);
-    text-transform: none;
+    font-family: "Marianne", "Marianne-Bold", "Roboto", sans-serif;
 }
 
 .executive-pole__layout {
     display: grid;
-    gap: 1.1rem;
+    gap: clamp(1rem, 2vw, 1.35rem);
     grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
     align-items: start;
 }
 
 .executive-pole__members {
     display: grid;
-    gap: 0.9rem;
+    gap: clamp(0.85rem, 1.6vw, 1.2rem);
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
 .executive-card-grid {
     display: grid;
-    gap: 1.1rem;
+    gap: 1rem;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    align-items: stretch;
 }
 
 .executive-card-grid--compact {
@@ -2014,39 +2149,19 @@ body.print-all .toolbar {
 
 .executive-card {
     --executive-avatar-size: 64px;
+    --executive-card-accent: var(--marianne-blue);
+    --executive-card-text: var(--color-encre);
+    --executive-card-muted: var(--marianne-grey-500);
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 0.9rem 1.1rem;
-    border-radius: 14px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,246,248,0.98));
-    border: 1px solid rgba(17,23,39,0.06);
-    box-shadow: 0 16px 36px rgba(17, 23, 39, 0.08);
-    transition: transform 180ms ease, box-shadow 180ms ease;
-}
-
-.executive-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 32px 60px rgba(15, 23, 42, 0.16);
-}
-
-.executive-card--head {
-    --executive-avatar-size: 76px;
-    background: linear-gradient(160deg,
-        color-mix(in srgb, var(--minister-accent, #2563eb) 88%, #ffffff 12%),
-        color-mix(in srgb, var(--minister-accent, #2563eb) 72%, #ffffff 28%)
-    );
-    border-color: color-mix(in srgb, var(--minister-accent, #2563eb) 42%, #ffffff 58%);
-    color: #ffffff;
-}
-
-.executive-pole .executive-card--head {
-    background: linear-gradient(
-        155deg,
-        var(--executive-accent-color),
-        var(--executive-accent-secondary)
-    );
-    border-color: rgba(255, 255, 255, 0.38);
+    padding: 1rem 1.2rem;
+    border-radius: 12px;
+    background: var(--marianne-white);
+    border: 1px solid var(--marianne-grey-300);
+    border-top: 4px solid var(--executive-card-accent);
+    box-shadow: 0 12px 26px rgba(12, 19, 51, 0.12);
+    position: relative;
 }
 
 .executive-card--compact {
@@ -2054,14 +2169,23 @@ body.print-all .toolbar {
     padding: 0.85rem 1rem;
 }
 
+.executive-card--head {
+    --executive-card-text: var(--marianne-white);
+    --executive-card-muted: rgba(255, 255, 255, 0.85);
+    background: var(--executive-card-accent);
+    color: var(--marianne-white);
+    border-color: var(--executive-card-accent);
+    box-shadow: 0 16px 34px rgba(12, 19, 51, 0.18);
+}
+
 .executive-card__avatar {
     width: var(--executive-avatar-size);
     height: var(--executive-avatar-size);
-    border-radius: 18px;
+    border-radius: 50%;
     overflow: hidden;
     flex: 0 0 var(--executive-avatar-size);
-    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.16);
-    background: rgba(255, 255, 255, 0.85);
+    border: 2px solid var(--marianne-grey-200);
+    background: var(--marianne-grey-50);
 }
 
 .executive-card__avatar img {
@@ -2075,71 +2199,97 @@ body.print-all .toolbar {
     gap: 0.2rem;
 }
 
-/* Badge row at top of each collaborator card */
 .executive-card__badges {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4rem;
-    margin: 0 0 0.2rem 0;
+    gap: 0.35rem;
+    margin: 0 0 0.25rem 0;
 }
+
 .executive-card__badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.25rem 0.6rem;
+    padding: 0.22rem 0.6rem;
     border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    color: var(--minister-accent, var(--color-curacao));
-    background: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 12%, rgba(255, 255, 255, 0.95));
-    border: 1px solid color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 35%, rgba(17, 23, 39, 0.08));
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--marianne-white);
+    background: var(--executive-card-accent);
 }
+
 .executive-card--head .executive-card__badge {
-    color: #0f172a;
-    background: rgba(255, 255, 255, 0.92);
-    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--marianne-white);
+}
+
+.executive-card[data-grade="direcab"] {
+    --executive-card-accent: var(--marianne-blue);
+}
+
+.executive-card[data-grade="direcab-adj"] {
+    --executive-card-accent: #1B2B7D;
+}
+
+.executive-card[data-grade="chefcab"] {
+    --executive-card-accent: #243A8F;
+}
+
+.executive-card[data-grade="chefcabadj"] {
+    --executive-card-accent: #3F51A2;
+}
+
+.executive-card[data-grade="chefpole"] {
+    --executive-card-accent: #5C6BC0;
+}
+
+.executive-card[data-grade="conseiller"] {
+    --executive-card-accent: #8A93B8;
+    --executive-card-muted: #6F7592;
 }
 
 .executive-card__name {
     margin: 0;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--color-encre);
+    font-size: 1.08rem;
+    font-weight: 600;
+    color: var(--executive-card-text);
 }
 
 .executive-card--head .executive-card__name {
-    color: #ffffff;
+    color: var(--marianne-white);
 }
 
 .executive-card__role {
     margin: 0;
     font-size: 0.95rem;
-    color: var(--color-poivre);
+    color: var(--executive-card-muted);
 }
 
 .executive-card__detail {
     margin: 0;
     font-size: 0.85rem;
-    color: var(--color-sesame);
+    color: var(--executive-card-muted);
 }
 
 .executive-card__context {
     margin: 0;
     font-size: 0.8rem;
-    color: var(--color-sesame);
+    color: var(--executive-card-muted);
     font-style: italic;
 }
 
 .executive-card__contact {
-    font-size: 0.86rem;
-    color: var(--minister-accent, var(--color-lavande));
+    font-size: 0.88rem;
+    color: var(--marianne-blue);
     word-break: break-word;
+    font-weight: 600;
+    letter-spacing: 0.015em;
 }
 
 .executive-card__contact:hover,
 .executive-card__contact:focus {
-    color: var(--color-lavande);
+    color: #1B2B7D;
     text-decoration: underline;
 }
 
@@ -2147,63 +2297,45 @@ body.print-all .toolbar {
 .executive-card--head .executive-card__detail,
 .executive-card--head .executive-card__context,
 .executive-card--head .executive-card__contact {
-    color: rgba(255, 255, 255, 0.82);
+    color: rgba(255, 255, 255, 0.88);
 }
 
 .executive-placeholder {
     margin: 0;
     padding: 0.85rem 1rem;
-    border-radius: 14px;
-    background: rgba(148, 163, 184, 0.14);
-    color: var(--color-sesame);
+    border-radius: 10px;
+    background: var(--marianne-grey-100);
+    color: var(--marianne-grey-500);
     font-size: 0.9rem;
 }
 
 .executive-pole--accent-blue {
-    --executive-accent-color: #2563eb;
-    --executive-accent-secondary: #1d4ed8;
-    --executive-accent-soft: rgba(37, 99, 235, 0.12);
-    --executive-accent-strong: rgba(37, 99, 235, 0.28);
+    --executive-accent-color: var(--marianne-blue);
 }
 
 .executive-pole--accent-rose {
-    --executive-accent-color: #ef4444;
-    --executive-accent-secondary: #dc2626;
-    --executive-accent-soft: rgba(239, 68, 68, 0.12);
-    --executive-accent-strong: rgba(239, 68, 68, 0.28);
+    --executive-accent-color: #C53C4C;
 }
 
 .executive-pole--accent-emerald {
-    --executive-accent-color: #10b981;
-    --executive-accent-secondary: #059669;
-    --executive-accent-soft: rgba(16, 185, 129, 0.12);
-    --executive-accent-strong: rgba(16, 185, 129, 0.26);
+    --executive-accent-color: #1E7F62;
 }
 
 .executive-pole--accent-amber {
-    --executive-accent-color: #f59e0b;
-    --executive-accent-secondary: #d97706;
-    --executive-accent-soft: rgba(245, 158, 11, 0.15);
-    --executive-accent-strong: rgba(245, 158, 11, 0.28);
+    --executive-accent-color: #B95C04;
 }
 
 .executive-pole--accent-violet {
-    --executive-accent-color: #8b5cf6;
-    --executive-accent-secondary: #7c3aed;
-    --executive-accent-soft: rgba(139, 92, 246, 0.16);
-    --executive-accent-strong: rgba(139, 92, 246, 0.3);
+    --executive-accent-color: #4C4F9D;
 }
 
 .executive-pole--accent-cyan {
-    --executive-accent-color: #06b6d4;
-    --executive-accent-secondary: #0891b2;
-    --executive-accent-soft: rgba(6, 182, 212, 0.16);
-    --executive-accent-strong: rgba(6, 182, 212, 0.28);
+    --executive-accent-color: #1D7DA6;
 }
 
 .executive-cabinet .executive-card--head .executive-card__contact:hover,
 .executive-cabinet .executive-card--head .executive-card__contact:focus {
-    color: #ffffff;
+    color: var(--marianne-white);
 }
 
 @media (max-width: 920px) {

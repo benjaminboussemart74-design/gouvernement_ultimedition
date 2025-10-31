@@ -1464,22 +1464,47 @@ const CABINET_GRADE_ALIASES = [
     ["dircab", "direcab"],
     ["directeurdecabinet", "direcab"],
     ["directricedecabinet", "direcab"],
+    ["directeurducabinet", "direcab"],
+    ["directriceducabinet", "direcab"],
     ["chefcab", "chefcab"],
     ["chefdecabinet", "chefcab"],
+    ["cheffedecabinet", "chefcab"],
+    ["chefducabinet", "chefcab"],
+    ["cheffeducabinet", "chefcab"],
     ["direcabadj", "direcab-adj"],
     ["directeuradjointdecabinet", "direcab-adj"],
+    ["directeurdecabinetadjoint", "direcab-adj"],
+    ["directeurducabinetadjoint", "direcab-adj"],
+    ["directeurdecabinetadjointe", "direcab-adj"],
+    ["directeurducabinetadjointe", "direcab-adj"],
     ["diradj", "direcab-adj"],
     ["chefcabadj", "chefcabadj"],
     ["adjointaucheffedecabinet", "chefcabadj"],
     ["chefadj", "chefcabadj"],
+    ["chefdecabinetadjoint", "chefcabadj"],
+    ["chefducabinetadjoint", "chefcabadj"],
+    ["cheffedecabinetadjoint", "chefcabadj"],
+    ["cheffeducabinetadjoint", "chefcabadj"],
+    ["directricedecabinetadjointe", "direcab-adj"],
+    ["directriceducabinetadjointe", "direcab-adj"],
+    ["directricedecabinetadjoint", "direcab-adj"],
+    ["directriceducabinetadjoint", "direcab-adj"],
+    ["cheffedecabinetadjointe", "chefcabadj"],
+    ["cheffeducabinetadjointe", "chefcabadj"],
     ["chefpole", "chefpole"],
     ["chefdepole", "chefpole"],
+    ["chefpoleadjoint", "chefpole"],
+    ["chefpoleadjointe", "chefpole"],
     ["conseiller", "conseiller"],
     ["conseillere", "conseiller"],
     ["conseillerspecial", "conseiller"],
     ["conseillerspeciale", "conseiller"],
     ["conseillertechnique", "conseiller"],
     ["conseilleretechnique", "conseiller"],
+    ["conseillerprincipal", "conseiller"],
+    ["conseillereprincipale", "conseiller"],
+    ["conseillertechniqueprincipal", "conseiller"],
+    ["conseilleretechniqueprincipale", "conseiller"],
 ];
 
 const FALLBACK_COLLAB_GRADES = [
@@ -1948,6 +1973,12 @@ const createExecutiveCard = (member, options = {}) => {
     if (member?.id != null) {
         card.dataset.personId = String(member.id);
     }
+    if (member?.gradeKey) {
+        card.dataset.grade = member.gradeKey;
+    }
+    if (Number.isFinite(member?.gradeRank)) {
+        card.dataset.gradeRank = String(member.gradeRank);
+    }
 
     const avatar = document.createElement("div");
     avatar.className = "executive-card__avatar";
@@ -1967,32 +1998,44 @@ const createExecutiveCard = (member, options = {}) => {
     const name = document.createElement("h4");
     name.className = "executive-card__name";
     name.textContent = member?.name || "Collaborateur·rice";
-    // Badge row (grade/role)
-    const roleLine = member?.cabinetRole || member?.gradeLabel || null;
-    if (roleLine) {
-        const badges = document.createElement('div');
-        badges.className = 'executive-card__badges';
-        const badge = document.createElement('span');
-        badge.className = 'executive-card__badge';
-        badge.textContent = String(roleLine);
+
+    const gradeLabel = member?.gradeLabel?.trim() || null;
+    const cabinetRole = member?.cabinetRole?.trim() || null;
+    const jobTitle = member?.jobTitle?.trim() || null;
+    const gradeValue = gradeLabel ? normalise(gradeLabel) : null;
+    const roleValue = cabinetRole ? normalise(cabinetRole) : null;
+    const jobValue = jobTitle ? normalise(jobTitle) : null;
+    const primaryRole = cabinetRole || jobTitle || null;
+    const primaryRoleValue = primaryRole ? normalise(primaryRole) : null;
+
+    if (gradeLabel) {
+        const badges = document.createElement("div");
+        badges.className = "executive-card__badges";
+        const badge = document.createElement("span");
+        badge.className = "executive-card__badge";
+        badge.textContent = gradeLabel;
         badges.appendChild(badge);
         meta.appendChild(badges);
     }
 
     meta.appendChild(name);
 
-    if (roleLine) {
+    if (primaryRole && (!gradeValue || gradeValue !== primaryRoleValue)) {
         const role = document.createElement("p");
         role.className = "executive-card__role";
-        role.textContent = roleLine;
+        role.textContent = primaryRole;
         meta.appendChild(role);
     }
 
-    const jobLine = member?.jobTitle;
-    if (jobLine && jobLine !== roleLine) {
+    if (
+        jobTitle &&
+        cabinetRole &&
+        jobValue !== roleValue &&
+        (!gradeValue || jobValue !== gradeValue)
+    ) {
         const detail = document.createElement("p");
         detail.className = "executive-card__detail";
-        detail.textContent = jobLine;
+        detail.textContent = jobTitle;
         meta.appendChild(detail);
     }
 
