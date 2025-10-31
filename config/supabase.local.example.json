@@ -1,0 +1,10 @@
+{
+  "url": "https://YOUR-PROJECT.ref.supabase.co",
+  "anonKey": "YOUR_ANON_PUBLIC_KEY",
+  "ministersTable": "persons",
+  "careersTable": "person_careers",
+  "options": {
+    "schema": "public"
+  }
+}
+

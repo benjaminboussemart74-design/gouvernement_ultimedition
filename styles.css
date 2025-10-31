@@ -14,14 +14,18 @@
     --color-citron: #FCEE88;
     --color-peche: #F0A08C;
 
-    --gradient-header: linear-gradient(135deg, var(--color-aubergine), var(--color-prune));
+    --gradient-header: linear-gradient(135deg, var(--color-curacao), var(--color-panthere));
     --accent-primary: var(--color-curacao);
     --accent-secondary: var(--color-lavande);
     --radius-base: 10px;
     --shadow-soft: 0 20px 45px rgba(39, 8, 59, 0.12);
     --shadow-hover: 0 28px 60px rgba(75, 37, 121, 0.18);
+    --cabinet-cloud-one: radial-gradient(circle at 14% 18%, rgba(100, 215, 205, 0.32), transparent 62%);
+    --cabinet-cloud-two: radial-gradient(circle at 78% 6%, rgba(209, 0, 123, 0.22), transparent 60%);
+    --cabinet-cloud-three: radial-gradient(circle at 80% 96%, rgba(105, 135, 255, 0.22), transparent 68%);
+    --cabinet-cloud-four: radial-gradient(circle at 5% 92%, rgba(240, 160, 140, 0.2), transparent 60%);
 
-    /* --- Couleurs des partis (palette Rumeur / mapping local) --- */
+    /* corriger les couleurs de renaissance trouver plusieurs bleus moins moche pour les droitoss*/
     /* Centre / majorités */
     --party-renaissance: #FFD700;    /* Jaune doré - Renaissance */
     --party-horizons: #0055A4;       /* Bleu institutionnel - Horizons */
@@ -68,7 +72,7 @@
     font-display: swap;
 }
 
-/* Apply Havelock Inline to ministry short names and related badges */
+/* Les titres de ministres sont affichés en Havelock Inline mais il faut modifier ça  */
 .mc-ministry,
 .mc-ministry-badge,
 .ministry-label,
@@ -123,7 +127,7 @@ h4,
 h5,
 h6 {
     color: var(--color-encre);
-    line-height: 1.15;
+    line-height: 1;
     margin: 0 0 0.75rem;
     font-weight: 700;
 }
@@ -144,7 +148,7 @@ a:focus {
 
 .site-header {
     background: var(--gradient-header);
-    color: var(--color-guimauve);
+    color: var(--color-panthere);
     padding: 3.5rem clamp(1.5rem, 3vw, 3.5rem) 2rem;
     display: grid;
     gap: 3rem;
@@ -185,7 +189,7 @@ a:focus {
     padding: 0.4rem 0.9rem;
     border-radius: var(--radius-base);
     background: rgba(100, 215, 205, 0.18);
-    color: var(--color-guimauve);
+    color: var(--color-panthere);
     font-size: 0.85rem;
     font-weight: 500;
     text-transform: uppercase;
@@ -204,7 +208,7 @@ a:focus {
 .brand-title h1 {
     font-size: clamp(2.25rem, 4vw, 3.4rem);
     color: var(--color-guimauve);
-    margin-bottom: 0.75rem;
+    margin-bottom: 4rem;
 }
 
 .brand-baseline {
@@ -282,7 +286,7 @@ a:focus {
     .header-logo-panel img { max-width: 260px; }
 }
 
-/* --- Large hero backdrop logo (bleu) --- */
+/* Les logos, modifications rendre celui du bas plus grand */
 .hero-bg-logo {
     position: absolute;
     inset: 0;
@@ -301,7 +305,7 @@ a:focus {
     background-repeat: no-repeat;
     background-position: center center;
     background-size: contain;
-    opacity: 0.32; /* make logo visible (user requested not transparent) */
+    opacity: 0.32; 
     filter: saturate(120%);
     transform: translateY(6vh);
     will-change: opacity, transform;
@@ -501,6 +505,7 @@ main > * { position: relative; z-index: 2; }
         max-width: 100%;
     }
 }
+/* Impremerie ajuster le style graphique et comprendre comme ça marche rajouter logo de la boite et les nouveaux élements */
 
 @media print {
     .modal-footer-cta { display: none; }
@@ -508,7 +513,7 @@ main > * { position: relative; z-index: 2; }
 }
 .header-suggestion[aria-selected="true"], .header-suggestion:hover { background: rgba(100,215,205,0.06); }
 
-/* Avatar in suggestion */
+/* Avatar de suggestion qui n'est pas très beau, et ne respecte pas la charte grapihque, à l'avenir le changer par un truc plus beau ? */
 .header-suggestion img.avatar {
     width: 56px;
     height: 56px;
@@ -597,7 +602,7 @@ main {
 
 .section-title {
     font-size: clamp(2rem, 4vw, 2.6rem);
-    font-weight: 700;
+    font-weight: 2000;
 }
 
 .section-subtitle {
@@ -626,18 +631,20 @@ main {
 
 .toolbar {
     background: var(--color-guimauve);
-    border-radius: var(--radius-base);
     padding: clamp(1.4rem, 4vw, 2rem);
     display: grid;
     gap: clamp(1rem, 3vw, 1.6rem);
     box-shadow: var(--shadow-soft);
     border: 1px solid rgba(62, 62, 61, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 20;
 }
-
+/* modification nécéssaire problème d'alignement incompréhensible des deux barres*/
 .toolbar-compact {
     display: grid;
     gap: 0.75rem;
-    align-items: start;
+    align-items: center ;
 }
 
 .toolbar-search-group {
@@ -646,7 +653,7 @@ main {
 }
 
 .toolbar-compact .toolbar-search-group {
-    width: 100%;
+    width: clamp(260px, 56%, 640px);
 }
 
 .toolbar-advanced {
@@ -685,6 +692,12 @@ main {
     cursor: pointer;
     transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, color 160ms ease;
     justify-self: start;
+}
+
+/* Hide the advanced search toggle button when requested */
+#advanced-search-toggle,
+.toolbar-advanced-toggle {
+    display: none !important;
 }
 
 .toolbar-advanced-toggle:hover,
@@ -737,6 +750,10 @@ main {
         width: 100%;
         justify-content: center;
     }
+
+    .toolbar-compact .toolbar-search-group {
+        width: 100%;
+    }
 }
 
 body.print-all {
@@ -763,26 +780,36 @@ body.print-all .toolbar {
     color: var(--color-sesame);
 }
 
+/* Make the visual label for search discreet on wider screens (kept for a11y on small screens) */
+@media (min-width: 480px) {
+    .search-label { display: none; }
+}
+
 .search-field {
     position: relative;
     display: flex;
     align-items: center;
-    background: var(--color-perle);
+    background: rgba(255, 255, 255, 0.4);
     border-radius: var(--radius-base);
-    border: 1px solid rgba(62, 62, 61, 0.14);
-    padding: 0.25rem 0.85rem 0.25rem 2.4rem;
-    transition: border-color 160ms ease, box-shadow 160ms ease;
+    border: 1px solid rgba(62, 62, 61, 0.10);
+    padding: 0.35rem 1rem 0.35rem 2.2rem;
+    transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
+.search-field:hover,
 .search-field:focus-within {
     border-color: var(--color-curacao);
-    box-shadow: 0 0 0 3px rgba(100, 215, 205, 0.25);
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 0 0 2px rgba(100, 215, 205, 0.18);
 }
 
 .search-icon {
     position: absolute;
-    left: 0.95rem;
+    left: 0.8rem;
+    width: 16px;
+    height: 16px;
     color: var(--color-sesame);
+    opacity: 0.6;
     pointer-events: none;
 }
 
@@ -790,7 +817,7 @@ body.print-all .toolbar {
     border: none;
     background: transparent;
     font-family: inherit;
-    font-size: 1rem;
+    font-size: 1.05rem;
     color: var(--color-poivre);
     width: 100%;
     padding: 0.6rem 0;
@@ -802,6 +829,7 @@ body.print-all .toolbar {
 
 .search input::placeholder {
     color: var(--color-sesame);
+    opacity: 0.75;
 }
 
 .toolbar-meta {
@@ -809,6 +837,41 @@ body.print-all .toolbar {
     gap: 0.3rem;
     align-content: start;
 }
+
+/* Global counters strip */
+.toolbar-counters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.15rem;
+}
+
+.counter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--color-encre);
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(17, 23, 39, 0.08);
+}
+
+.counter-pill__dot {
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.counter-pill--ministers { color: var(--color-curacao); }
+.counter-pill--direcab { color: #2563eb; }
+.counter-pill--chefcab { color: #0ea5e9; }
+.counter-pill--conseiller { color: #14b8a6; }
 
 .results-count {
     display: flex;
@@ -1208,11 +1271,12 @@ body.print-all .toolbar {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    align-items: flex-end;
+    /* Fonction qui permet Centre horizontalement les éléments (photo + bouton) pour que
+       le bouton "Voir la fiche" soit aligné sous la photo. Comme je suis un gros neuneu c'était flex-end */
+    align-items: center;
     justify-content: flex-start;
     min-width: 0;
 }
-
 .mc-meta {
     display: flex;
     gap: 0.35rem 0.5rem;
@@ -1237,10 +1301,10 @@ body.print-all .toolbar {
 
 /* Actions dans la carte (ex: bouton délégués) */
 .card-actions { margin-top: 0.5rem; }
-/* Badges de parti — utilitaire simple */
+/* Badges de parti — forcément si j'oublie le margin-top */
 .party-badge {
     display: inline-block;
-    margin-top: 0.3rem;
+    margin-top:0 rem;
     background: var(--color-perle);
     color: var(--color-encre);
     font-size: 0.8rem;
@@ -1258,6 +1322,7 @@ body.print-all .toolbar {
 .party-badge[data-party="UDI"]             { background-color: var(--party-udi); }
 .party-badge[data-party="LR"]              { background-color: var(--party-lr); color: #F2F2F2; }
 .party-badge[data-party="DLF"]             { background-color: var(--party-dlf); color: #F2F2F2; }
+.party-badge[data-party="Sans étiquette"]  { background-color: #d1d5db; color: var(--color-encre); }
 .party-badge[data-party="RN"]              { background-color: var(--party-rn); color: #F2F2F2; }
 .party-badge[data-party="Reconquête"]      { background-color: var(--party-reconquete); color: #F2F2F2; }
 .party-badge[data-party="Patriotes"]       { background-color: var(--party-patriotes); color: #F2F2F2; }
@@ -1269,6 +1334,37 @@ body.print-all .toolbar {
 .party-badge[data-party="LFI"]             { background-color: var(--party-lfi); color: #F2F2F2; }
 .party-badge[data-party="NPA"]             { background-color: var(--party-npa); color: #F2F2F2; }
 .party-badge[data-party="LO"]              { background-color: var(--party-lo); color: #F2F2F2; }
+
+/* Apply party accent color to the whole minister card when available
+    The card sets `data-party` (via script.js) and the following rules map
+    that value to the corresponding --party-* variable by setting
+    --accent-color on the card. This variable is used throughout the
+    card styling (badges, backgrounds, borders, shadows). */
+.minister-card[data-party="Renaissance"]     { --accent-color: var(--party-renaissance); }
+.minister-card[data-party="Horizons"]        { --accent-color: var(--party-horizons); }
+.minister-card[data-party="MoDem"]           { --accent-color: var(--party-modem); }
+.minister-card[data-party="PRV"]             { --accent-color: var(--party-prv); }
+.minister-card[data-party="Centristes"]      { --accent-color: var(--party-centristes); }
+.minister-card[data-party="UDI"]             { --accent-color: var(--party-udi); }
+.minister-card[data-party="LR"]              { --accent-color: var(--party-lr); }
+.minister-card[data-party="DLF"]             { --accent-color: var(--party-dlf); }
+.minister-card[data-party="RN"]              { --accent-color: var(--party-rn); }
+.minister-card[data-party="Reconquête"]      { --accent-color: var(--party-reconquete); }
+.minister-card[data-party="Patriotes"]       { --accent-color: var(--party-patriotes); }
+.minister-card[data-party="PS"]              { --accent-color: var(--party-ps); }
+.minister-card[data-party="Place Publique"]  { --accent-color: var(--party-placepub); }
+.minister-card[data-party="Génération.s"]    { --accent-color: var(--party-generations); }
+.minister-card[data-party="EELV"]            { --accent-color: var(--party-eelv); }
+.minister-card[data-party="PCF"]             { --accent-color: var(--party-pcf); }
+.minister-card[data-party="LFI"]             { --accent-color: var(--party-lfi); }
+.minister-card[data-party="NPA"]             { --accent-color: var(--party-npa); }
+.minister-card[data-party="LO"]              { --accent-color: var(--party-lo); }
+.minister-card[data-party="PRG"]             { --accent-color: var(--party-prg); }
+.minister-card[data-party="POI"]             { --accent-color: var(--party-poi); }
+.minister-card[data-party="Volt"]            { --accent-color: var(--party-volt); }
+.minister-card[data-party="Animaliste"]      { --accent-color: var(--party-animaliste); }
+.minister-card[data-party="Regionalistes"]   { --accent-color: var(--party-regionalistes); }
+.minister-card[data-party="Sans étiquette"]  { --accent-color: #9CA3AF; }
 .party-badge[data-party="PRG"]             { background-color: var(--party-prg); }
 .party-badge[data-party="POI"]             { background-color: var(--party-poi); color: #F2F2F2; }
 .party-badge[data-party="Animaliste"]      { background-color: var(--party-animaliste); color: #111727; }
@@ -1293,6 +1389,16 @@ body.print-all .toolbar {
     justify-self: start;
     padding: 0.6rem 1.05rem;
     border-radius: 12px;
+}
+
+/* Ensure the CTA button is horizontally centered under the photo on
+   wider screens. On small screens the CTA becomes full-width (handled
+   by the existing mobile media query). */
+@media (min-width: 861px) {
+    .mc-right .minister-cta {
+        display: inline-block;
+        margin: 0 auto;
+    }
 }
 
 .minister-role {
@@ -1358,11 +1464,11 @@ body.print-all .toolbar {
     margin-top: 0;
 }
 
-/* Keep party badge visual mapping defined above; only adjust spacing here */
+/* Keep party badge visual mapping defined above; only adjust spacing here * effectivement si je modifie pas le pading rien n'est aligné/
 .mc-meta .party-badge {
     display: inline-flex;
     align-items: center;
-    margin-top: 0.2rem;
+    margin-top: 0rem;
 }
 
 /* Indicateur de rang/importance */
@@ -1533,18 +1639,23 @@ body.print-all .toolbar {
 
 .modal-collaborators {
     margin-top: 1.75rem;
-    padding: clamp(1.5rem, 2vw, 2.1rem);
-    border-radius: 18px;
-    border: 1px solid rgba(17, 23, 39, 0.08);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(242, 242, 244, 0.95));
-    backdrop-filter: blur(10px);
-    box-shadow: var(--shadow-soft);
+    padding: clamp(1.5rem, 2vw, 2.25rem);
+    border-radius: 22px;
+    border: 1px solid rgba(17, 23, 39, 0.06);
+    background:
+        var(--cabinet-cloud-one),
+        var(--cabinet-cloud-two),
+        var(--cabinet-cloud-three),
+        var(--cabinet-cloud-four),
+        linear-gradient(180deg, rgba(250, 252, 255, 0.96), rgba(236, 234, 237, 0.94));
+    backdrop-filter: blur(14px);
+    box-shadow: 0 30px 60px rgba(17, 23, 39, 0.18);
     display: grid;
-    gap: clamp(1.25rem, 2vw, 1.75rem);
+    gap: 1.5rem;
     grid-column: 1 / -1;
     justify-self: center;
     width: 100%;
-    justify-items: stretch;
+    justify-items: center;
 }
 
 .modal-collaborators.is-hidden {
@@ -1632,31 +1743,48 @@ body.print-all .toolbar {
     border-radius: 18px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(242, 242, 244, 0.94));
     border: 1px solid rgba(17, 23, 39, 0.08);
-    box-shadow: var(--shadow-soft);
-    width: min(100%, 1120px);
+    box-shadow: 0 22px 48px rgba(17, 23, 39, 0.10);
+    width: min(100%, 1100px);
     margin-inline: auto;
+    justify-items: stretch;
 }
 
 .cabinet-panel-header {
     display: grid;
     gap: 0.35rem;
-    padding-left: 1.6rem;
-    border-left: 4px solid var(--minister-accent, var(--color-curacao));
+    padding-left: 1.25rem;
+    align-items: baseline;
+    min-height: 3.2rem;
+}
+.cabinet-panel-header::before {
+    content: "";
+    position: absolute;
+    left: 0.3rem;
+    top: 0.25rem;
+    bottom: 0.25rem;
+    width: 7px;
+    border-radius: 999px;
+    background: linear-gradient(
+        180deg,
+        var(--minister-accent, var(--color-lavande)),
+        color-mix(in srgb, var(--minister-accent, var(--color-lavande)) 64%, #ffffff 36%)
+    );
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--minister-accent, var(--color-lavande)) 32%, rgba(17, 23, 39, 0.2));
 }
 
 .cabinet-panel-title {
-    font-size: clamp(1.35rem, 1.9vw, 1.65rem);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--minister-accent, var(--color-curacao));
+    font-size: clamp(1.45rem, 1.9vw, 1.7rem);
+    font-weight: 800;
+    letter-spacing: 0.015em;
+    color: var(--color-encre);
     margin: 0;
+    text-transform: uppercase;
 }
 
 .cabinet-panel-context {
     margin: 0;
-    color: var(--color-sesame);
-    font-size: 0.95rem;
+    color: color-mix(in srgb, var(--minister-accent, var(--color-sesame)) 28%, var(--color-sesame) 72%);
+    font-size: 1rem;
     letter-spacing: 0.01em;
 }
 
@@ -1667,10 +1795,10 @@ body.print-all .toolbar {
     gap: 1rem;
     padding: 1rem 1.2rem;
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(148, 163, 184, 0.35);
-    border-left: 5px solid var(--minister-accent, var(--color-curacao));
-    box-shadow: 0 14px 32px rgba(17, 23, 39, 0.12);
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(17, 23, 39, 0.08);
+    width: min(100%, 520px);
+    margin-inline: auto;
 }
 
 .cabinet-tree-hero-avatar {
@@ -1685,81 +1813,118 @@ body.print-all .toolbar {
 
 .cabinet-tree-hero-info {
     display: grid;
-    gap: 0.15rem;
+    gap: 0.2rem;
 }
 
 .cabinet-tree-hero-name {
-    font-size: clamp(1.05rem, 1.6vw, 1.35rem);
-    font-weight: 600;
     margin: 0;
+    font-size: clamp(1.08rem, 1.6vw, 1.25rem);
+    font-weight: 700;
     color: var(--color-encre);
 }
 
 .cabinet-tree-hero-role {
     margin: 0;
-    color: var(--color-sesame);
-    font-size: 0.95rem;
+    font-size: 0.92rem;
+    color: color-mix(in srgb, var(--minister-accent, var(--color-sesame)) 24%, var(--color-sesame) 76%);
 }
 
 .cabinet-tree-hero-count {
-    margin: 0;
+    display: inline-block;
+    margin-top: 0.15rem;
     font-size: 0.82rem;
+    color: color-mix(in srgb, var(--minister-accent, var(--color-panthere)) 65%, var(--color-panthere) 35%);
+    background: color-mix(in srgb, var(--minister-accent, var(--color-lavande)) 18%, rgba(255, 255, 255, 0.9));
+    border: 1px solid color-mix(in srgb, var(--minister-accent, var(--color-lavande)) 40%, rgba(17, 23, 39, 0.1));
+    border-radius: 999px;
+    padding: 0.22rem 0.65rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--minister-accent, var(--color-curacao));
 }
 
 .cabinet-tree {
-    display: grid;
-    gap: clamp(1.1rem, 1.8vw, 1.6rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: min(100%, 1080px);
+    margin-inline: auto;
 }
 
 .cabinet-tree-level {
     display: grid;
-    gap: clamp(1rem, 1.6vw, 1.4rem);
-    justify-items: center;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    padding: clamp(0.9rem, 1.3vw, 1.15rem);
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.88);
-    border: 1px solid rgba(148, 163, 184, 0.2);
+    justify-content: center;
+    justify-items: center;
+    align-items: stretch;
+    gap: 0.9rem 1rem;
+    width: 100%;
+    padding: clamp(0.6rem, 1.5vw, 1rem) clamp(0.75rem, 2vw, 1.4rem);
+    border-radius: 26px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(245, 246, 250, 0.8));
+    border: 1px solid rgba(17, 23, 39, 0.06);
+    box-shadow: 0 22px 44px rgba(17, 23, 39, 0.12);
+    isolation: isolate;
+}
+
+.cabinet-tree-level::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 18% 20%, rgba(100, 215, 205, 0.14), transparent 60%),
+        radial-gradient(circle at 82% 20%, rgba(105, 135, 255, 0.15), transparent 68%),
+        radial-gradient(circle at 50% 120%, rgba(209, 0, 123, 0.12), transparent 75%);
+    pointer-events: none;
+    z-index: -1;
 }
 
 .cabinet-tree-level[data-depth="0"] {
-    background: rgba(255, 255, 255, 0.96);
-    border-color: rgba(100, 135, 255, 0.18);
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.cabinet-tree-level[data-depth="0"] {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
 .cabinet-tree-connector {
-    position: relative;
-    height: 32px;
-}
-
-.cabinet-tree-connector::before {
-    content: "";
-    position: absolute;
-    left: 15%;
-    right: 15%;
-    top: 50%;
-    border-top: 1px solid rgba(17, 23, 39, 0.12);
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 35%, rgba(17, 23, 39, 0.12)),
+        transparent
+    );
 }
 
 .cabinet-node {
-    --cabinet-node-accent: var(--minister-accent, var(--color-lavande));
+    --cabinet-node-accent: var(--minister-accent, var(--color-curacao));
     --cabinet-node-text: var(--color-encre);
     --cabinet-node-muted: var(--color-sesame);
-    background: rgba(255, 255, 255, 0.94);
-    padding: 0.95rem 1.1rem 1.05rem;
+    --cabinet-node-link: color-mix(in srgb, var(--cabinet-node-accent) 38%, var(--color-panthere) 62%);
+    --cabinet-node-surface: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--cabinet-node-accent) 12%, rgba(255, 255, 255, 0.98)),
+        rgba(248, 248, 252, 0.94)
+    );
+    --cabinet-node-border: color-mix(in srgb, var(--cabinet-node-accent) 18%, rgba(148, 163, 184, 0.45));
+    --cabinet-node-grade-surface: color-mix(in srgb, var(--cabinet-node-accent) 14%, rgba(255, 255, 255, 0.92));
+    --cabinet-node-grade-border: color-mix(in srgb, var(--cabinet-node-accent) 26%, rgba(17, 23, 39, 0.12));
+    --cabinet-node-grade-color: var(--cabinet-node-accent);
+    background: var(--cabinet-node-surface);
     border-radius: 14px;
-    border: 1px solid rgba(148, 163, 184, 0.35);
-    border-top: 4px solid var(--cabinet-node-accent);
-    box-shadow: 0 18px 34px rgba(17, 23, 39, 0.16);
-    width: min(100%, 240px);
+    border: 1px solid var(--cabinet-node-border);
+    padding: 0.9rem 1rem;
+    min-width: 180px;
+    max-width: 260px;
+    text-align: center;
+    box-shadow: 0 18px 34px color-mix(in srgb, var(--cabinet-node-accent) 14%, rgba(17, 23, 39, 0.16));
     display: grid;
-    gap: 0.55rem;
-    justify-items: stretch;
+    gap: 0.5rem;
+    position: relative;
     color: var(--cabinet-node-text);
+    overflow: hidden;
 }
 
 .cabinet-node-avatar {
@@ -1786,22 +1951,21 @@ body.print-all .toolbar {
 
 .cabinet-node-grade {
     display: inline-block;
-    font-size: 0.76rem;
-    font-weight: 700;
-    color: var(--cabinet-node-accent);
-    background: color-mix(in srgb, var(--cabinet-node-accent) 12%, rgba(255, 255, 255, 0.95));
-    border: 1px solid color-mix(in srgb, var(--cabinet-node-accent) 35%, rgba(17, 23, 39, 0.12));
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--cabinet-node-grade-color);
+    background: var(--cabinet-node-grade-surface);
+    border: 1px solid var(--cabinet-node-grade-border);
     border-radius: 999px;
-    padding: 0.2rem 0.55rem;
-    letter-spacing: 0.04em;
+    padding: 0.18rem 0.6rem;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--cabinet-node-accent) 24%, rgba(17, 23, 39, 0.18));
 }
 
 .cabinet-node-name {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--cabinet-node-text);
-    font-size: clamp(1rem, 1.3vw, 1.08rem);
-    margin: 0;
 }
 
 .cabinet-node-title,
@@ -1809,42 +1973,67 @@ body.print-all .toolbar {
     margin: 0;
     color: var(--cabinet-node-muted);
     font-size: 0.9rem;
+    letter-spacing: 0.01em;
 }
 
 .cabinet-node-email {
     font-size: 0.85rem;
-    color: var(--cabinet-node-accent);
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    color: var(--cabinet-node-link);
+}
+
+.cabinet-node[data-grade="direcab"],
+.cabinet-node[data-grade="direcab-adj"] {
+    --cabinet-node-text: #ffffff;
+    --cabinet-node-muted: rgba(255, 255, 255, 0.86);
+    --cabinet-node-link: rgba(255, 255, 255, 0.86);
+    --cabinet-node-grade-color: rgba(255, 255, 255, 0.94);
+    --cabinet-node-grade-surface: rgba(255, 255, 255, 0.22);
+    --cabinet-node-grade-border: rgba(255, 255, 255, 0.45);
 }
 
 .cabinet-node[data-grade="direcab"] {
-    --cabinet-node-accent: var(--color-panthere);
+    --cabinet-node-accent: var(--minister-accent, var(--color-curacao));
+    --cabinet-node-surface: linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--cabinet-node-accent) 88%, #ffffff 12%),
+        color-mix(in srgb, var(--cabinet-node-accent) 68%, #ffffff 32%)
+    );
+    --cabinet-node-border: color-mix(in srgb, var(--cabinet-node-accent) 52%, rgba(255, 255, 255, 0.35));
+    box-shadow: 0 30px 60px color-mix(in srgb, var(--cabinet-node-accent) 32%, rgba(15, 23, 42, 0.24));
 }
 
 .cabinet-node[data-grade="direcab-adj"] {
-    --cabinet-node-accent: #1C3A82;
+    --cabinet-node-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 78%, #7c3aed 22%);
+    --cabinet-node-surface: linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--cabinet-node-accent) 78%, #ffffff 22%),
+        color-mix(in srgb, var(--cabinet-node-accent) 56%, #ffffff 44%)
+    );
+    --cabinet-node-border: color-mix(in srgb, var(--cabinet-node-accent) 46%, rgba(255, 255, 255, 0.38));
+    box-shadow: 0 26px 52px color-mix(in srgb, var(--cabinet-node-accent) 26%, rgba(15, 23, 42, 0.2));
 }
 
 .cabinet-node[data-grade="chefcab"] {
-    --cabinet-node-accent: #2B4BA6;
+    --cabinet-node-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 68%, #0ea5e9 32%);
 }
 
 .cabinet-node[data-grade="chefcabadj"] {
-    --cabinet-node-accent: #3E5BB7;
+    --cabinet-node-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 58%, #38bdf8 42%);
 }
 
 .cabinet-node[data-grade="chefpole"] {
-    --cabinet-node-accent: #6472C6;
+    --cabinet-node-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 52%, #14b8a6 48%);
+    --cabinet-node-muted: color-mix(in srgb, var(--cabinet-node-accent) 24%, var(--color-sesame) 76%);
 }
 
 .cabinet-node[data-grade="conseiller"] {
-    --cabinet-node-accent: #8C95D8;
-    --cabinet-node-muted: color-mix(in srgb, #8C95D8 45%, var(--color-sesame));
+    --cabinet-node-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 30%, #475569 70%);
+    --cabinet-node-muted: color-mix(in srgb, var(--cabinet-node-accent) 26%, var(--color-sesame) 74%);
+    --cabinet-node-link: color-mix(in srgb, var(--cabinet-node-accent) 36%, rgba(15, 23, 42, 0.72));
 }
 
-.cabinet-tree-level[data-depth="0"] .cabinet-node {
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+.cabinet-tree-level[data-depth="0"] .cabinet-node:not([data-grade="direcab"]):not([data-grade="direcab-adj"]) {
+    box-shadow: 0 26px 52px color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 24%, rgba(15, 23, 42, 0.2));
 }
 
 @media (max-width: 600px) {
@@ -1923,6 +2112,7 @@ body.print-all .toolbar {
     box-shadow: var(--shadow-soft);
     width: min(100%, 1180px);
     margin-inline: auto;
+    justify-items: stretch;
 }
 
 .executive-cabinet__hero {
@@ -1930,22 +2120,17 @@ body.print-all .toolbar {
     align-items: center;
     gap: 1.35rem;
     flex-wrap: wrap;
-    padding: 1.1rem 1.4rem;
-    border-radius: 12px;
-    border: 1px solid rgba(148, 163, 184, 0.28);
-    border-left: 5px solid var(--minister-accent, var(--color-curacao));
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 14px 30px rgba(17, 23, 39, 0.12);
+    justify-content: space-between;
 }
 
 .executive-cabinet__hero-portrait {
     width: 92px;
     height: 92px;
-    border-radius: 50%;
+    border-radius: 20px;
     object-fit: cover;
-    border: 3px solid rgba(255, 255, 255, 0.92);
-    box-shadow: 0 12px 28px rgba(17, 23, 39, 0.18);
-    background: rgba(255, 255, 255, 0.65);
+    box-shadow: 0 18px 42px rgba(17, 23, 39, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.95);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(242, 242, 244, 0.92));
 }
 
 .executive-cabinet__hero-meta {
@@ -1957,44 +2142,57 @@ body.print-all .toolbar {
 
 .executive-cabinet__title {
     margin: 0;
-    font-size: clamp(1.35rem, 2vw, 1.65rem);
-    font-weight: 700;
+    font-size: clamp(1.35rem, 2vw, 1.6rem);
+    font-weight: 800;
+    color: var(--color-encre);
+    letter-spacing: 0.015em;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--minister-accent, var(--color-curacao));
 }
 
 .executive-cabinet__subtitle {
     margin: 0;
     font-size: 0.95rem;
-    color: var(--color-sesame);
+    color: color-mix(in srgb, var(--minister-accent, var(--color-sesame)) 24%, var(--color-sesame) 76%);
 }
 
 .executive-cabinet__count {
     margin-left: auto;
-    padding: 0.45rem 1.1rem;
+    padding: 0.4rem 1.05rem;
     border-radius: 999px;
-    font-size: 0.88rem;
-    font-weight: 600;
+    font-size: 0.92rem;
+    font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #ffffff;
-    background: var(--minister-accent, var(--color-curacao));
-    border: none;
+    color: var(--minister-accent, var(--color-lavande));
+    background: color-mix(in srgb, var(--minister-accent, var(--color-lavande)) 20%, rgba(255, 255, 255, 0.92));
+    border: 1px solid color-mix(in srgb, var(--minister-accent, var(--color-lavande)) 45%, rgba(17, 23, 39, 0.08));
     align-self: flex-start;
-    box-shadow: 0 10px 22px rgba(17, 23, 39, 0.16);
+    box-shadow: 0 12px 26px color-mix(in srgb, var(--minister-accent, var(--color-lavande)) 30%, rgba(17, 23, 39, 0.18));
 }
 
 .executive-cabinet__band,
 .executive-cabinet__others {
     display: grid;
-    gap: 1rem;
-    padding: 1.2rem 1.5rem;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.94);
-    border: 1px solid rgba(148, 163, 184, 0.28);
-    border-left: 4px solid var(--minister-accent, var(--color-curacao));
-    box-shadow: 0 12px 28px rgba(17, 23, 39, 0.1);
+    gap: 1.05rem;
+    padding: 1.25rem 1.45rem 1.35rem;
+    border-radius: 22px;
+    background:
+        radial-gradient(circle at 85% -20%, rgba(105, 135, 255, 0.16), transparent 70%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 245, 248, 0.9));
+    border: 1px solid rgba(17, 23, 39, 0.06);
+    box-shadow: 0 26px 52px rgba(17, 23, 39, 0.12);
+    position: relative;
+    isolation: isolate;
+}
+
+.executive-cabinet__band::before,
+.executive-cabinet__others::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 10% 110%, rgba(100, 215, 205, 0.18), transparent 72%);
+    pointer-events: none;
+    z-index: -1;
 }
 
 .executive-cabinet__band-title,
@@ -2010,28 +2208,49 @@ body.print-all .toolbar {
 
 .executive-cabinet__poles {
     display: grid;
-    gap: clamp(1rem, 1.8vw, 1.45rem);
+    gap: clamp(1.1rem, 2vw, 1.45rem);
 }
 
 .executive-pole {
-    --executive-accent-color: var(--minister-accent, var(--color-curacao));
-    --executive-accent-soft: color-mix(in srgb, var(--executive-accent-color) 12%, rgba(255, 255, 255, 0.96));
-    border-radius: 12px;
-    border: 1px solid rgba(148, 163, 184, 0.24);
-    border-left: 4px solid var(--executive-accent-color);
-    background: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 12px 26px rgba(17, 23, 39, 0.1);
-    padding: 1.1rem 1.4rem;
+    --executive-accent-color: var(--color-lavande);
+    --executive-accent-secondary: #4c64ff;
+    --executive-accent-soft: rgba(105, 135, 255, 0.06);
+    --executive-accent-strong: rgba(105, 135, 255, 0.12);
+    --executive-accent-contrast: #ffffff;
+    border-radius: 22px;
+    border: 1px solid rgba(17,23,39,0.05);
+    background:
+        radial-gradient(circle at 12% -10%, color-mix(in srgb, var(--executive-accent-color) 24%, transparent 76%), transparent 65%),
+        linear-gradient(180deg, rgba(255,255,255,0.96), rgba(250,250,252,0.95));
+    box-shadow: 0 22px 48px rgba(17, 23, 39, 0.12);
+    padding: 1.1rem 1.25rem 1.25rem;
     display: grid;
     gap: 1rem;
+    position: relative;
+    isolation: isolate;
+}
+
+/* subtle accent stripe on the left to tie with pole color */
+.executive-pole::before {
+    content: "";
+    position: absolute;
+    left: 0.75rem;
+    top: 0.75rem;
+    bottom: 0.75rem;
+    width: 7px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--executive-accent-color), var(--executive-accent-secondary));
+    opacity: 0.92;
+    box-shadow: 0 14px 32px color-mix(in srgb, var(--executive-accent-color) 38%, rgba(17, 23, 39, 0.2));
 }
 
 .executive-pole__title {
-    margin: 0;
-    font-size: 1.1rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    margin: 0 0 0 1.35rem; /* offset to account for accent stripe */
+    font-size: 1.2rem;
+    letter-spacing: 0.025em;
+    font-family: 'HavelockInlineXO', 'Space Grotesk', system-ui, sans-serif;
     color: var(--executive-accent-color);
+    text-transform: uppercase;
 }
 
 .executive-pole__layout {
@@ -2056,6 +2275,7 @@ body.print-all .toolbar {
 
 .executive-card-grid--compact {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    align-items: stretch;
 }
 
 .executive-card {
@@ -2063,27 +2283,41 @@ body.print-all .toolbar {
     --executive-card-accent: var(--minister-accent, var(--color-curacao));
     --executive-card-text: var(--color-encre);
     --executive-card-muted: var(--color-sesame);
+    --executive-card-contact: color-mix(in srgb, var(--executive-card-accent) 46%, var(--color-lavande) 54%);
+    --executive-card-badge-color: var(--executive-card-accent);
     display: flex;
     align-items: center;
     gap: 1rem;
     padding: 1rem 1.2rem;
     border-radius: 14px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(242, 242, 244, 0.94));
-    border: 1px solid rgba(17, 23, 39, 0.08);
-    border-top: 4px solid var(--executive-card-accent);
-    box-shadow: var(--shadow-soft);
-    position: relative;
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--executive-card-accent) 8%, rgba(255, 255, 255, 0.98)),
+        rgba(246, 246, 248, 0.98)
+    );
+    border: 1px solid color-mix(in srgb, var(--executive-card-accent) 20%, rgba(17,23,39,0.06));
+    box-shadow: 0 16px 36px color-mix(in srgb, var(--executive-card-accent) 14%, rgba(17, 23, 39, 0.08));
+    transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
-.executive-card--compact {
-    --executive-avatar-size: 58px;
-    padding: 0.85rem 1rem;
+.executive-card:hover,
+.executive-card:focus-within {
+    transform: translateY(-4px);
+    box-shadow: 0 32px 60px color-mix(in srgb, var(--executive-card-accent) 24%, rgba(15, 23, 42, 0.16));
 }
 
 .executive-card--head {
+    --executive-avatar-size: 76px;
     --executive-card-text: #ffffff;
     --executive-card-muted: rgba(255, 255, 255, 0.82);
-    background: linear-gradient(135deg, var(--executive-card-accent), color-mix(in srgb, var(--executive-card-accent) 55%, #ffffff));
+    --executive-card-contact: rgba(255, 255, 255, 0.85);
+    --executive-card-badge-color: rgba(15, 23, 42, 0.85);
+    background: linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--executive-card-accent) 88%, #ffffff 12%),
+        color-mix(in srgb, var(--executive-card-accent) 70%, #ffffff 30%)
+    );
+    border-color: color-mix(in srgb, var(--executive-card-accent) 48%, #ffffff 52%);
     color: #ffffff;
     border-color: var(--executive-card-accent);
     box-shadow: 0 18px 40px rgba(39, 8, 59, 0.22);
@@ -2123,49 +2357,51 @@ body.print-all .toolbar {
     align-items: center;
     padding: 0.22rem 0.6rem;
     border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--executive-card-accent);
-    background: color-mix(in srgb, var(--executive-card-accent) 14%, rgba(255, 255, 255, 0.96));
-    border: 1px solid color-mix(in srgb, var(--executive-card-accent) 32%, rgba(17, 23, 39, 0.1));
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--executive-card-badge-color, var(--executive-card-accent));
+    background: color-mix(in srgb, var(--executive-card-accent) 14%, rgba(255, 255, 255, 0.95));
+    border: 1px solid color-mix(in srgb, var(--executive-card-accent) 35%, rgba(17, 23, 39, 0.08));
 }
 
 .executive-card--head .executive-card__badge {
-    background: rgba(255, 255, 255, 0.22);
-    color: #ffffff;
+    color: var(--executive-card-badge-color, #0f172a);
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(255, 255, 255, 0.55);
 }
 
 .executive-card[data-grade="direcab"] {
-    --executive-card-accent: var(--color-panthere);
+    --executive-card-accent: var(--minister-accent, var(--color-curacao));
 }
 
 .executive-card[data-grade="direcab-adj"] {
-    --executive-card-accent: #1C3A82;
+    --executive-card-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 78%, #7c3aed 22%);
 }
 
 .executive-card[data-grade="chefcab"] {
-    --executive-card-accent: #2B4BA6;
+    --executive-card-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 68%, #0ea5e9 32%);
 }
 
 .executive-card[data-grade="chefcabadj"] {
-    --executive-card-accent: #3E5BB7;
+    --executive-card-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 58%, #38bdf8 42%);
 }
 
 .executive-card[data-grade="chefpole"] {
-    --executive-card-accent: #6472C6;
+    --executive-card-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 52%, #14b8a6 48%);
+    --executive-card-muted: color-mix(in srgb, var(--executive-card-accent) 24%, var(--color-sesame) 76%);
 }
 
 .executive-card[data-grade="conseiller"] {
-    --executive-card-accent: #8C95D8;
-    --executive-card-muted: color-mix(in srgb, #8C95D8 45%, var(--color-sesame));
+    --executive-card-accent: color-mix(in srgb, var(--minister-accent, var(--color-curacao)) 30%, #475569 70%);
+    --executive-card-muted: color-mix(in srgb, var(--executive-card-accent) 28%, var(--color-sesame) 72%);
+    --executive-card-contact: color-mix(in srgb, var(--executive-card-accent) 52%, var(--color-panthere) 48%);
 }
 
 .executive-card__name {
     margin: 0;
-    font-size: 1.08rem;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 700;
     color: var(--executive-card-text);
 }
 
@@ -2190,11 +2426,12 @@ body.print-all .toolbar {
     font-size: 0.8rem;
     color: var(--executive-card-muted);
     font-style: italic;
+    letter-spacing: 0.01em;
 }
 
 .executive-card__contact {
     font-size: 0.86rem;
-    color: var(--executive-card-accent);
+    color: var(--executive-card-contact);
     word-break: break-word;
     font-weight: 600;
     letter-spacing: 0.015em;
@@ -2202,7 +2439,7 @@ body.print-all .toolbar {
 
 .executive-card__contact:hover,
 .executive-card__contact:focus {
-    color: color-mix(in srgb, var(--executive-card-accent) 80%, #000000 20%);
+    color: color-mix(in srgb, var(--executive-card-contact) 55%, var(--executive-card-accent) 45%);
     text-decoration: underline;
 }
 
@@ -2629,12 +2866,21 @@ body.print-all .toolbar {
 }
 
 .modal-module--description {
+    --description-accent: var(--color-curacao);
     color: var(--color-poivre);
+    background: color-mix(in srgb, var(--description-accent) 5%, #ffffff);
+    border: 1px solid color-mix(in srgb, var(--description-accent) 16%, rgba(17, 23, 39, 0.08));
+    border-left: 5px solid var(--description-accent);
+    border-radius: 14px;
+    padding: 0.85rem 1rem 1rem;
+    box-shadow: 0 10px 22px rgba(17, 23, 39, 0.06);
 }
 
 .modal-description {
     margin: 0;
-    line-height: 1.55;
+    line-height: 1.6;
+    font-size: 1.15rem;
+    font-weight: 700;
 }
 
 .modal-module--export,
@@ -2642,102 +2888,128 @@ body.print-all .toolbar {
     grid-column: 1 / -1;
 }
 
-.modal-module--career {
-    --timeline-color: var(--color-curacao);
+.modal-module--biography {
+    --biography-accent: var(--color-curacao);
+    background: color-mix(in srgb, var(--biography-accent) 6%, #ffffff);
+    border: 1px solid color-mix(in srgb, var(--biography-accent) 22%, rgba(17, 23, 39, 0.08));
+    border-left: 6px solid var(--biography-accent);
+    border-radius: 16px;
+    padding: 1rem 1.25rem 1.25rem;
+    box-shadow: 0 10px 26px rgba(17, 23, 39, 0.08);
 }
 
-.modal-module--career .modal-module-title {
-    margin: 0;
+.modal-module--biography .modal-module-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-encre);
+    position: relative;
 }
 
-.modal-career-timeline {
-    --timeline-track-color: linear-gradient(180deg, rgba(100, 215, 205, 0.55), rgba(105, 135, 255, 0.55));
-    --timeline-default-color: var(--timeline-color, var(--color-curacao));
+.modal-module--biography .modal-module-title::after {
+    content: "";
+    display: block;
+    width: 44px;
+    height: 3px;
+    margin-top: 6px;
+    border-radius: 2px;
+    background: var(--biography-accent);
+}
+
+.modal-biography {
+    display: grid;
+    gap: 1.75rem;
+}
+
+.biography-groups {
     display: grid;
     gap: 1.5rem;
-}
-
-.timeline {
-    position: relative;
-    display: grid;
-    gap: 2rem;
     margin: 0;
-    padding: 1rem 0 1rem 1.75rem;
-    list-style: none;
 }
 
-.timeline::before {
-    content: "";
-    position: absolute;
-    inset-block: 0.5rem;
-    inset-inline-start: 0.55rem;
-    width: 3px;
-    border-radius: 999px;
-    background: var(--timeline-track-color);
-}
-
-.timeline__event {
-    --timeline-entry-color: var(--timeline-default-color);
-    position: relative;
+.biography-group {
     display: grid;
-    gap: 0.85rem;
-    padding: 1.25rem 1.5rem 1.5rem;
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.78);
-    border: 1px solid rgba(17, 23, 39, 0.08);
-    border-inline-start: 4px solid var(--timeline-entry-color);
-    box-shadow: 0 20px 50px rgba(17, 23, 39, 0.15);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    gap: 1rem;
 }
 
-.timeline__event::before {
+.biography-group__title {
+    margin: 0;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--biography-accent);
+}
+
+.biography-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+}
+
+.biography-entry {
+    position: relative;
+    padding: 1.25rem 1.5rem 1.25rem 2.75rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(17, 23, 39, 0.08);
+    box-shadow: 0 18px 45px rgba(17, 23, 39, 0.12);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    --biography-entry-color: var(--biography-accent);
+}
+
+.biography-entry::before {
     content: "";
     position: absolute;
-    inset-inline-start: -1.1rem;
+    inset-inline-start: 1rem;
     inset-block-start: 1.35rem;
-    width: 1rem;
-    height: 1rem;
-    border-radius: 999px;
-    background: #fff;
-    border: 3px solid var(--timeline-entry-color);
-    box-shadow: 0 0 0 5px rgba(17, 23, 39, 0.08);
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background: var(--biography-entry-color);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--biography-entry-color) 20%, transparent);
 }
 
-.timeline__event:hover,
-.timeline__event:focus-within {
+.biography-entry:hover,
+.biography-entry:focus-within {
     transform: translateY(-4px);
     box-shadow: 0 26px 60px rgba(17, 23, 39, 0.22);
 }
 
-.timeline__event--current {
-    border-inline-start-width: 6px;
-    box-shadow: 0 30px 70px rgba(17, 23, 39, 0.25);
+.biography-entry__header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
-.timeline__event-date {
+.biography-entry__period {
     margin: 0;
     font-weight: 600;
-    color: var(--timeline-entry-color);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
     font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--biography-entry-color);
 }
 
-.timeline__event-badge {
+.biography-entry__badge {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.25rem 0.75rem;
+    padding: 0.25rem 0.6rem;
     border-radius: 999px;
     font-size: 0.72rem;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--timeline-entry-color);
-    background: color-mix(in srgb, var(--timeline-entry-color) 15%, rgba(255, 255, 255, 0.9));
-    border: 1px solid color-mix(in srgb, var(--timeline-entry-color) 55%, rgba(17, 23, 39, 0.08));
+    color: var(--biography-entry-color);
+    background: color-mix(in srgb, var(--biography-entry-color) 18%, rgba(255, 255, 255, 0.92));
+    border: 1px solid color-mix(in srgb, var(--biography-entry-color) 55%, rgba(17, 23, 39, 0.08));
 }
 
-.timeline__event-badge::before {
+.biography-entry__badge::before {
     content: "";
     width: 0.4rem;
     height: 0.4rem;
@@ -2745,75 +3017,43 @@ body.print-all .toolbar {
     background: currentColor;
 }
 
-.timeline__event-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.timeline__event-title {
+.biography-entry__title {
     margin: 0;
-    font-size: 1.1rem;
-    color: var(--color-encre);
+    font-size: 1.05rem;
     font-weight: 600;
+    color: var(--color-encre);
 }
 
-.timeline__event-organisation {
-    margin: 0;
+.biography-entry__org {
+    margin: 0.35rem 0 0;
     font-size: 0.95rem;
     color: var(--color-sesame);
 }
 
-.timeline__event-description {
-    margin: 0;
-    font-size: 0.95rem;
-    line-height: 1.6;
+.biography-entry__details {
+    margin: 0.75rem 0 0;
+    padding-inline-start: 1.3rem;
+    display: grid;
+    gap: 0.35rem;
     color: var(--color-poivre);
+    font-size: 0.95rem;
 }
 
-/* Timeline legend */
-.timeline-legend {
-    margin-block-start: 0.75rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1rem;
-    align-items: center;
+.biography-entry__details li::marker {
+    color: var(--biography-entry-color);
 }
-.timeline-legend[hidden] { display: none !important; }
-.timeline-legend__item {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    color: var(--color-sesame);
-    background: rgba(255, 255, 255, 0.65);
-    border: 1px solid rgba(17, 23, 39, 0.08);
-    border-radius: 999px;
-    padding: 0.25rem 0.6rem 0.25rem 0.4rem;
-}
-.timeline-legend__dot {
-    inline-size: 0.65rem;
-    block-size: 0.65rem;
-    border-radius: 50%;
-    background: currentColor;
-    box-shadow: 0 0 0 2px #fff inset, 0 0 0 1px rgba(17,23,39,0.15);
-}
-.timeline-legend__label { line-height: 1; }
 
 @media (min-width: 768px) {
-    .timeline {
-        gap: 2.5rem;
-        padding-inline-start: 2.5rem;
+    .biography-groups {
+        gap: 1.75rem;
     }
 
-    .timeline::before {
-        inset-inline-start: 1.1rem;
+    .biography-entry {
+        padding-inline-start: 3rem;
     }
 
-    .timeline__event::before {
-        inset-inline-start: -1.6rem;
+    .biography-entry::before {
+        inset-inline-start: 1.2rem;
     }
 }
 
