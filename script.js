@@ -637,18 +637,9 @@ const formatBiographyPeriod = (entry) => {
     const endText = entry.endText || '';
 
     // Prefer explicit textual start/end when present
-    if (startText && endText) {
-        return `${startText} – ${endText}`;
-    }
-    if (startText && !endText) {
-        return startText;
-    }
-    if (!startText && endText) {
-        return endText;
-    }
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
-};
+    if (startText && endText) return `${startText} – ${endText}`;
+    if (startText && !endText) return startText;
+    if (!startText && endText) return endText;
 
     // Fallback to formatted dates when available
     const startLabel = hasStartDate ? biographyDateFormatter.format(entry.startDate) : '';
@@ -657,12 +648,8 @@ const formatBiographyPeriod = (entry) => {
     if (startLabel && endLabel) {
         return startLabel === endLabel ? startLabel : `${startLabel} – ${endLabel}`;
     }
-    if (startLabel) {
-        return entry.isCurrent ? `${startLabel} – présent` : `Depuis ${startLabel}`;
-    }
-    if (endLabel) {
-        return `Jusqu'à ${endLabel}`;
-    }
+    if (startLabel) return entry.isCurrent ? `${startLabel} – présent` : `Depuis ${startLabel}`;
+    if (endLabel) return `Jusqu'à ${endLabel}`;
     return '';
 };
 
