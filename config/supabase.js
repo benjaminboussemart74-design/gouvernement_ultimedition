@@ -24,6 +24,9 @@
     if (source.careersTable) {
       next.careersTable = normalizeValue(source.careersTable);
     }
+    if (source.biographyView) {
+      next.biographyView = normalizeValue(source.biographyView);
+    }
     if (source.options && typeof source.options === 'object') {
       next.options = Object.assign({}, target.options || {}, source.options);
     }
@@ -53,6 +56,7 @@
         anonKey: process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
         ministersTable: process.env.SUPABASE_MINISTERS_TABLE || '',
         careersTable: process.env.SUPABASE_CAREERS_TABLE || '',
+        biographyView: process.env.SUPABASE_BIOGRAPHY_VIEW || '',
       });
     }
 
@@ -91,6 +95,7 @@
     config.anonKey = normalizeValue(config.anonKey || '');
     config.ministersTable = normalizeValue(config.ministersTable || 'persons');
     config.careersTable = normalizeValue(config.careersTable || 'person_careers');
+    config.biographyView = normalizeValue(config.biographyView || 'biography_entries_view');
 
     return config;
   }
@@ -108,6 +113,9 @@
   }
   if (resolved.careersTable) {
     global.SUPABASE_CAREERS_TABLE = resolved.careersTable;
+  }
+  if (resolved.biographyView) {
+    global.SUPABASE_BIOGRAPHY_VIEW = resolved.biographyView;
   }
 
   if (typeof module !== 'undefined' && module.exports) {

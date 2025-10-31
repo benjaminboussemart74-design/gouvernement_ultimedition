@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Quick tester: queries the Supabase REST endpoint for the careers table
+// Quick tester: queries the Supabase REST endpoint for the biography view
 // Usage: node scripts/test_supabase_careers.js
 
 const path = require('path');
@@ -18,14 +18,14 @@ try {
 
 const SUPABASE_URL = supabaseConfig && supabaseConfig.url ? supabaseConfig.url : '';
 const SUPABASE_ANON_KEY = supabaseConfig && supabaseConfig.anonKey ? supabaseConfig.anonKey : '';
-const SUPABASE_CAREERS_TABLE = supabaseConfig && supabaseConfig.careersTable ? supabaseConfig.careersTable : 'person_careers';
+const SUPABASE_BIOGRAPHY_VIEW = supabaseConfig && supabaseConfig.biographyView ? supabaseConfig.biographyView : 'biography_entries_view';
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error('Missing Supabase credentials. Configure SUPABASE_URL and SUPABASE_ANON_KEY via environment variables or config/supabase.local.json.');
   process.exit(3);
 }
 
-const endpoint = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/${SUPABASE_CAREERS_TABLE}`;
+const endpoint = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/${SUPABASE_BIOGRAPHY_VIEW}`;
 
 function httpGet(url, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -51,7 +51,7 @@ function httpGet(url, headers = {}) {
 
 async function run() {
   console.log('Supabase URL:', SUPABASE_URL);
-  console.log('Careers table:', SUPABASE_CAREERS_TABLE);
+  console.log('Biography view:', SUPABASE_BIOGRAPHY_VIEW);
   console.log('Querying', endpoint, '\n');
 
   try {

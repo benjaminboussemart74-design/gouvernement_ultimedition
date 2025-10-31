@@ -203,9 +203,9 @@ function createFakeSupabaseClient(baseUrl, anonKey) {
       if (person) {
         window.openModal(person);
         const modal = window.document.getElementById('minister-modal');
-        const careerSection = modal ? modal.querySelector('.modal-module--career') : null;
-        const careerList = modal ? modal.querySelectorAll('.modal-career-list li').length : 0;
-        console.log('Modal opened, career entries:', careerList, 'career section visible:', careerSection && !careerSection.hasAttribute('hidden'));
+        const bioSection = modal ? modal.querySelector('.modal-module--biography') : null;
+        const bioLists = modal ? modal.querySelectorAll('.biography-list li').length : 0;
+        console.log('Modal opened, biography entries:', bioLists, 'biography section visible:', bioSection && !bioSection.hasAttribute('hidden'));
       }
     } catch (e) {
       console.warn('Could not call openModal:', e.message);
