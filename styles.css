@@ -282,7 +282,7 @@ a:focus {
     .header-logo-panel img { max-width: 260px; }
 }
 
-/* --- Large hero backdrop logo (bleu) plus utile le modifier--- */
+/* Les logos, modifications rendre celui du bas plus grand */
 .hero-bg-logo {
     position: absolute;
     inset: 0;
@@ -301,7 +301,7 @@ a:focus {
     background-repeat: no-repeat;
     background-position: center center;
     background-size: contain;
-    opacity: 0.32; /* make logo visible (user requested not transparent) */
+    opacity: 0.32; 
     filter: saturate(120%);
     transform: translateY(6vh);
     will-change: opacity, transform;
@@ -1211,6 +1211,20 @@ body.print-all .toolbar {
     align-items: flex-end;
     justify-content: flex-start;
     min-width: 0;
+}
+
+/* Si la fiche ne contient pas d'étiquettes/ministries, centrer
+   l'ensemble des éléments de gauche (nom, méta, badge de parti)
+   pour que le badge de parti apparaisse centré vis‑à‑vis de la
+   photo/logo située à droite. Utilise :has() lorsqu'il est dispo. */
+.minister-card:not(:has(.mc-ministries)) .mc-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+.minister-card:not(:has(.mc-ministries)) .mc-meta {
+    justify-content: center;
 }
 
 .mc-meta {
