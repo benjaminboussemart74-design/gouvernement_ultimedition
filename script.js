@@ -214,7 +214,6 @@ const activeFiltersHint = document.getElementById("active-filters-hint");
 
 const modalElements = {
     photo: document.getElementById("modal-photo"),
-    role: document.getElementById("modal-role"),
     title: document.getElementById("modal-title"),
     portfolio: document.getElementById("modal-portfolio"),
     description: document.getElementById("modal-description"),
@@ -604,9 +603,11 @@ const normalizeBiographyEntries = (rows) => {
             const endDate = toDate(row.end_date || row.endDate || row.end);
             const startNullsafe = toDate(row.start_date_nullsafe || row.startDateNullsafe);
             const createdAt = toDate(row.created_at || row.createdAt);
+            const eventDate = toDate(row.event_date || row.eventDate);
+            const eventText = toText(row.event_text || row.eventText);
             const sortWeight = Number.isFinite(row.sort_weight) ? row.sort_weight : 0;
             const dateQuality = Number.isFinite(row.date_quality) ? row.date_quality : 99;
-            const sortSource = startDate || startNullsafe || endDate || createdAt;
+            const sortSource = startDate || startNullsafe || eventDate || endDate || createdAt;
             let sortTimestamp = Number.NEGATIVE_INFINITY;
             if (sortSource instanceof Date) {
                 const time = sortSource.getTime();
@@ -614,6 +615,10 @@ const normalizeBiographyEntries = (rows) => {
                     sortTimestamp = time;
                 }
             }
+            const isPointEvent = Boolean(
+                (row.is_point_event) ||
+                (!startDate && !endDate && (eventDate || (eventText && eventText.length)))
+            );
 
             return {
                 id: row.id || null,
@@ -623,9 +628,13 @@ const normalizeBiographyEntries = (rows) => {
                 details: normalizeBiographyDetails(row.details),
                 startDate,
                 endDate,
+                eventDate,
+                eventText,
                 startText: toText(row.start_text),
                 endText: toText(row.end_text),
                 isCurrent: Boolean(row.is_current),
+                isPointEvent,
+                startDateNullsafe: startNullsafe,
                 isUndated: Boolean(row.is_undated),
                 sortWeight,
                 dateQuality,
@@ -639,10 +648,26 @@ const normalizeBiographyEntries = (rows) => {
 
 const formatBiographyPeriod = (entry) => {
     if (!entry) return '';
+    const isPlaceholderDate = (txt) => {
+        if (!txt) return false;
+        const s = String(txt).trim().toLowerCase();
+        // common placeholder variants in French
+        return /date\s+non|non\s+pr[eé]cis|non\s+pr[eé]cis[eé]?/.test(s) || s === 'date non précisée' || s === 'date non précisé' || s === 'date non précisé';
+    };
+    // Priorité aux événements ponctuels (texte libre puis année de la date)
+    if (entry.eventText) {
+        return String(entry.eventText).trim();
+    }
+    if (entry.eventDate instanceof Date && !Number.isNaN(entry.eventDate.getTime())) {
+        return String(entry.eventDate.getFullYear());
+    }
     const hasStartDate = entry.startDate instanceof Date && !Number.isNaN(entry.startDate.getTime());
     const hasEndDate = entry.endDate instanceof Date && !Number.isNaN(entry.endDate.getTime());
-    const startText = entry.startText || '';
-    const endText = entry.endText || '';
+    let startText = entry.startText || '';
+    let endText = entry.endText || '';
+    // sanitize common placeholder phrases like "Date non précisée"
+    if (isPlaceholderDate(startText)) startText = '';
+    if (isPlaceholderDate(endText)) endText = '';
 
     // Prefer explicit textual start/end when present
     if (startText && endText) return `${startText} – ${endText}`;
@@ -671,7 +696,7 @@ const createBiographyEntryElement = (entry) => {
     }
 
     const period = formatBiographyPeriod(entry);
-    if (period || entry.isCurrent) {
+    if (period || entry.isCurrent || entry.isPointEvent) {
         const header = document.createElement('div');
         header.className = 'biography-entry__header';
         if (period) {
@@ -2473,16 +2498,22 @@ const openModal = async (minister) => {
         };
     }
     modalElements.photo.alt = minister.photoAlt ?? `Portrait de ${minister.name ?? "ministre"}`;
-    modalElements.role.textContent = formatRole(minister.role);
     modalElements.title.textContent = minister.name ?? "Nom du ministre";
 
-    const ministriesLabel = minister.ministries?.length
+    // Portfolio now displays role label(s) from person_ministries
+    let roleLabels = Array.isArray(minister.ministries)
         ? minister.ministries
-              .map((entry) => entry.label)
-              .filter(Boolean)
-              .join(" • ")
-        : null;
-    modalElements.portfolio.textContent = ministriesLabel || minister.portfolio || "Portefeuille à préciser";
+              .map((entry) => (entry && typeof entry.roleLabel === 'string' ? entry.roleLabel.trim() : ''))
+              .filter((v) => !!v)
+        : [];
+    // Prefer unique labels, preserve order (primary first if marked)
+    if (Array.isArray(minister.ministries)) {
+        const primaries = minister.ministries.filter((e) => e && e.isPrimary && e.roleLabel).map((e) => e.roleLabel.trim());
+        const others = roleLabels.filter((rl) => !primaries.includes(rl));
+        roleLabels = [...(primaries.length ? primaries : []), ...others];
+    }
+    const joinedRoleLabels = roleLabels.length ? Array.from(new Set(roleLabels.map((t) => t.toLowerCase()))).map((lower, idx) => roleLabels.find((t) => t.toLowerCase() === lower)).join(' • ') : '';
+    modalElements.portfolio.textContent = joinedRoleLabels || formatRole(minister.role) || minister.portfolio || "Rôle à préciser";
 
     modalElements.description.textContent = minister.description ?? "Ajoutez ici une biographie synthétique.";
 
