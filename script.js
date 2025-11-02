@@ -923,11 +923,6 @@ const buildCard = (minister) => {
     const meta = document.createElement("div");
     meta.className = "mc-meta";
 
-    const role = document.createElement("p");
-    role.className = "minister-role";
-    role.textContent = formatRole(roleKey);
-    meta.appendChild(role);
-
     const partyValue = minister.party;
     const partyBadge = createPartyBadge(partyValue == null ? "" : String(partyValue).trim());
     if (partyBadge) {
@@ -937,12 +932,8 @@ const buildCard = (minister) => {
     left.appendChild(meta);
 
     const missionText = (minister.mission ?? "").trim();
-    if (missionText) {
-        const mission = document.createElement("p");
-        mission.className = "mc-mission";
-        mission.textContent = missionText;
-        left.appendChild(mission);
-    }
+    // user requested: do not render mission paragraph for ministers in the grid
+    // (keep mission available in modals/prints)
 
     if (roleKey === "leader") {
         const bio = document.createElement("p");
@@ -972,7 +963,8 @@ const buildCard = (minister) => {
     right.appendChild(cta);
 
     const delegates = Array.isArray(minister.delegates) ? minister.delegates : [];
-    if (delegates.length) {
+    // Do not render the delegates module for ministers that are themselves delegates
+    if (!DELEGATE_ROLES.has(roleKey) && delegates.length) {
         const delegatesContainer = document.createElement("div");
         delegatesContainer.className = "delegates";
 
@@ -2985,7 +2977,7 @@ const fetchMinistersFromView = async () => {
         }
     }
 
-    // Essaye de retrouver l'identifiant du ministère par libellé
+    // Essaye de retrouver l'identifiant du ministère par libellé il faudrait faire en sorte qu'il l'identifie directement avec son id, je vais créer un 
     const ministryNames = Array.from(new Set(rows.map((r) => r.ministry_name).filter(Boolean)));
     let ministryIdByName = new Map();
     if (ministryNames.length) {
@@ -3071,6 +3063,7 @@ const loadMinisters = async () => {
             attachDelegatesToCore();
             dataLoaded = true;
             updatePartyFilterOptions(ministers);
+            try { await updateGlobalCounters(); } catch (_) {}
         }
     } catch (error) {
         lastFetchError = error;
@@ -3088,6 +3081,7 @@ const loadMinisters = async () => {
                 dataLoaded = true;
                 updatePartyFilterOptions(ministers);
             }
+            try { await updateGlobalCounters(); } catch (_) {}
         } catch (error) {
             lastFetchError = error;
             console.error("[onepage] Erreur lors du chargement du fichier de secours", error);
@@ -3123,6 +3117,7 @@ const loadMinisters = async () => {
             "Aucune donnée disponible. Vérifiez la configuration Supabase ou ajoutez un fichier data/ministers.json.";
         updateResultsSummary(0, 0);
         updateActiveFiltersHint(0, 0);
+        try { await updateGlobalCounters(); } catch (_) {}
     }
 };
 
@@ -3199,44 +3194,63 @@ highlightFilter(currentRole);
 updateResultsSummary(0, 0);
 updateActiveFiltersHint(0, 0);
 
-// C'est ici que le compteur prend la placr j'ai 200 ministres et collab vérifier que le chiffre est toujours bon
+// C'est ici que le compteur prend la placr j'ai 200 ministres et collab vérifier que le chiffre est toujours bon je sais mais il faudrait rendre ça plus beau également voir dans le dernier code
 let __appInitialized = false;
-// Lazy-created counters container element
 let __globalCountersEl = null;
 
 function ensureCountersContainer() {
+    // Reuse if already in DOM
     if (__globalCountersEl && document.body.contains(__globalCountersEl)) return __globalCountersEl;
+
+
+    const compact = document.querySelector('.toolbar-compact');
+    if (compact) {
+        const el = document.createElement('div');
+        el.className = 'toolbar-counters toolbar-counters--compact';
+        el.id = 'global-counters';
+        el.setAttribute('role', 'status');
+        compact.appendChild(el);
+        __globalCountersEl = el;
+        return el;
+    }
+
+    //  Ca c'est la tool bar que j'ai caché pour le moment 
     const meta = document.querySelector('.toolbar-meta');
-    if (!meta) return null;
-    const el = document.createElement('div');
-    el.className = 'toolbar-counters';
-    el.id = 'global-counters';
-    el.setAttribute('role', 'status');
-    meta.appendChild(el);
-    __globalCountersEl = el;
-    return el;
+    if (meta) {
+        const el = document.createElement('div');
+        el.className = 'toolbar-counters';
+        el.id = 'global-counters';
+        el.setAttribute('role', 'status');
+        meta.appendChild(el);
+        __globalCountersEl = el;
+        return el;
+    }
+    return null;
 }
 
 async function fetchCollaboratorCounters() {
     const client = ensureSupabaseClient();
     if (!client) return { dircab: 0, chefcab: 0, conseiller: 0, ok: false };
     try {
+        // Be permissive with available columns: some schemas may not have collab_code
         const { data, error } = await client
             .from('persons')
-            .select('collab_code, collab_grade')
+            .select('collab_grade, cabinet_role')
             .eq('role', 'collaborator');
         if (error) throw error;
         let dircab = 0, chefcab = 0, conseiller = 0;
         (Array.isArray(data) ? data : []).forEach((row) => {
-            const code = String(row?.collab_code || '').toLowerCase();
             const grade = String(row?.collab_grade || '').toLowerCase();
-            const isDir = code.includes('direcab') || code.includes('dircab') || grade.includes('directeur de cabinet');
-            const isChef = code.includes('chefcab') || grade.includes('chef de cabinet');
-            const isCons = code.includes('conseiller') || grade.includes('conseiller');
+            const roleText = String(row?.cabinet_role || '').toLowerCase();
+            const hay = grade + ' ' + roleText;
+            const isDir = hay.includes('directeur de cabinet') || hay.includes('dircab');
+            const isChef = hay.includes('chef de cabinet') || hay.includes('chefcab');
+            const isCons = hay.includes('conseiller');
             if (isDir) dircab++; else if (isChef) chefcab++; else if (isCons) conseiller++;
         });
         return { dircab, chefcab, conseiller, ok: true };
     } catch (_) {
+        // best-effort: don't break UI on counter failure
         return { dircab: 0, chefcab: 0, conseiller: 0, ok: false };
     }
 }
@@ -3246,7 +3260,7 @@ async function updateGlobalCounters() {
     if (!host) return;
     const ministersCount = Array.isArray(coreMinisters) ? coreMinisters.length : 0;
     host.innerHTML = '';
-    const makePill = (cls, label, value) => {
+    const makePill = (cls, label, value, detail = '') => {
         const pill = document.createElement('span');
         pill.className = `counter-pill ${cls}`;
         const dot = document.createElement('span');
@@ -3255,16 +3269,24 @@ async function updateGlobalCounters() {
         text.textContent = `${label}: ${value}`;
         pill.appendChild(dot);
         pill.appendChild(text);
+        if (detail) {
+            const more = document.createElement('span');
+            more.className = 'counter-pill__detail';
+            more.textContent = ` ${detail}`;
+            pill.appendChild(more);
+        }
         return pill;
     };
     host.appendChild(makePill('counter-pill--ministers', 'Ministres', ministersCount));
+    const delegatesCount = Array.isArray(delegateMinisters) ? delegateMinisters.length : 0;
+    host.appendChild(makePill('counter-pill--delegates', 'Délégués', delegatesCount));
     // Try to fetch collaborator counters; if unavailable, skip gracefully
     try {
         const { dircab, chefcab, conseiller, ok } = await fetchCollaboratorCounters();
         if (ok) {
-            host.appendChild(makePill('counter-pill--direcab', 'Directeurs de cabinet', dircab));
-            host.appendChild(makePill('counter-pill--chefcab', 'Chefs de cabinet', chefcab));
-            host.appendChild(makePill('counter-pill--conseiller', 'Conseillers', conseiller));
+            const total = (dircab || 0) + (chefcab || 0) + (conseiller || 0);
+            const detail = `(DirCab ${dircab} · ChefCab ${chefcab} · Cons. ${conseiller})`;
+            host.appendChild(makePill('counter-pill--collabs', 'Collaborateurs', total, detail));
         }
     } catch (_) {
         // ignore
