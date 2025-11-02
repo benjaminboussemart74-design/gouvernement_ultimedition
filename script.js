@@ -1939,7 +1939,7 @@ const renderCabinetSection = (minister, collaborators, gradeLookup) => {
         return section;
     }
 
-    panel.appendChild(createCabinetTreeHero(minister, members.length));
+    // Removed cabinet tree hero for a more minimal header
 
     const treeWrapper = document.createElement("div");
     treeWrapper.className = "cabinet-tree";
@@ -2577,6 +2577,15 @@ const openModal = async (minister) => {
             // We'll query for a delegates list inside the modal (may not exist if section was removed)
             let delegatesList = delegatesSection ? delegatesSection.querySelector('#modal-delegates') : null;
 
+            // If the current minister IS a delegate (role in DELEGATE_ROLES), ensure the delegates
+            // module is removed from the modal and skip population.
+            if (DELEGATE_ROLES.has(minister.role)) {
+                if (delegatesSection && delegatesSection.parentNode) {
+                    delegatesSection.parentNode.removeChild(delegatesSection);
+                }
+                // skip the rest of the delegates population logic
+            } else {
+
             // Determine linked delegates: prefer minister.delegates if already attached
             let linkedDelegates = Array.isArray(minister.delegates) && minister.delegates.length ? minister.delegates.slice() : [];
             if (!linkedDelegates.length && Array.isArray(delegateMinisters) && delegateMinisters.length) {
@@ -2600,12 +2609,12 @@ const openModal = async (minister) => {
                 });
             }
 
-            // If no linked delegates, remove the delegates section from the modal (so it doesn't appear)
-            if (!Array.isArray(linkedDelegates) || !linkedDelegates.length) {
-                if (delegatesSection && delegatesSection.parentNode) {
-                    delegatesSection.parentNode.removeChild(delegatesSection);
-                }
-            } else {
+                // If no linked delegates, remove the delegates section from the modal (so it doesn't appear)
+                if (!Array.isArray(linkedDelegates) || !linkedDelegates.length) {
+                    if (delegatesSection && delegatesSection.parentNode) {
+                        delegatesSection.parentNode.removeChild(delegatesSection);
+                    }
+                } else {
                 // Ensure delegates section exists; create it if needed
                 if (!delegatesSection) {
                     delegatesSection = document.createElement('div');
@@ -2628,6 +2637,7 @@ const openModal = async (minister) => {
                     } else if (layout) {
                         layout.appendChild(delegatesSection);
                     }
+                }
                 }
 
                 // Populate delegates list
