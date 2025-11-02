@@ -147,8 +147,9 @@ a:focus {
 }
 
 .site-header {
-    background: var(--gradient-header);
-    color: var(--color-panthere);
+    /* Use solid "bleu panthère" for header background */
+    background: var(--color-panthere);
+    color: var(--color-perle);
     padding: 3.5rem clamp(1.5rem, 3vw, 3.5rem) 2rem;
     display: grid;
     gap: 3rem;
@@ -872,6 +873,19 @@ body.print-all .toolbar {
 .counter-pill--direcab { color: #2563eb; }
 .counter-pill--chefcab { color: #0ea5e9; }
 .counter-pill--conseiller { color: #14b8a6; }
+.counter-pill--collabs { color: var(--color-encre); }
+.counter-pill--delegates { color: #7c3aed; }
+
+.counter-pill__detail {
+    font-weight: 600;
+    color: var(--color-sesame);
+}
+
+/* Placement when inserted in compact toolbar */
+.toolbar-counters--compact {
+    justify-self: start;
+    margin-top: 0.25rem;
+}
 
 .results-count {
     display: flex;
@@ -2588,8 +2602,9 @@ body.print-all .toolbar {
 
 .site-footer {
     padding: 3rem clamp(1.5rem, 4vw, 3rem);
-    background: var(--color-encre);
-    color: var(--color-guimauve);
+    /* apply bleu panthère to footer as well */
+    background: var(--color-panthere);
+    color: var(--color-perle);
 }
 
 .footer-inner {
