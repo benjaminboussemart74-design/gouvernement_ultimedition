@@ -596,6 +596,15 @@ const normalizeBiographyEntries = (rows) => {
         return Number.isNaN(date.getTime()) ? null : date;
     };
     const toText = (value) => (value == null ? '' : String(value).trim());
+    const isPlaceholderDate = (txt) => {
+        if (!txt) return false;
+        const s = String(txt).trim().toLowerCase();
+        return /date\s+non|non\s+pr[eé]cis|non\s+pr[eé]cis[eé]?/.test(s) || s === 'date non précisée' || s === 'date non précisé';
+    };
+    const sanitizeText = (value) => {
+        const t = toText(value);
+        return isPlaceholderDate(t) ? '' : t;
+    };
 
     return (Array.isArray(rows) ? rows : [])
         .map((row) => {
@@ -604,7 +613,7 @@ const normalizeBiographyEntries = (rows) => {
             const startNullsafe = toDate(row.start_date_nullsafe || row.startDateNullsafe);
             const createdAt = toDate(row.created_at || row.createdAt);
             const eventDate = toDate(row.event_date || row.eventDate);
-            const eventText = toText(row.event_text || row.eventText);
+            const eventText = sanitizeText(row.event_text || row.eventText);
             const sortWeight = Number.isFinite(row.sort_weight) ? row.sort_weight : 0;
             const dateQuality = Number.isFinite(row.date_quality) ? row.date_quality : 99;
             const sortSource = startDate || startNullsafe || eventDate || endDate || createdAt;
@@ -630,8 +639,8 @@ const normalizeBiographyEntries = (rows) => {
                 endDate,
                 eventDate,
                 eventText,
-                startText: toText(row.start_text),
-                endText: toText(row.end_text),
+                startText: sanitizeText(row.start_text),
+                endText: sanitizeText(row.end_text),
                 isCurrent: Boolean(row.is_current),
                 isPointEvent,
                 startDateNullsafe: startNullsafe,
