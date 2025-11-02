@@ -3,584 +3,482 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Hiérarchie des collaborateurs</title>
+  <title>Hiérarchie gouvernementale</title>
   <!-- Supabase runtime configuration (public anon key only) -->
   <meta name="supabase-url" content="https://yyquczbuhxbfnefwgxxc.supabase.co" />
   <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cXVjemJ1aHhiZm5lZndneHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3ODI5NjcsImV4cCI6MjA3NTM1ODk2N30.0IDUEP96IQQ4Ylz-YoTY1UzoySLT9Wq2YLC2zAb7jds" />
   <style>
-    :root{
-      --bg:#f8fafc;
-      --card:#ffffff;
-      --muted:#64748b;
-      --accent:#2563eb;
-      --text:#0f172a;
+    :root {
+      color-scheme: light;
+      --page-bg: #f1f5f9;
+      --card-bg: #ffffff;
+      --card-border: #d8dee6;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --accent: #1f2937;
+      font-family: "Space Grotesk", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
     }
 
-    <bouton
-    html,body{height:100%;}
-    body{
-      font-family: "Inter", "Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:1.25rem;
-      padding:2rem;
+    *, *::before, *::after {
+      box-sizing: border-box;
     }
 
-    .header{
-      text-align:center;
-      max-width:900px;
-      width:100%;
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--page-bg);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2.5rem 1.25rem 3rem;
     }
 
-    .minister {
+    .page-header {
+      max-width: 720px;
       text-align: center;
-      padding: 0.9rem 1.2rem;
-      background-color: var(--accent);
-      color: white;
+      margin-bottom: 2rem;
+    }
+
+    .page-title {
+      font-size: clamp(2rem, 3vw, 2.6rem);
+      font-weight: 600;
+      margin: 0 0 0.75rem;
+      letter-spacing: -0.01em;
+    }
+
+    .page-intro {
+      margin: 0 auto;
+      font-size: 1.05rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    main {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 18px 34px rgba(15, 23, 42, 0.05);
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0 0 0.75rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-width: 320px;
+    }
+
+    label {
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    select {
       border-radius: 12px;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      box-shadow: 0 6px 18px rgba(37,99,235,0.12);
-      display:inline-block;
+      border: 1px solid var(--card-border);
+      padding: 0.6rem 0.75rem;
+      font-size: 1rem;
+      background: #f8fafc;
+      color: var(--text-main);
+      transition: border-color 0.2s ease;
     }
 
-    .tree-wrap{
-      width:100%;
-      max-width:1100px;
-      display:flex;
-      justify-content:center;
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
     }
 
-    .tree {
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:1.25rem;
-      width:100%;
+    .hierarchy {
+      position: relative;
+      padding-left: 1.5rem;
+      border-left: 1px solid rgba(148, 163, 184, 0.4);
     }
 
-    .level{
-      display:flex;
-      justify-content:center;
-      flex-wrap:wrap;
-      gap:1rem 1.5rem;
-      align-items:flex-start;
-      width:100%;
-      padding:0 0.5rem;
+    .hierarchy > ol {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 1rem;
     }
 
-    .person{
-      background:var(--card);
-      border:1px solid #e2e8f0;
-      border-radius:10px;
-      padding:0.75rem 1rem;
-      box-shadow:0 6px 14px rgba(2,6,23,0.04);
-      min-width:170px;
-      max-width:220px;
-      text-align:center;
-      transition:transform .15s ease, box-shadow .15s ease;
-      cursor:default;
+    .hierarchy ol ol {
+      margin-top: 0.75rem;
+      margin-left: 1.75rem;
+      padding-left: 1.25rem;
+      border-left: 1px solid rgba(148, 163, 184, 0.3);
+      list-style: none;
+      display: grid;
+      gap: 0.75rem;
     }
-    .person img{
-      width:56px;
-      height:56px;
-      border-radius:50%;
-      object-fit:cover;
-      display:block;
-      margin:0 auto 0.5rem;
-      background:#e6eefb;
+
+    .node-card {
+      background: #fff;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
+      display: grid;
+      gap: 0.35rem;
+      position: relative;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
     }
-    .person .meta{font-size:0.82rem; color:#64748b; margin-top:0.35rem}
-    .person:hover{transform:translateY(-4px); box-shadow:0 10px 22px rgba(2,6,23,0.08);}
-    .person strong{display:block; margin-bottom:0.25rem;}
-    .grade{font-size:0.82rem; color:#475569}
 
-    /* Large minister card shown at top when a minister is selected */
-    .minister-big{
-      display:flex; gap:1rem; align-items:center; background:var(--card); padding:1rem; border-radius:12px; box-shadow:0 8px 24px rgba(2,6,23,0.06); border:1px solid #e6eef8; margin-top:0.6rem; width:100%;
+    .node-card::before {
+      content: "";
+      position: absolute;
+      left: -1.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1.15rem;
+      height: 1px;
+      background: rgba(148, 163, 184, 0.4);
     }
-    .minister-big img{width:96px;height:96px;border-radius:12px;object-fit:cover}
-    .minister-big .info{display:flex;flex-direction:column;gap:0.25rem}
-    .minister-big .info h2{margin:0;font-size:1.15rem}
-    .minister-big .info p{margin:0;color:var(--muted)}
 
-    .line{width:2px; height:18px; background:var(--muted); margin:0.25rem auto 0; border-radius:2px}
+    .node-name {
+      font-weight: 600;
+      font-size: 1.02rem;
+    }
 
-    .controls{display:flex; gap:0.5rem; align-items:center; margin-top:0.25rem}
-    .small{font-size:0.9rem; color:#475569}
+    .node-role {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      letter-spacing: 0.01em;
+    }
 
-    pre.jsondump{background:#0f172a; color:#e6f1ff; padding:0.75rem; border-radius:8px; overflow:auto; max-height:220px; width:100%; box-sizing:border-box}
+    .node-extra {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
 
-    @media (max-width:640px){
-      .person{min-width:140px}
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 1rem;
+      padding: 1rem 0;
+    }
+
+    .meta-info {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 1rem;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 1.75rem 1rem 2.5rem;
+      }
+
+      .panel {
+        padding: 1.35rem;
+      }
+
+      .hierarchy {
+        padding-left: 1.1rem;
+      }
+
+      .hierarchy ol ol {
+        margin-left: 1.25rem;
+        padding-left: 0.9rem;
+      }
+
+      .node-card::before {
+        left: -1.3rem;
+        width: 0.9rem;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="minister" id="ministerTitle">Ministre</div>
-    <div id="ministerCardContainer" style="width:100%; max-width:1100px; margin:1rem auto 0;"></div>
-    <div class="controls">
-      <div class="small">Exemple dynamique — données en mémoire (modifie le tableau JS pour tester)</div>
-      <label for="ministerSelect" style="margin-left:1rem; font-size:0.95rem; color:#334155">Ministre :</label>
-      <select id="ministerSelect" style="margin-left:0.5rem; padding:0.25rem 0.4rem; border-radius:6px; border:1px solid #cbd5e1; background:white">
-        <option value="__all">Tous les ministres</option>
-      </select>
-    </div>
-  </div>
+  <header class="page-header">
+    <h1 class="page-title">Hiérarchie gouvernementale</h1>
+    <p class="page-intro">Visualisation minimale de l'organisation des équipes autour d'un membre du gouvernement. Sélectionnez un ministre pour afficher sa chaîne hiérarchique.</p>
+  </header>
 
-  <div class="tree-wrap">
-    <div class="tree" id="treeContainer" aria-live="polite"></div>
-  </div>
+  <main>
+    <section class="panel">
+      <h2 class="panel-title">Sélection</h2>
+      <div class="control-group">
+        <label for="ministerSelect">Ministre</label>
+        <select id="ministerSelect" autocomplete="off">
+          <option value="__all">Tous les ministres</option>
+        </select>
+      </div>
+      <p class="meta-info" id="dataSource">Sources : jeu d'exemple local.</p>
+    </section>
 
-  <details style="max-width:1100px; width:100%;">
-    <summary style="cursor:pointer; padding:0.5rem 0;">Voir les données JSON utilisées</summary>
-    <pre class="jsondump" id="jsonDump"></pre>
-  </details>
+    <section class="panel">
+      <h2 class="panel-title" id="hierarchyTitle">Structure hiérarchique</h2>
+      <div id="hierarchyContainer" class="hierarchy" aria-live="polite">
+        <div class="empty-state" id="emptyState">Aucune donnée disponible pour cette sélection.</div>
+      </div>
+    </section>
+  </main>
 
-  <!-- Charger la config locale Supabase (optionnelle) et le client JS Supabase -->
-  <!-- Optional local override (gitignored). 404 is fine in prod. -->
   <script src="config/supabase.local.js?v=14a6c69" onerror="void 0"></script>
   <script src="config/supabase.js?v=14a6c69"></script>
   <script src="config/supabase-lite-client.js?v=14a6c69"></script>
-
   <script>
-    // Exemple de données plates suivant la logique SQL : id, name, role, superior_id (chaîne de subordination), collab_grade
-    const persons = [
-      { id: 1, name: "Mme Dupont", role: "Ministre", superior_id: null, collab_grade: "Ministre" },
-      { id: 2, name: "Jean Martin", role: "Directeur de cabinet", superior_id: 1, collab_grade: "Directeur de cabinet" },
-      { id: 3, name: "Sophie Bernard", role: "Chef de cabinet adjoint", superior_id: 2, collab_grade: "Chef de cabinet adjoint" },
-      { id: 4, name: "Luc Moreau", role: "Conseiller technique", superior_id: 2, collab_grade: "Conseiller technique" },
-      { id: 5, name: "Amélie Giraud", role: "Attachée de presse", superior_id: 3, collab_grade: "Attachée de presse" },
-      { id: 6, name: "Paul Simon", role: "Chargé de mission", superior_id: 3, collab_grade: "Chargé de mission" },
-      { id: 7, name: "Clara Petit", role: "Secrétaire particulière", superior_id: 3, collab_grade: "Secrétaire particulière" }
+    const fallbackPersons = [
+      { id: 1, name: "Mme Dupont", role: "Ministre", portfolio: "Ministère de la Transition", superior_id: null },
+      { id: 2, name: "Jean Martin", role: "Directeur de cabinet", superior_id: 1 },
+      { id: 3, name: "Sophie Bernard", role: "Chef de cabinet adjoint", superior_id: 2 },
+      { id: 4, name: "Luc Moreau", role: "Conseiller technique", superior_id: 2 },
+      { id: 5, name: "Amélie Giraud", role: "Attachée de presse", superior_id: 3 },
+      { id: 6, name: "Paul Simon", role: "Chargé de mission", superior_id: 3 },
+      { id: 7, name: "Clara Petit", role: "Secrétaire particulière", superior_id: 3 },
+      { id: 8, name: "Marc Delaunay", role: "Ministre délégué", portfolio: "Ministère de la Mer", superior_id: null },
+      { id: 9, name: "Inès Fabre", role: "Directrice de cabinet", superior_id: 8 },
+      { id: 10, name: "Olivier Renard", role: "Conseiller juridique", superior_id: 9 }
     ];
 
-    const treeContainer = document.getElementById('treeContainer');
-    const ministerTitle = document.getElementById('ministerTitle');
-  const ministerCardContainer = document.getElementById('ministerCardContainer');
-    const jsonDump = document.getElementById('jsonDump');
+    const ministerSelect = document.getElementById('ministerSelect');
+    const hierarchyContainer = document.getElementById('hierarchyContainer');
+    const emptyState = document.getElementById('emptyState');
+    const hierarchyTitle = document.getElementById('hierarchyTitle');
+    const dataSource = document.getElementById('dataSource');
 
-    // Affiche les données JSON (formatées)
-    jsonDump.textContent = JSON.stringify(persons, null, 2);
+    function escapeHtml(value) {
+      if (typeof value !== 'string') return '';
+      return value.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+    }
 
-  // --- Supabase integration -------------------------------------------------
-    // Si `config/supabase.js` définit window.SUPABASE_URL and window.SUPABASE_ANON_KEY,
-    // on essaiera de charger `collab_grades` et une table de collaborateurs depuis Supabase.
-    async function tryLoadFromSupabase(){
-      if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
-        console.info('Supabase config absente, utilisation des données locales.');
-        return null;
+    function toTree(records) {
+      const nodes = new Map();
+      records.forEach((item) => {
+        const id = String(item.id);
+        nodes.set(id, {
+          id,
+          name: item.name || item.full_name || item.nom || ('#' + id),
+          role: item.role || '',
+          details: item.portfolio || item.job_title || item.title || item.cabinet_role || '',
+          superior_id: item.superior_id === null || item.superior_id === undefined ? null : String(item.superior_id),
+          children: []
+        });
+      });
+
+      const roots = [];
+      nodes.forEach((node) => {
+        if (!node.superior_id) {
+          roots.push(node);
+          return;
+        }
+        const parent = nodes.get(node.superior_id);
+        if (parent) {
+          parent.children.push(node);
+        } else {
+          roots.push(node);
+        }
+      });
+
+      const sortNodes = (list) => {
+        list.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+        list.forEach((child) => sortNodes(child.children));
+      };
+
+      sortNodes(roots);
+      return roots;
+    }
+
+    function renderTree(nodes) {
+      hierarchyContainer.innerHTML = '';
+      if (!nodes.length) {
+        emptyState.hidden = false;
+        hierarchyContainer.appendChild(emptyState);
+        return;
       }
 
-      // createClient est exposé par le client léger local via `supabase.createClient`
-      if (!window.supabase || typeof window.supabase.createClient !== 'function'){
-        console.warn('Client Supabase non disponible dans le scope global.');
+      emptyState.hidden = true;
+      const rootList = document.createElement('ol');
+      nodes.forEach((node) => {
+        rootList.appendChild(renderNode(node));
+      });
+      hierarchyContainer.appendChild(rootList);
+    }
+
+    function renderNode(node) {
+      const li = document.createElement('li');
+      const card = document.createElement('div');
+      card.className = 'node-card';
+      const role = node.role ? `<span class="node-role">${escapeHtml(node.role)}</span>` : '';
+      const extra = node.details ? `<span class="node-extra">${escapeHtml(node.details)}</span>` : '';
+      card.innerHTML = `<span class="node-name">${escapeHtml(node.name)}</span>${role}${extra}`;
+      li.appendChild(card);
+
+      if (node.children && node.children.length) {
+        const subList = document.createElement('ol');
+        node.children.forEach((child) => {
+          subList.appendChild(renderNode(child));
+        });
+        li.appendChild(subList);
+      }
+
+      return li;
+    }
+
+    function buildOptions(records) {
+      const seen = new Set();
+      const options = [];
+      records.forEach((item) => {
+        if (item.superior_id === null || item.superior_id === undefined) {
+          const id = String(item.id);
+          if (!seen.has(id)) {
+            options.push({ id, name: item.name || item.full_name || item.nom || ('#' + id) });
+            seen.add(id);
+          }
+        }
+      });
+      options.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+      return options;
+    }
+
+    function updateView(records) {
+      const selection = ministerSelect.value;
+      const tree = toTree(records);
+      let nodesToRender = tree;
+      let titleSuffix = '';
+
+      if (selection !== '__all') {
+        const map = new Map();
+        const collect = (list) => {
+          list.forEach((node) => {
+            map.set(node.id, node);
+            collect(node.children);
+          });
+        };
+        collect(tree);
+        const selectedNode = map.get(selection);
+        if (selectedNode) {
+          nodesToRender = [selectedNode];
+          titleSuffix = ` — ${selectedNode.name}`;
+        } else {
+          nodesToRender = [];
+        }
+      }
+
+      hierarchyTitle.textContent = `Structure hiérarchique${titleSuffix}`;
+      renderTree(nodesToRender);
+    }
+
+    function populateSelect(records) {
+      const options = buildOptions(records);
+      ministerSelect.innerHTML = '<option value="__all">Tous les ministres</option>';
+      options.forEach((opt) => {
+        const option = document.createElement('option');
+        option.value = opt.id;
+        option.textContent = opt.name;
+        ministerSelect.appendChild(option);
+      });
+    }
+
+    async function tryLoadFromSupabase() {
+      if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
+        return null;
+      }
+      if (!window.supabase || typeof window.supabase.createClient !== 'function') {
         return null;
       }
 
       const client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-  const result = { grades: null, collaborators: null, persons: null };
+      const result = { persons: [], collaborators: [] };
 
-      // Charger collab_grades
-      try{
-        const { data: grades, error: gErr } = await client.from('collab_grades').select('*').order('rank');
-        if (gErr) {
-          console.warn('Erreur en récupérant collab_grades:', gErr);
-        } else {
-          result.grades = grades;
+      try {
+        const { data, error } = await client.from('persons').select('*');
+        if (!error && Array.isArray(data)) {
+          result.persons = data;
         }
-      } catch(e){ console.warn('Exception fetching collab_grades', e); }
-
-      // Essayer quelques noms de tables possibles pour les collaborateurs
-      const candidateTables = ['collaborators','people','members','ministers','cabinet','collabs','persons'];
-      for(const tbl of candidateTables){
-        try{
-          const { data, error } = await client.from(tbl).select('*');
-          if (!error && Array.isArray(data) && data.length > 0){
-            result.collaborators = { table: tbl, rows: data };
-            break;
-          }
-        } catch(e){ /* ignore */ }
+      } catch (err) {
+        console.warn('Erreur en chargeant persons', err);
       }
 
-      // If collaborators came from another table, try to fetch `persons` to get ministers info
-      try{
-        const { data: personsData, error: pErr } = await client.from('persons').select('*');
-        if (!pErr && Array.isArray(personsData) && personsData.length > 0){
-          result.persons = personsData;
+      const tables = ['collaborators', 'people', 'members', 'cabinet', 'collabs'];
+      for (const table of tables) {
+        try {
+          const { data, error } = await client.from(table).select('*');
+          if (!error && Array.isArray(data) && data.length) {
+            result.collaborators = data;
+            result.table = table;
+            break;
+          }
+        } catch (err) {
+          /* ignore */
         }
-      } catch(e){ /* ignore */ }
+      }
+
+      if (!result.persons.length && !result.collaborators.length) {
+        return null;
+      }
 
       return result;
     }
 
-    // Helper pour normaliser id -> string (évite mismatch entre types SQL et JS)
-    function normalizeId(v){ return v === null || v === undefined ? null : String(v); }
-
-    // Rebuild tree that tolerates string ids
-    function buildTree(flat){
-      const map = new Map();
-      flat.forEach(p => map.set(String(p.id), {...p, subordinates: []}));
-
-      const roots = [];
-      map.forEach(node => {
-        const sup = node.superior_id === null || node.superior_id === undefined ? null : String(node.superior_id);
-        if (sup === null) {
-          roots.push(node);
-        } else {
-          const parent = map.get(sup);
-          if (parent) parent.subordinates.push(node);
-          else roots.push(node); // orphans -> treat as root
-        }
-      });
-      // Trier les subordinates par collab_rank (asc) puis par nom
-      map.forEach(n => {
-        if (Array.isArray(n.subordinates) && n.subordinates.length > 1){
-          n.subordinates.sort((a,b) => {
-            const ra = (a.collab_rank !== undefined) ? Number(a.collab_rank) : 99;
-            const rb = (b.collab_rank !== undefined) ? Number(b.collab_rank) : 99;
-            if (ra !== rb) return ra - rb;
-            return String(a.name).localeCompare(String(b.name));
-          });
-        }
-      });
-      return roots;
-    }
-
-
-    // (la fonction buildTree tolérante aux string ids est définie plus haut)
-
-    // Crée des niveaux (par profondeur) depuis les racines
-    function groupByLevel(roots){
-      const levels = [];
-      const queue = [];
-      roots.forEach(r => queue.push({node:r, depth:0}));
-
-      while(queue.length){
-        const {node, depth} = queue.shift();
-        if (!levels[depth]) levels[depth] = [];
-        levels[depth].push(node);
-        node.subordinates.forEach(child => queue.push({node:child, depth: depth+1}));
-      }
-      return levels;
-    }
-
-    // Rendu : une ligne par fonction/grade (dircab, diradj, chefcab, chefadj, chefpole, conseiller)
-    function renderHierarchy(flatData){
-      treeContainer.innerHTML = '';
-      if (!Array.isArray(flatData) || flatData.length === 0) {
-        treeContainer.textContent = 'Aucune donnée.';
-        return;
+    function normaliseRecords(supabaseData) {
+      if (!supabaseData) {
+        return fallbackPersons;
       }
 
-      // Ordre des fonctions (rank asc)
-      const functions = [
-        { code: 'dircab', label: 'Directeur de cabinet', rank: 1 },
-        { code: 'diradj', label: 'Directeur adjoint', rank: 2 },
-        { code: 'chefcab', label: 'Chef de cabinet', rank: 3 },
-        { code: 'chefadj', label: 'Chef adjoint', rank: 4 },
-        { code: 'chefpole', label: 'Chef de pôle', rank: 5 },
-        { code: 'conseiller', label: 'Conseiller', rank: 6 }
-      ];
+      const { persons = [], collaborators = [] } = supabaseData;
+      const merged = [];
 
-      // map labels/codes to rank
-      const mapRank = {};
-      functions.forEach(f => { mapRank[f.code] = f.rank; mapRank[f.label.toLowerCase()] = f.rank; });
-
-      // bucket collaborators by function rank
-      const buckets = new Map();
-      functions.forEach(f => buckets.set(f.rank, []));
-
-      flatData.forEach(p => {
-        let r = undefined;
-        if (p.collab_rank !== undefined && p.collab_rank !== null) {
-          const n = Number(p.collab_rank);
-          if (!Number.isNaN(n) && n >= 1 && n <= 6) r = n;
-        }
-        if (!r && p.collab_code) {
-          r = mapRank[String(p.collab_code).toLowerCase()];
-        }
-        if (!r && p.collab_grade) {
-          const g = String(p.collab_grade).toLowerCase();
-          for (const k in mapRank) if (g.includes(k)) { r = mapRank[k]; break; }
-        }
-        if (!r) r = 6;
-        buckets.get(r).push(p);
-      });
-
-      const container = document.createElement('div');
-      container.style.display = 'flex';
-      container.style.flexDirection = 'column';
-      container.style.gap = '0.75rem';
-      container.style.width = '100%';
-
-      let anyShown = false;
-      functions.forEach(f => {
-        const row = document.createElement('div');
-        row.style.display = 'flex';
-        row.style.alignItems = 'flex-start';
-        row.style.gap = '1rem';
-        row.style.padding = '0.5rem';
-        row.style.borderRadius = '10px';
-        row.style.background = '#fff';
-        row.style.boxShadow = '0 4px 10px rgba(2,6,23,0.03)';
-
-        const header = document.createElement('div');
-        header.style.minWidth = '220px';
-        header.style.padding = '0.4rem 0.6rem';
-        header.style.borderRadius = '8px';
-        header.style.background = '#f1f5f9';
-        header.style.fontWeight = '700';
-        header.style.textAlign = 'left';
-        header.textContent = f.label;
-
-        const list = document.createElement('div');
-        list.style.display = 'flex';
-        list.style.flexWrap = 'wrap';
-        list.style.gap = '0.75rem';
-        list.style.alignItems = 'flex-start';
-        // Center conseillers row
-        if (f.code === 'conseiller') {
-          list.style.justifyContent = 'center';
-        } else {
-          list.style.justifyContent = 'flex-start';
-        }
-
-        const items = buckets.get(f.rank) || [];
-        if (!items || items.length === 0) {
-          // ne rien afficher si pas de collaborateurs pour cette fonction
-          return;
-        }
-        anyShown = true;
-        items.sort((a,b) => String(a.name).localeCompare(String(b.name)));
-        items.forEach(p => {
-          const card = document.createElement('div');
-          card.className = 'person';
-          card.style.margin = '0';
-          const photoSrc = p.photo || 'assets/placeholder-minister.svg';
-          const alt = p.photoAlt || `${p.name}`;
-          const job = p.job_title || '';
-          const cab = p.cabinet_role || '';
-          // For certain functions (directeurs / chefs), show only cabinet_role
-          const onlyCabinetFor = new Set(['dircab','diradj','chefcab','chefadj']);
-          let metaText = '';
-          if (onlyCabinetFor.has(f.code)) {
-            metaText = cab || '';
-          } else if (f.code === 'conseiller') {
-            // For conseillers: show the grade/role first, then the job title
-            const gradeLabel = p.collab_grade || '';
-            if (gradeLabel && job) metaText = gradeLabel + ' — ' + job;
-            else metaText = gradeLabel || job || cab || '';
-          } else {
-            // default: show job_title and cabinet_role if both present
-            if (job && cab) metaText = job + ' — ' + cab;
-            else metaText = job || cab || '';
-          }
-
-          card.innerHTML = `
-            <img src="${escapeHtml(photoSrc)}" alt="${escapeHtml(alt)}" />
-            <strong>${escapeHtml(p.name)}</strong>
-            <div class="meta">${escapeHtml(metaText)}</div>
-          `;
-          list.appendChild(card);
+      persons.forEach((item) => {
+        merged.push({
+          id: item.id,
+          name: item.name || item.full_name || item.nom,
+          role: item.role || item.title,
+          portfolio: item.portfolio || item.job_title || '',
+          superior_id: item.superior_id ?? item.superior ?? null
         });
-
-        row.appendChild(header);
-        row.appendChild(list);
-        container.appendChild(row);
       });
 
-      if (!anyShown) {
-        treeContainer.textContent = 'Aucun collaborateur à afficher pour ce ministre.';
-      } else {
-        treeContainer.appendChild(container);
-      }
-    }
-
-    // Petite fonction d'échappement pour éviter XSS si tu colles des données externes
-    function escapeHtml(str){
-      if (typeof str !== 'string') return '';
-      return str.replace(/[&<>"']/g, function(ch){
-        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[ch];
+      collaborators.forEach((item) => {
+        merged.push({
+          id: item.id,
+          name: item.name || item.full_name || item.nom,
+          role: item.role || item.grade || item.job_title || 'Collaborateur',
+          portfolio: item.portfolio || item.cabinet_role || item.title || '',
+          superior_id: item.superior_id ?? item.superior ?? null
+        });
       });
+
+      return merged.length ? merged : fallbackPersons;
     }
 
-    // Render a large minister card into the header area
-    function renderMinisterBigCard(minister){
-      if (!ministerCardContainer) return;
-      ministerCardContainer.innerHTML = '';
-      if (!minister) return;
-      const photo = minister.photo || minister.image || minister.avatar || 'assets/placeholder-minister.svg';
-      const name = minister.name || minister.full_name || minister.nom || ('#' + String(minister.id));
-      const portfolio = minister.portfolio || minister.job_title || minister.title || minister.role || '';
-      const html = `
-        <div class="minister-big">
-          <img src="${escapeHtml(photo)}" alt="${escapeHtml(name)}" />
-          <div class="info">
-            <h2>${escapeHtml(name)}</h2>
-            <p>${escapeHtml(portfolio)}</p>
-          </div>
-        </div>`;
-      ministerCardContainer.innerHTML = html;
-    }
+    (async function init() {
+      let records = fallbackPersons;
+      let sourceLabel = "Sources : jeu d'exemple local.";
 
-    // Populate minister <select>
-    function populateMinisterSelect(options){
-      const sel = document.getElementById('ministerSelect');
-      if (!sel) return;
-      // clear (preserve first 'Tous les ministres' option)
-      sel.innerHTML = '<option value="__all">Tous les ministres</option>';
-      options.forEach(o => {
-        const opt = document.createElement('option');
-        opt.value = o.id;
-        opt.textContent = o.name;
-        sel.appendChild(opt);
-      });
-    }
-
-    // Charger depuis Supabase si possible, sinon utiliser les données locales
-    (async function init(){
-      try{
-        const sup = await tryLoadFromSupabase();
-        if (sup && sup.collaborators){
-          // construire des maps des grades si disponibles (code -> {label,rank})
-          const gradeLabel = new Map();
-          const gradeRank = new Map();
-          if (Array.isArray(sup.grades)) sup.grades.forEach(g => { gradeLabel.set(String(g.code), g.label || g.code); gradeRank.set(String(g.code), Number(g.rank) || 99); });
-
-          // De la table persons (si disponible) on récupère les ministres
-          let personsData = sup.persons || null;
-          if (!personsData && sup.collaborators && sup.collaborators.table === 'persons') personsData = sup.collaborators.rows;
-
-          // Normaliser et filtrer : ne garder que les collaborateurs
-          const collRows = sup.collaborators.rows
-            .filter(r => {
-              const role = String(r.role || '').toLowerCase();
-              return role === 'collaborator' || role === 'collaborateur' || (r.collab_grade !== null && r.collab_grade !== undefined);
-            })
-            .map(r => {
-              const code = r.collab_grade || r.grade || null;
-              const codeStr = code === null ? null : String(code);
-                  return {
-                    id: r.id,
-                    name: r.name || r.full_name || r.nom || r.label || ('#' + String(r.id)),
-                    role: 'collaborator',
-                    superior_id: r.superior_id !== undefined ? r.superior_id : (r.superior || null),
-                    collab_code: codeStr,
-                    collab_grade: codeStr && gradeLabel.has(codeStr) ? gradeLabel.get(codeStr) : (codeStr || ''),
-                    collab_rank: codeStr && gradeRank.has(codeStr) ? gradeRank.get(codeStr) : 99,
-                    // photos and titles (try common field names)
-                    photo: r.photo || r.photo_url || r.avatar || r.image || null,
-                    photoAlt: r.photoAlt || r.photo_alt || r.photo_alt_text || '',
-                    job_title: r.job_title || r.job || r.title || '',
-                    cabinet_role: r.cabinet_role || r.cabinetRole || r.cabinet || ''
-                  };
-            });
-
-          // Construire une map d'id -> node pour remonter la hiérarchie
-          const idMap = new Map();
-          if (Array.isArray(personsData)) personsData.forEach(p => idMap.set(String(p.id), {...p}));
-          collRows.forEach(c => idMap.set(String(c.id), {...c}));
-
-          // Déterminer ministres : depuis personsData (role non-collaborator ou role contenant 'minister')
-          const ministers = [];
-          if (Array.isArray(personsData)){
-            personsData.forEach(p => {
-              const role = String(p.role || '').toLowerCase();
-              if (role !== 'collaborator' && (role.includes('minister') || p.superior_id === null || p.superior_id === undefined)){
-                ministers.push({ id: String(p.id), name: p.name || p.full_name || p.nom || ('#' + String(p.id)) });
-              }
-            });
-          }
-
-          // Pour chaque collaborateur, trouver le ministre racine (ou __none)
-          const byMinister = new Map();
-          for (const c of collRows){
-            let curr = c;
-            let top = null;
-            const seen = new Set();
-            while (curr && curr.superior_id != null){
-              const supId = String(curr.superior_id);
-              if (seen.has(supId)) break;
-              seen.add(supId);
-              const parent = idMap.get(supId);
-              if (!parent){ top = null; break; }
-              const parentRole = String(parent.role || '').toLowerCase();
-              if (parentRole !== 'collaborator' && parentRole !== 'collaborateur') { top = parent; break; }
-              curr = parent;
-            }
-            const key = top ? String(top.id) : '__none';
-            if (!byMinister.has(key)) byMinister.set(key, []);
-            byMinister.get(key).push(c);
-          }
-
-          // Préparer la liste d'options pour le select
-          const ministerOptions = [];
-          if (ministers.length){
-            ministers.forEach(m => ministerOptions.push({ id: m.id, name: m.name }));
-          }
-          // Ajouter option pour 'Sans ministre'
-          if (!ministerOptions.find(o => o.id === '__none')) ministerOptions.push({ id: '__none', name: 'Sans ministre' });
-
-          populateMinisterSelect(ministerOptions);
-
-          const sel = document.getElementById('ministerSelect');
-          // Sélection par défaut : premier ministre s'il existe, sinon Sans ministre
-          if (ministers.length) sel.value = ministers[0].id; else sel.value = '__none';
-
-          function renderForSelected(){
-            const val = sel.value;
-            const rowsToRender = byMinister.get(val) || [];
-            const selectedText = sel.selectedOptions[0]?.textContent || '';
-            ministerTitle.textContent = selectedText ? `Hiérarchie des collaborateurs — ${selectedText}` : 'Hiérarchie des collaborateurs';
-            jsonDump.textContent = JSON.stringify({ from: sup.collaborators.table, minister: val, rows: rowsToRender, grades: sup.grades || [] }, null, 2);
-        // Render the big minister card (if any)
-        const ministerObj = idMap.get(val) || null;
-        renderMinisterBigCard(ministerObj);
-        renderHierarchy(rowsToRender);
-          }
-
-          sel.addEventListener('change', renderForSelected);
-          renderForSelected();
-          return;
+      try {
+        const supabaseData = await tryLoadFromSupabase();
+        if (supabaseData) {
+          records = normaliseRecords(supabaseData);
+          const detail = supabaseData.table ? `Table Supabase « ${supabaseData.table} »` : 'Table Supabase « persons »';
+          sourceLabel = `Sources : ${detail}.`;
         }
-      } catch(e){ console.warn('Erreur init Supabase', e); }
+      } catch (err) {
+        console.warn('Initialisation hiérarchie : utilisation du jeu local', err);
+      }
 
-      // fallback local: ne garder que les collaborateurs
-      const localRows = persons
-        .filter(p => {
-          const role = String(p.role || '').toLowerCase();
-          return role === 'collaborator' || role === 'collaborateur' || (p.collab_grade !== null && p.collab_grade !== undefined && p.collab_grade !== '');
-        })
-        .map(p => ({
-          id: p.id,
-          name: p.name || p.nom || ('#' + String(p.id)),
-          role: 'collaborator',
-          superior_id: p.superior_id !== undefined ? p.superior_id : (p.superior || null),
-            collab_code: null,
-            collab_grade: p.collab_grade || p.grade || '',
-            collab_rank: 99,
-            photo: p.photo || p.photo_url || null,
-            photoAlt: p.photoAlt || p.photoAlt || '',
-            job_title: p.job_title || p.role || '',
-            cabinet_role: p.portfolio || p.cabinet_role || ''
-        }));
-
-      // Fallback: pas de ministres locaux dans cet exemple => afficher tous les collaborateurs
-      populateMinisterSelect([{ id: '__none', name: 'Sans ministre' }]);
-      document.getElementById('ministerSelect').value = '__none';
-      ministerTitle.textContent = 'Hiérarchie des collaborateurs — Sans ministre';
-      jsonDump.textContent = JSON.stringify({ from: 'local', rows: localRows }, null, 2);
-      renderHierarchy(localRows);
+      dataSource.textContent = sourceLabel;
+      populateSelect(records);
+      ministerSelect.addEventListener('change', () => updateView(records));
+      updateView(records);
     })();
-
-    // Exemple : si plus tard tu récupères depuis Supabase, appelle renderHierarchy(newArray)
-    // Exemple (simulé) : setTimeout(() => { persons.push({id:8, name:'Nouveau', role:'Adjoint', superior_id:2, collab_grade:'Adjoint'}); renderHierarchy(persons); jsonDump.textContent = JSON.stringify(persons, null, 2); }, 4000);
   </script>
 </body>
 </html>
