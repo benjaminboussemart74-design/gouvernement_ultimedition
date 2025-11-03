@@ -3,8 +3,8 @@
   "anonKey": "YOUR_ANON_PUBLIC_KEY",
   "ministersTable": "persons",
   "careersTable": "person_careers",
+  "biographyView": "person_careers",
   "options": {
     "schema": "public"
   }
 }
-

@@ -97,7 +97,7 @@ comme sensible dans le code, il est dans gitignore donc pas de commit */
     config.anonKey = normalizeValue(config.anonKey || '');
     config.ministersTable = normalizeValue(config.ministersTable || 'persons');
     config.careersTable = normalizeValue(config.careersTable || 'person_careers');
-    config.biographyView = normalizeValue(config.biographyView || 'biography_entries_view');
+    config.biographyView = normalizeValue(config.biographyView || 'person_careers');
 
     return config;
   }

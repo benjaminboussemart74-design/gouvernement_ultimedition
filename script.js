@@ -69,7 +69,10 @@ const CORE_ROLES = new Set(["leader", "minister", "minister-state"]);
 const FALLBACK_DATA_URL = "data/ministers.json";
 const SUPABASE_BIOGRAPHY_VIEW = (typeof globalThis !== 'undefined' && globalThis.SUPABASE_BIOGRAPHY_VIEW)
     ? globalThis.SUPABASE_BIOGRAPHY_VIEW
-    : 'biography_entries_view';
+    : 'person_careers';
+const SUPABASE_CAREERS_TABLE = (typeof globalThis !== 'undefined' && globalThis.SUPABASE_CAREERS_TABLE)
+    ? globalThis.SUPABASE_CAREERS_TABLE
+    : 'person_careers';
 
 const ensureImageSource = (value, fallback = "assets/placeholder-minister.svg") => {
     if (!value) return fallback;
@@ -146,7 +149,11 @@ const PARTY_MAP = new Map([
     ["poi", "POI"],
     ["animaliste", "Animaliste"],
     ["volt", "Volt"],
-    ["regionalistes", "Regionalistes"]
+    ["regionalistes", "Regionalistes"],
+    // indépendants / sans étiquette
+    ["sans etiquette", "Sans étiquette"],
+    ["sansetiquette", "Sans étiquette"],
+    ["sans-etiquette", "Sans étiquette"],
 ]);
 
 const KNOWN_PARTIES = Array.from(new Set(PARTY_MAP.values())).sort((a, b) =>
@@ -526,12 +533,14 @@ function normalise(value) {
 
 
 const BIOGRAPHY_CATEGORY_ORDER = [
+    // Ordre logique d'une biographie; titres affichés tels quels
     'Gouvernement',
     'Assemblée nationale',
     'Sénat',
     'Parti politique',
     'Mandats locaux',
     'Collectivités locales',
+    'Société civile',
     'Vie professionnelle',
     'Administrations et associations',
     'Formation académique',
@@ -541,10 +550,14 @@ const BIOGRAPHY_CATEGORY_ORDER_MAP = new Map(
     BIOGRAPHY_CATEGORY_ORDER.map((label, idx) => [normalise(label), idx])
 );
 
-const biographyDateFormatter = new Intl.DateTimeFormat('fr-FR', {
-    month: 'long',
-    year: 'numeric',
-});
+// Formatters for biography periods
+const biographyYearFormatter = new Intl.DateTimeFormat('fr-FR', { year: 'numeric' });
+const biographyMonthYearFormatter = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' });
+const biographyFullDateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+const capitalizeFirst = (s) => {
+    if (!s) return s;
+    return s.charAt(0).toUpperCase() + s.slice(1);
+};
 
 const normalizeBiographyDetails = (value) => {
     if (!value) return [];
@@ -592,107 +605,156 @@ const normalizeBiographyDetails = (value) => {
 const normalizeBiographyEntries = (rows) => {
     const toDate = (value) => {
         if (!value) return null;
-        const date = new Date(value);
-        return Number.isNaN(date.getTime()) ? null : date;
+        if (value instanceof Date) {
+            return Number.isNaN(value.getTime()) ? null : value;
+        }
+        const raw = String(value).trim();
+        // Accept YYYY-MM-DD | YYYY-MM | YYYY
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+            const d = new Date(raw);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+        if (/^\d{4}-\d{2}$/.test(raw)) {
+            const d = new Date(`${raw}-01`);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+        if (/^\d{4}$/.test(raw)) {
+            const d = new Date(`${raw}-01-01`);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+        // Accept ranges like "2024-2025" or "2024 – 2025" → take first year
+        if (/^\d{4}\s*[\-–]\s*\d{4}$/.test(raw)) {
+            const first = raw.split(/[\-–]/)[0].trim();
+            const d = new Date(`${first}-01-01`);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+        // Accept month names in French like "septembre 2024" or "15 septembre 2024"
+        const lower = raw.toLowerCase().replace(/\s+/g, ' ').trim();
+        const monthMap = new Map([
+            ['janvier', 0], ['janv.', 0], ['janv', 0],
+            ['février', 1], ['fevrier', 1], ['févr.', 1], ['fevr.', 1], ['fevr', 1],
+            ['mars', 2],
+            ['avril', 3], ['avr.', 3], ['avr', 3],
+            ['mai', 4],
+            ['juin', 5],
+            ['juillet', 6],
+            ['août', 7], ['aout', 7],
+            ['septembre', 8], ['sept.', 8], ['sept', 8],
+            ['octobre', 9], ['oct.', 9], ['oct', 9],
+            ['novembre', 10], ['nov.', 10], ['nov', 10],
+            ['décembre', 11], ['decembre', 11], ['déc.', 11], ['dec.', 11], ['dec', 11],
+        ]);
+        // Match: [day ]month year OR month year
+        const monthNames = Array.from(new Set(Array.from(monthMap.keys()))).sort((a,b)=>b.length-a.length).join('|');
+        const reDayMonthYear = new RegExp(`^(?:([0-3]?\d)\s+)?(${monthNames})\s+(\d{4})$`, 'i');
+        const m = lower.match(reDayMonthYear);
+        if (m) {
+            const monthKey = m[2];
+            const monthIdx = monthMap.get(monthKey) ?? monthMap.get(monthKey.replace(/\.$/, ''));
+            const year = m[3];
+            if (typeof monthIdx === 'number') {
+                const mm = String(monthIdx + 1).padStart(2, '0');
+                const d = new Date(`${year}-${mm}-01`);
+                return Number.isNaN(d.getTime()) ? null : d;
+            }
+        }
+        // Fallback: extract first 4-digit year anywhere in the string
+        const yearMatch = raw.match(/\b(19|20)\d{2}\b/);
+        if (yearMatch) {
+            const y = yearMatch[0];
+            const d = new Date(`${y}-01-01`);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+        const d = new Date(raw);
+        return Number.isNaN(d.getTime()) ? null : d;
     };
-    const toText = (value) => (value == null ? '' : String(value).trim());
-    const isPlaceholderDate = (txt) => {
-        if (!txt) return false;
-        const s = String(txt).trim().toLowerCase();
-        return /date\s+non|non\s+pr[eé]cis|non\s+pr[eé]cis[eé]?/.test(s) || s === 'date non précisée' || s === 'date non précisé';
-    };
-    const sanitizeText = (value) => {
-        const t = toText(value);
-        return isPlaceholderDate(t) ? '' : t;
-    };
+    const toText = (v) => (v == null ? '' : String(v).trim());
 
     return (Array.isArray(rows) ? rows : [])
         .map((row) => {
-            const startDate = toDate(row.start_date || row.startDate || row.start);
-            const endDate = toDate(row.end_date || row.endDate || row.end);
-            const startNullsafe = toDate(row.start_date_nullsafe || row.startDateNullsafe);
-            const createdAt = toDate(row.created_at || row.createdAt);
-            const eventDate = toDate(row.event_date || row.eventDate);
-            const eventText = sanitizeText(row.event_text || row.eventText);
-            const sortWeight = Number.isFinite(row.sort_weight) ? row.sort_weight : 0;
-            const dateQuality = Number.isFinite(row.date_quality) ? row.date_quality : 99;
-            const sortSource = startDate || startNullsafe || eventDate || endDate || createdAt;
-            let sortTimestamp = Number.NEGATIVE_INFINITY;
-            if (sortSource instanceof Date) {
-                const time = sortSource.getTime();
-                if (!Number.isNaN(time)) {
-                    sortTimestamp = time;
-                }
-            }
-            const isPointEvent = Boolean(
-                (row.is_point_event) ||
-                (!startDate && !endDate && (eventDate || (eventText && eventText.length)))
-            );
-
+            // Accept multiple possible fields coming from various views/exports or already-normalized objects
+            const startRaw = row.start_date || row.startDate || row.start_text || row.start || row.startYear || row.start_year;
+            const endRaw = row.end_date || row.endDate || row.end_text || row.end || row.endYear || row.end_year;
+            const startDate = toDate(startRaw);
+            const endDate = toDate(endRaw);
+            const eventDate = toDate(row.event_date || row.eventDate || row.event_text);
+            const eventText = toText(row.event_text || row.eventText);
+            const category = toText(row.bio_section || row.category);
+            const title = toText(row.title);
+            const org = toText(row.organisation || row.organization || row.org);
+            const createdAt = row.created_at ? toDate(row.created_at) : (row.createdAt ? toDate(row.createdAt) : null);
+            const sortIndex = Number.isFinite(row.sort_index) ? row.sort_index : (Number.isFinite(row.sortIndex) ? row.sortIndex : null);
+            // Determine current status with explicit flags first.
+            // If neither flag is provided, fall back to "no end date" heuristic.
+            const hasIsCurrentFlag = Object.prototype.hasOwnProperty.call(row, 'isCurrent');
+            const hasOngoingFlag = Object.prototype.hasOwnProperty.call(row, 'ongoing');
+            const isCurrent = hasIsCurrentFlag
+                ? Boolean(row.isCurrent)
+                : (hasOngoingFlag
+                    ? Boolean(row.ongoing)
+                    : (endDate == null));
             return {
                 id: row.id || null,
-                category: toText(row.category),
-                title: toText(row.title),
-                org: toText(row.org),
-                details: normalizeBiographyDetails(row.details),
+                category,
+                title,
+                org,
+                details: Array.isArray(row.details) ? normalizeBiographyDetails(row.details) : [],
                 startDate,
                 endDate,
                 eventDate,
                 eventText,
-                startText: sanitizeText(row.start_text),
-                endText: sanitizeText(row.end_text),
-                isCurrent: Boolean(row.is_current),
-                isPointEvent,
-                startDateNullsafe: startNullsafe,
-                isUndated: Boolean(row.is_undated),
-                sortWeight,
-                dateQuality,
-                sortTimestamp,
+                startText: toText(row.start_text || row.start || row.startText),
+                endText: toText(row.end_text || row.end || row.endText),
+                isCurrent,
+                sortIndex,
                 createdAt,
-                color: row.color ? String(row.color).trim() : null,
+                color: (row.color || row.category_color) ? String((row.color || row.category_color)).trim() : null,
             };
         })
-        .filter((entry) => entry.category || entry.title || entry.org || entry.details.length);
+        // Conserver aussi les entrées d'événements ponctuels (event_date / event_text)
+        .filter((e) => e.category || e.title || e.org || e.startDate || e.endDate || e.eventText || e.eventDate);
 };
 
 const formatBiographyPeriod = (entry) => {
     if (!entry) return '';
-    const isPlaceholderDate = (txt) => {
-        if (!txt) return false;
-        const s = String(txt).trim().toLowerCase();
-        // common placeholder variants in French
-        return /date\s+non|non\s+pr[eé]cis|non\s+pr[eé]cis[eé]?/.test(s) || s === 'date non précisée' || s === 'date non précisé' || s === 'date non précisé';
+    const isValidDate = (d) => d instanceof Date && !Number.isNaN(d.getTime());
+    const fmtMonthYear = (d) => capitalizeFirst(biographyMonthYearFormatter.format(d));
+    const fmtYear = (d) => biographyYearFormatter.format(d);
+    const isYearOnly = (d, text) => {
+        const t = (text || '').trim();
+        if (/^\d{4}$/.test(t)) return true;
+        if (isValidDate(d) && d.getMonth() === 0 && d.getDate() === 1) return true;
+        return false;
     };
-    // Priorité aux événements ponctuels (texte libre puis année de la date)
+    const formatOne = (d, text, { forceYear = false } = {}) => {
+        const t = (text || '').trim();
+        if (forceYear) {
+            if (isValidDate(d)) return fmtYear(d);
+            const ym = t.match(/\b(19|20)\d{2}\b/);
+            if (ym) return ym[0];
+            if (/^\d{4}$/.test(t)) return t;
+            return t ? capitalizeFirst(t) : '';
+        }
+        if (t) return capitalizeFirst(t);
+        if (!isValidDate(d)) return '';
+        // Heuristic: if day=1 and month=January, likely year-only → show year only
+        if (d.getMonth() === 0 && d.getDate() === 1) return fmtYear(d);
+        return fmtMonthYear(d);
+    };
+
+    // Événements ponctuels: afficher l'année + libellé si possible
     if (entry.eventText) {
-        return String(entry.eventText).trim();
+        const eventStr = formatOne(entry.eventDate, entry.eventText);
+        return eventStr;
     }
-    if (entry.eventDate instanceof Date && !Number.isNaN(entry.eventDate.getTime())) {
-        return String(entry.eventDate.getFullYear());
-    }
-    const hasStartDate = entry.startDate instanceof Date && !Number.isNaN(entry.startDate.getTime());
-    const hasEndDate = entry.endDate instanceof Date && !Number.isNaN(entry.endDate.getTime());
-    let startText = entry.startText || '';
-    let endText = entry.endText || '';
-    // sanitize common placeholder phrases like "Date non précisée"
-    if (isPlaceholderDate(startText)) startText = '';
-    if (isPlaceholderDate(endText)) endText = '';
 
-    // Prefer explicit textual start/end when present
-    if (startText && endText) return `${startText} – ${endText}`;
-    if (startText && !endText) return startText;
-    if (!startText && endText) return endText;
+    const startYearOnly = isYearOnly(entry.startDate, entry.startText);
+    const startStr = formatOne(entry.startDate, entry.startText, { forceYear: false });
+    const endStr = formatOne(entry.endDate, entry.endText, { forceYear: startYearOnly });
 
-    // Fallback to formatted dates when available
-    const startLabel = hasStartDate ? biographyDateFormatter.format(entry.startDate) : '';
-    const endLabel = hasEndDate ? biographyDateFormatter.format(entry.endDate) : '';
-
-    if (startLabel && endLabel) {
-        return startLabel === endLabel ? startLabel : `${startLabel} – ${endLabel}`;
-    }
-    if (startLabel) return entry.isCurrent ? `${startLabel} – présent` : `Depuis ${startLabel}`;
-    if (endLabel) return `Jusqu'à ${endLabel}`;
-    return '';
+    if (startStr && endStr) return startStr === endStr ? startStr : `${startStr} – ${endStr}`;
+    if (entry.isCurrent && startStr) return `Depuis ${startStr}`;
+    return startStr || endStr || '';
 };
 
 const createBiographyEntryElement = (entry) => {
@@ -705,54 +767,45 @@ const createBiographyEntryElement = (entry) => {
     }
 
     const period = formatBiographyPeriod(entry);
-    if (period || entry.isCurrent || entry.isPointEvent) {
-        const header = document.createElement('div');
-        header.className = 'biography-entry__header';
-        if (period) {
-            const periodEl = document.createElement('p');
-            periodEl.className = 'biography-entry__period';
-            const needsColon = entry.title || entry.org || entry.details.length;
-            periodEl.textContent = needsColon ? `${period} :` : period;
-            header.appendChild(periodEl);
+    const titleText = entry.title || '';
+    const orgText = entry.org || '';
+
+    const line = document.createElement('p');
+    line.className = 'biography-entry__line';
+
+    if (period) {
+        const periodEl = document.createElement('span');
+        periodEl.className = 'biography-entry__period';
+        const needsColon = Boolean(titleText || orgText || (entry.details && entry.details.length));
+        periodEl.textContent = needsColon ? `${period} :` : period;
+        line.appendChild(periodEl);
+    }
+
+    if (titleText) {
+        const titleEl = document.createElement('span');
+        titleEl.className = 'biography-entry__title';
+        titleEl.textContent = titleText;
+        line.appendChild(titleEl);
+    }
+
+    if (orgText) {
+        if (titleText) {
+            const sep = document.createElement('span');
+            sep.className = 'biography-entry__sep';
+            sep.textContent = ' — ';
+            line.appendChild(sep);
         }
-        if (entry.isCurrent) {
-            const badge = document.createElement('span');
-            badge.className = 'biography-entry__badge';
-            badge.textContent = 'En cours';
-            header.appendChild(badge);
-        }
-        item.appendChild(header);
+        const orgEl = document.createElement('span');
+        orgEl.className = 'biography-entry__org';
+        orgEl.textContent = orgText;
+        line.appendChild(orgEl);
     }
 
-    if (entry.title) {
-        const title = document.createElement('p');
-        title.className = 'biography-entry__title';
-        title.textContent = entry.title;
-        item.appendChild(title);
+    if (!line.childElementCount) {
+        line.textContent = titleText || orgText || 'Parcours';
     }
 
-    if (entry.org) {
-        const org = document.createElement('p');
-        org.className = 'biography-entry__org';
-        org.textContent = entry.org;
-        item.appendChild(org);
-    }
-
-    if (entry.details && entry.details.length) {
-        const detailsList = document.createElement('ul');
-        detailsList.className = 'biography-entry__details';
-        entry.details.forEach((detail) => {
-            const detailItem = document.createElement('li');
-            detailItem.textContent = detail;
-            detailsList.appendChild(detailItem);
-        });
-        item.appendChild(detailsList);
-    }
-
-    if (!item.childElementCount) {
-        item.textContent = entry.title || entry.org || 'Parcours';
-    }
-
+    item.appendChild(line);
     return item;
 };
 
@@ -762,6 +815,7 @@ const populateBiographyModule = (entries, accentColor = null) => {
     const normalized = normalizeBiographyEntries(entries);
 
     if (!normalized.length) {
+        console.log('[onepage] Module biographie: aucune entrée normalisée, section masquée');
         modalBiographyRoot.innerHTML = '';
         modalBiographySection.hidden = true;
         modalBiographySection.style.removeProperty('--biography-accent');
@@ -774,6 +828,7 @@ const populateBiographyModule = (entries, accentColor = null) => {
         modalBiographySection.style.removeProperty('--biography-accent');
     }
 
+    // 1) Group entries by section label (bio_section)
     const groups = new Map();
     normalized.forEach((entry) => {
         const category = entry.category || 'Autres';
@@ -783,12 +838,9 @@ const populateBiographyModule = (entries, accentColor = null) => {
         groups.get(category).push(entry);
     });
 
-    const sortedGroups = Array.from(groups.entries()).sort((a, b) => {
-        const orderA = BIOGRAPHY_CATEGORY_ORDER_MAP.get(normalise(a[0])) ?? BIOGRAPHY_CATEGORY_ORDER.length;
-        const orderB = BIOGRAPHY_CATEGORY_ORDER_MAP.get(normalise(b[0])) ?? BIOGRAPHY_CATEGORY_ORDER.length;
-        if (orderA !== orderB) return orderA - orderB;
-        return a[0].localeCompare(b[0], 'fr', { sensitivity: 'base' });
-    });
+    // Helper to compute section order index: prefer explicit sort_index from rows
+    // Conserver l'ordre d'apparition des sections
+    const sortedGroups = Array.from(groups.entries());
 
     const frag = document.createDocumentFragment();
 
@@ -799,29 +851,22 @@ const populateBiographyModule = (entries, accentColor = null) => {
 
         const heading = document.createElement('h5');
         heading.className = 'biography-group__title';
-        heading.textContent = category;
+        heading.textContent = category ? `${category} :` : '';
         group.appendChild(heading);
 
         const list = document.createElement('ul');
         list.className = 'biography-list';
-
+        // 2) Sort items within a section by sort_index ASC, then start_date DESC, then title
         items.sort((a, b) => {
-            const weightDiff = (a.sortWeight ?? 0) - (b.sortWeight ?? 0);
-            if (weightDiff !== 0) return weightDiff;
-
-            const qualityDiff = (a.dateQuality ?? 99) - (b.dateQuality ?? 99);
-            if (qualityDiff !== 0) return qualityDiff;
-
-            const timeDiff = (b.sortTimestamp ?? Number.NEGATIVE_INFINITY) - (a.sortTimestamp ?? Number.NEGATIVE_INFINITY);
-            if (timeDiff !== 0) return timeDiff;
-
-            const endDiff = ((b.endDate && b.endDate.getTime()) || Number.NEGATIVE_INFINITY)
-                - ((a.endDate && a.endDate.getTime()) || Number.NEGATIVE_INFINITY);
-            if (endDiff !== 0) return endDiff;
-
+            const sidx = (a.sortIndex ?? 9999) - (b.sortIndex ?? 9999);
+            if (sidx !== 0) return sidx;
+            const aTime = (a.startDate && a.startDate.getTime()) || Number.NEGATIVE_INFINITY;
+            const bTime = (b.startDate && b.startDate.getTime()) || Number.NEGATIVE_INFINITY;
+            if (aTime !== bTime) return bTime - aTime; // DESC
             return (a.title || '').localeCompare(b.title || '', 'fr', { sensitivity: 'base' });
         });
 
+        // 3) Render items as-is (no annotation merge; strict to schema)
         items.forEach((entry) => {
             const element = createBiographyEntryElement(entry);
             list.appendChild(element);
@@ -835,6 +880,53 @@ const populateBiographyModule = (entries, accentColor = null) => {
     modalBiographyRoot.appendChild(frag);
     modalBiographySection.hidden = false;
     return true;
+};
+
+
+// Fallback loader: fetch biography rows for a person from careers table when not
+// already present on the minister object. It maps common columns to the
+// normalizeBiographyEntries schema and sorts them consistently.
+const fetchBiographyForPersonFallback = async (personId) => {
+    if (!personId) return [];
+    const client = ensureSupabaseClient();
+    if (!client) return [];
+    try {
+        // Prefer configured biography view first; fallback to careers table if missing
+        const tryQuery = async (source) => {
+            const { data, error } = await client
+                .from(source)
+                .select('*')
+                .eq('person_id', personId)
+                .order('sort_index', { ascending: true })
+                .order('start_date', { ascending: false })
+                .order('created_at', { ascending: false });
+            return { data, error };
+        };
+
+        let source = SUPABASE_BIOGRAPHY_VIEW;
+        let { data, error } = await tryQuery(source);
+        if (error && (error.code === 'PGRST205' || (error.message && error.message.includes('Could not find the table')))) {
+            // If a distinct table name is configured, try it as a fallback
+            if (SUPABASE_CAREERS_TABLE && SUPABASE_CAREERS_TABLE !== SUPABASE_BIOGRAPHY_VIEW) {
+                source = SUPABASE_CAREERS_TABLE;
+                ({ data, error } = await tryQuery(source));
+            }
+        }
+        if (error) {
+            console.warn('[onepage] Erreur chargement biographie depuis', source + ':', error);
+            return [];
+        }
+        const rows = Array.isArray(data) ? data : [];
+        if (!rows.length) {
+            console.log('[onepage] Aucune entrée biographie trouvée pour', personId, 'depuis', source);
+        } else {
+            console.log('[onepage] Entrées biographie chargées pour', personId, 'depuis', source, '→', rows.length, 'ligne(s)');
+        }
+        return normalizeBiographyEntries(rows);
+    } catch (e) {
+        console.warn('[onepage] Exception careers:', e);
+        return [];
+    }
 };
 
 
@@ -857,7 +949,8 @@ const buildCard = (minister) => {
     card.setAttribute("role", "listitem");
     card.dataset.role = minister.role ?? "";
     // expose normalized party on the card so CSS can style it (and so tests/selectors can read it)
-    const _partyLabelForCard = mapPartyLabel(minister.party == null ? "" : String(minister.party).trim()) || "";
+    const _rawParty = minister.party == null ? "" : String(minister.party).trim();
+    const _partyLabelForCard = mapPartyLabel(_rawParty) || (_rawParty ? "" : "Sans étiquette");
     if (_partyLabelForCard) card.dataset.party = _partyLabelForCard;
     if (minister.id != null) card.dataset.personId = String(minister.id);
     const roleKey = minister.role || "";
@@ -1012,12 +1105,14 @@ const buildCard = (minister) => {
 
             const dn = document.createElement("p");
             dn.className = "delegate-name";
+            // keep the minister's name visible
             dn.textContent = delegate.name || "";
             info.appendChild(dn);
 
             const dr = document.createElement("p");
             dr.className = "delegate-role";
-            dr.textContent = delegate.portfolio || formatRole(delegate.role) || "";
+            // prefer role_label from person_ministries (available as mission) as the displayed role
+            dr.textContent = delegate.mission || delegate.portfolio || formatRole(delegate.role) || "";
             info.appendChild(dr);
 
             btn.appendChild(info);
@@ -1149,9 +1244,10 @@ const applyFilters = () => {
 
     if (currentQuery) {
         filtered = filtered.filter((minister) => {
-            const haystack = normalise(
-                `${minister.name ?? ""} ${minister.portfolio ?? ""} ${minister.mission ?? ""} ${minister.searchIndex ?? ""}`
-            );
+            const ministryNames = Array.isArray(minister.ministries)
+                ? minister.ministries.map((m) => m && (m.label || "")).filter(Boolean).join(" ")
+                : "";
+            const haystack = normalise(`${minister.name ?? ""} ${minister.portfolio ?? ""} ${ministryNames}`);
             return haystack.includes(currentQuery);
         });
     }
@@ -1222,28 +1318,7 @@ const fetchCollaboratorsForMinister = async (ministerId) => {
 
 const collaboratorsCache = new Map();
 
-const renderCollaboratorsTemplate = (collaborators) => `
-      <h4>Collaborateurs</h4>
-      <div class="collaborators-list">
-        ${collaborators
-            .map((c) => {
-                const fullName = escapeHTML(c.full_name ?? 'Collaborateur·rice');
-                const role = escapeHTML(c.cabinet_role || 'Collaborateur');
-                const grade = c.collab_grade ? `<p class="collab-grade">${escapeHTML(c.collab_grade)}</p>` : '';
-                const photo = ensureImageSource(c.photo_url);
-                const alt = c.full_name ? `Portrait de ${escapeHTML(c.full_name)}` : 'Portrait collaborateur';
-                return `
-          <div class="collaborator-card">
-            <img src="${photo}" class="collaborator-photo" alt="${alt}" onerror="this.onerror=null;this.src='assets/placeholder-minister.svg';">
-            <div>
-              <p class="collab-name">${fullName}</p>
-              <p class="collab-role">${role}</p>
-              ${grade}
-            </div>
-          </div>`;
-            })
-            .join("")}
-      </div>`;
+// Legacy template removed - now using harmonized cabinet-node system for all collaborators display
 
 const ensureCollaboratorsForPrint = async (minister) => {
     if (!minister?.id) return [];
@@ -1408,11 +1483,6 @@ const printMinisterSheet = async (minister) => {
             details.appendChild(
                 createElement("p", "print-collaborator-role", ensureText(collab.cabinet_role, "Collaborateur"))
             );
-            if (collab.collab_grade) {
-                details.appendChild(
-                    createElement("p", "print-collaborator-grade", ensureText(collab.collab_grade))
-                );
-            }
             card.appendChild(details);
             collabGrid.appendChild(card);
         });
@@ -1785,12 +1855,7 @@ const createCabinetNodeCard = (member) => {
     const info = document.createElement("div");
     info.className = "cabinet-node-info";
 
-    if (member?.gradeLabel) {
-        const badge = document.createElement("span");
-        badge.className = "cabinet-node-grade";
-        badge.textContent = member.gradeLabel;
-        info.appendChild(badge);
-    }
+    // grade label intentionally omitted from cabinet node UI per design request
 
     const name = document.createElement("strong");
     name.className = "cabinet-node-name";
@@ -1801,29 +1866,31 @@ const createCabinetNodeCard = (member) => {
     const normalizedJob = member?.jobTitle?.trim() || null;
     const normalizedGrade = member?.gradeLabel?.trim() || null;
 
-    const shouldShowJobTitleOnly = DISPLAY_JOB_TITLE_ONLY_GRADES.has(member?.gradeKey);
-
-    if (shouldShowJobTitleOnly) {
-        const titleLine = normalizedJob || normalizedRole || normalizedGrade;
-        if (titleLine) {
-            const title = document.createElement("p");
-            title.className = "cabinet-node-title";
-            title.textContent = titleLine;
-            info.appendChild(title);
-        }
-    } else {
+    // Special handling for pole heads (chefpole): show both cabinet_role and job_title
+    if (member?.gradeKey === "chefpole") {
         if (normalizedRole) {
             const roleLine = document.createElement("p");
             roleLine.className = "cabinet-node-role";
             roleLine.textContent = normalizedRole;
             info.appendChild(roleLine);
         }
-
         if (normalizedJob && normalizedJob !== normalizedRole) {
             const jobLine = document.createElement("p");
-            jobLine.className = "cabinet-node-title";
+            jobLine.className = "cabinet-node-role cabinet-node-role--secondary";
             jobLine.textContent = normalizedJob;
             info.appendChild(jobLine);
+        }
+    } else {
+        // Standard behavior for other grades: render a single info line
+        const preferJobOnly = DISPLAY_JOB_TITLE_ONLY_GRADES.has(member?.gradeKey);
+        const infoLine = preferJobOnly
+            ? (normalizedJob || normalizedRole || normalizedGrade)
+            : (normalizedRole || normalizedJob || normalizedGrade);
+        if (infoLine) {
+            const line = document.createElement("p");
+            line.className = "cabinet-node-role";
+            line.textContent = infoLine;
+            info.appendChild(line);
         }
     }
 
@@ -2031,13 +2098,13 @@ const isExecutiveLeader = (minister) => {
 
 const createExecutiveCard = (member, options = {}) => {
     const card = document.createElement("article");
-    card.className = "executive-card";
+    card.className = "cabinet-node";  // Use same base class as cabinet nodes for consistency
     const { head = false, compact = false, context = null } = options;
     if (head) {
-        card.classList.add("executive-card--head");
+        card.classList.add("cabinet-node--head");
     }
     if (compact) {
-        card.classList.add("executive-card--compact");
+        card.classList.add("cabinet-node--compact");
     }
     if (member?.id != null) {
         card.dataset.personId = String(member.id);
@@ -2045,12 +2112,9 @@ const createExecutiveCard = (member, options = {}) => {
     if (member?.gradeKey) {
         card.dataset.grade = member.gradeKey;
     }
-    if (Number.isFinite(member?.gradeRank)) {
-        card.dataset.gradeRank = String(member.gradeRank);
-    }
 
     const avatar = document.createElement("div");
-    avatar.className = "executive-card__avatar";
+    avatar.className = "cabinet-node-avatar";  // Use same avatar class as cabinet nodes
     const img = document.createElement("img");
     img.src = ensureImageSource(member?.photo);
     img.onerror = () => {
@@ -2061,70 +2125,50 @@ const createExecutiveCard = (member, options = {}) => {
     avatar.appendChild(img);
     card.appendChild(avatar);
 
-    const meta = document.createElement("div");
-    meta.className = "executive-card__meta";
+    const info = document.createElement("div");
+    info.className = "cabinet-node-info";  // Use same info class as cabinet nodes
 
-    const name = document.createElement("h4");
-    name.className = "executive-card__name";
+    // Grade label intentionally omitted for consistency with cabinet nodes
+
+    const name = document.createElement("strong");
+    name.className = "cabinet-node-name";  // Use same name class as cabinet nodes
     name.textContent = member?.name || "Collaborateur·rice";
+    info.appendChild(name);
 
-    const gradeLabel = member?.gradeLabel?.trim() || null;
-    const cabinetRole = member?.cabinetRole?.trim() || null;
-    const jobTitle = member?.jobTitle?.trim() || null;
-    const gradeValue = gradeLabel ? normalise(gradeLabel) : null;
-    const roleValue = cabinetRole ? normalise(cabinetRole) : null;
-    const jobValue = jobTitle ? normalise(jobTitle) : null;
-    const primaryRole = cabinetRole || jobTitle || null;
-    const primaryRoleValue = primaryRole ? normalise(primaryRole) : null;
+    const normalizedRole = member?.cabinetRole?.trim() || null;
+    const normalizedJob = member?.jobTitle?.trim() || null;
+    const normalizedGrade = member?.gradeLabel?.trim() || null;
 
-    if (gradeLabel) {
-        const badges = document.createElement("div");
-        badges.className = "executive-card__badges";
-        const badge = document.createElement("span");
-        badge.className = "executive-card__badge";
-        badge.textContent = gradeLabel;
-        badges.appendChild(badge);
-        meta.appendChild(badges);
-    }
-
-    meta.appendChild(name);
-
-    if (primaryRole && (!gradeValue || gradeValue !== primaryRoleValue)) {
+    // Harmonize with cabinet node rendering: single role line with preference order
+    const preferJobOnly = DISPLAY_JOB_TITLE_ONLY_GRADES.has(member?.gradeKey);
+    const infoLine = preferJobOnly
+        ? (normalizedJob || normalizedRole || normalizedGrade)
+        : (normalizedRole || normalizedJob || normalizedGrade);
+    
+    if (infoLine) {
         const role = document.createElement("p");
-        role.className = "executive-card__role";
-        role.textContent = primaryRole;
-        meta.appendChild(role);
-    }
-
-    if (
-        jobTitle &&
-        cabinetRole &&
-        jobValue !== roleValue &&
-        (!gradeValue || jobValue !== gradeValue)
-    ) {
-        const detail = document.createElement("p");
-        detail.className = "executive-card__detail";
-        detail.textContent = jobTitle;
-        meta.appendChild(detail);
+        role.className = "cabinet-node-role";  // Use same role class as cabinet nodes
+        role.textContent = infoLine;
+        info.appendChild(role);
     }
 
     if (context) {
         const contextLine = document.createElement("p");
-        contextLine.className = "executive-card__context";
+        contextLine.className = "cabinet-node-context";
         contextLine.textContent = context;
-        meta.appendChild(contextLine);
+        info.appendChild(contextLine);
     }
 
     if (member?.email) {
         const contact = document.createElement("a");
-        contact.className = "executive-card__contact";
+        contact.className = "cabinet-node-email";  // Use same email class as cabinet nodes
         contact.href = `mailto:${member.email}`;
         contact.textContent = member.email;
         contact.rel = "noopener";
-        meta.appendChild(contact);
+        info.appendChild(contact);
     }
 
-    card.appendChild(meta);
+    card.appendChild(info);
     return card;
 };
 
@@ -2205,7 +2249,7 @@ const buildExecutiveCabinetSection = (minister, collaborators, gradeLookup, opti
         directionSection.appendChild(empty);
     } else {
         const directionGrid = document.createElement("div");
-        directionGrid.className = "executive-card-grid";
+        directionGrid.className = "cabinet-tree";  // Use harmonized cabinet tree class
         directionMembers.forEach((member) => {
             directionGrid.appendChild(
                 createExecutiveCard(member, {
@@ -2273,7 +2317,7 @@ const buildExecutiveCabinetSection = (minister, collaborators, gradeLookup, opti
             usedIds.add(head.id);
 
             const membersGrid = document.createElement("div");
-            membersGrid.className = "executive-pole__members executive-card-grid";
+            membersGrid.className = "executive-pole__members cabinet-tree";  // Use harmonized cabinet tree class
 
             if (!poleMembers.length) {
                 const emptyMembers = document.createElement("p");
@@ -2306,7 +2350,7 @@ const buildExecutiveCabinetSection = (minister, collaborators, gradeLookup, opti
         othersSection.appendChild(othersTitle);
 
         const othersGrid = document.createElement("div");
-        othersGrid.className = "executive-card-grid executive-card-grid--compact";
+        othersGrid.className = "cabinet-tree cabinet-tree--compact";  // Use harmonized cabinet tree class
 
         remainingMembers.sort(compareCabinetMembers).forEach((member) => {
             const parent = membersById.get(member.superiorId);
@@ -2528,48 +2572,18 @@ const openModal = async (minister) => {
 
     // mission field removed from modal — no longer displayed
 
-    // Biographie (affichage en listes)
-    if (modalBiographySection && modalBiographyRoot) {
-        const accentColor = minister.accentColor || null;
-        const biographyItems = Array.isArray(minister.biography) ? minister.biography : [];
-        const hasLocalBiography = populateBiographyModule(biographyItems, accentColor);
-        if (!hasLocalBiography) {
-            const client = ensureSupabaseClient();
-            if (client && minister.id != null) {
-                client
-                    .from(SUPABASE_BIOGRAPHY_VIEW)
-                    .select('*')
-                    .eq('person_id', minister.id)
-                    .order('category', { ascending: true })
-                    .order('sort_weight', { ascending: true })
-                    .order('start_date_nullsafe', { ascending: false })
-                    .order('created_at', { ascending: false })
-                    .then(({ data, error }) => {
-                        let normalized = [];
-                        if (!error && Array.isArray(data) && data.length) {
-                            normalized = normalizeBiographyEntries(data);
-                        }
-                        if (populateBiographyModule(normalized, accentColor)) {
-                            minister.biography = normalized;
-                        } else {
-                            populateBiographyModule([], accentColor);
-                        }
-                        setModalBusy(false);
-                    })
-                    .catch(() => {
-                        populateBiographyModule([], accentColor);
-                        setModalBusy(false);
-                    });
-            } else {
-                populateBiographyModule([], accentColor);
-                setModalBusy(false);
-            }
-        } else {
-            setModalBusy(false);
+    // Populate biography module from preloaded view or fallback careers table
+    try {
+        let bioEntries = Array.isArray(minister.biography) ? minister.biography : [];
+        if (!bioEntries.length && minister.id != null) {
+            bioEntries = await fetchBiographyForPersonFallback(minister.id);
         }
-    } else {
-        setModalBusy(false);
+        populateBiographyModule(bioEntries, minister.accentColor || null);
+    } catch (_) {
+        // ignore population errors
     }
+
+    setModalBusy(false);
 
     if (modalBody) {
         const oldCollabSection = modalBody.querySelector(".modal-collaborators");
@@ -2579,36 +2593,10 @@ const openModal = async (minister) => {
     }
 
     if (modalBody) {
-        if (isExecutiveLeader(minister)) {
-            const toggleButton = document.createElement("button");
-            toggleButton.type = "button";
-            toggleButton.className = "btn btn-primary modal-collaborators-toggle";
-            toggleButton.textContent = minister.id ? "Afficher les collaborateurs" : "Cabinet non disponible";
-            toggleButton.setAttribute("aria-expanded", "false");
-            toggleButton.dataset.cabinetState = "closed";
-
-            if (!minister.id) {
-                toggleButton.disabled = true;
-                toggleButton.setAttribute("aria-disabled", "true");
-            }
-
-            const metaSection = modalBody.querySelector(".modal-meta");
-            if (metaSection) {
-                metaSection.insertAdjacentElement("afterend", toggleButton);
-            } else {
-                modalBody.appendChild(toggleButton);
-            }
-
-            if (minister.id) {
-                toggleButton.addEventListener("click", async () => {
-                    await toggleExecutiveCabinet(minister, toggleButton);
-                });
-            }
-        } else {
-            showCabinetInlineForMinister(minister).catch((error) => {
-                console.warn("[onepage] Impossible d'afficher le cabinet :", error);
-            });
-        }
+        // Show cabinet inline for all ministers (including Prime Minister and delegates)
+        showCabinetInlineForMinister(minister).catch((error) => {
+            console.warn("[onepage] Impossible d'afficher le cabinet :", error);
+        });
 
         // Populate inline ministres délégués section inside the fiche modal
         try {
@@ -2694,11 +2682,13 @@ const openModal = async (minister) => {
                         info.className = 'delegate-info';
                         const dn = document.createElement('p');
                         dn.className = 'delegate-name';
+                        // keep the minister's name visible
                         dn.textContent = delegate.name || '';
                         info.appendChild(dn);
                         const dr = document.createElement('p');
                         dr.className = 'delegate-role';
-                        dr.textContent = delegate.portfolio || formatRole(delegate.role) || '';
+                        // prefer role_label from person_ministries (mapped to mission) as the displayed role
+                        dr.textContent = delegate.mission || delegate.portfolio || formatRole(delegate.role) || '';
                         info.appendChild(dr);
                         btn.appendChild(info);
 
@@ -2901,14 +2891,24 @@ const fetchMinistersFromSupabase = async () => {
     let biographyByPerson = new Map();
     if (personIds.length) {
         try {
-            const { data: biographyRows, error: biographyError } = await client
-                .from(SUPABASE_BIOGRAPHY_VIEW)
+            const tryQuery = async (source) => client
+                .from(source)
                 .select('*')
                 .in('person_id', personIds)
-                .order('category', { ascending: true })
-                .order('sort_weight', { ascending: true })
-                .order('start_date_nullsafe', { ascending: false })
+                .order('sort_index', { ascending: true })
+                .order('start_date', { ascending: false })
                 .order('created_at', { ascending: false });
+
+            // Prefer view first, then fallback to careers table if missing
+            let source = SUPABASE_BIOGRAPHY_VIEW;
+            let { data: biographyRows, error: biographyError } = await tryQuery(source);
+            if (biographyError && (biographyError.code === 'PGRST205' || (biographyError.message && biographyError.message.includes('Could not find the table')))) {
+                if (SUPABASE_CAREERS_TABLE && SUPABASE_CAREERS_TABLE !== SUPABASE_BIOGRAPHY_VIEW) {
+                    source = SUPABASE_CAREERS_TABLE;
+                    ({ data: biographyRows, error: biographyError } = await tryQuery(source));
+                }
+            }
+
             if (!biographyError && Array.isArray(biographyRows)) {
                 biographyByPerson = biographyRows.reduce((map, row) => {
                     if (!row || row.person_id == null) return map;
@@ -2917,8 +2917,9 @@ const fetchMinistersFromSupabase = async () => {
                     map.set(row.person_id, list);
                     return map;
                 }, new Map());
+                console.log('[onepage] Biographies groupées par personne depuis', source, '→', biographyRows.length, 'ligne(s)');
             } else if (biographyError) {
-                console.warn('[onepage] Erreur lors du chargement de biography_entries_view :', biographyError);
+                console.warn('[onepage] Erreur lors du chargement des entrées de biographie depuis', source + ':', biographyError);
             }
         } catch (error) {
             console.warn('[onepage] Impossible de charger les entrées de biographie', error);
@@ -2953,11 +2954,10 @@ const fetchMinistersFromSupabase = async () => {
             })
             .filter(Boolean);
 
+        // Index de recherche toolbar: restreint aux noms (ministre + ministères)
         const searchIndexParts = [
             person.full_name,
-            person.description,
-            ...ministriesLabels.map((entry) => entry.label),
-            ...ministriesLabels.map((entry) => entry.roleLabel || "")
+            ...ministriesLabels.map((entry) => entry.label)
         ];
 
         const biographyEntries = biographyByPerson.get(person.id) || [];

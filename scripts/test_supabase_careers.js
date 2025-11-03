@@ -18,7 +18,7 @@ try {
 
 const SUPABASE_URL = supabaseConfig && supabaseConfig.url ? supabaseConfig.url : '';
 const SUPABASE_ANON_KEY = supabaseConfig && supabaseConfig.anonKey ? supabaseConfig.anonKey : '';
-const SUPABASE_BIOGRAPHY_VIEW = supabaseConfig && supabaseConfig.biographyView ? supabaseConfig.biographyView : 'biography_entries_view';
+const SUPABASE_BIOGRAPHY_VIEW = supabaseConfig && supabaseConfig.biographyView ? supabaseConfig.biographyView : 'person_careers';
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error('Missing Supabase credentials. Configure SUPABASE_URL and SUPABASE_ANON_KEY via environment variables or config/supabase.local.json.');

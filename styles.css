@@ -25,6 +25,16 @@
     --cabinet-cloud-three: radial-gradient(circle at 80% 96%, rgba(105, 135, 255, 0.22), transparent 68%);
     --cabinet-cloud-four: radial-gradient(circle at 5% 92%, rgba(240, 160, 140, 0.2), transparent 60%);
 
+    /* Modal design tokens (harmonized) */
+    --modal-backdrop: rgba(17, 23, 39, 0.65);
+    --modal-surface: #ffffff;
+    --modal-border: rgba(17, 23, 39, 0.12);
+    --modal-radius: 16px;
+    --modal-shadow: 0 40px 80px rgba(17, 23, 39, 0.28);
+    --modal-panel-bg: #ffffff;
+    --modal-panel-border: rgba(17, 23, 39, 0.12);
+    --modal-panel-radius: 16px;
+
     /* corriger les couleurs de renaissance trouver plusieurs bleus moins moche pour les droitoss*/
     /* Centre / majorités */
     --party-renaissance: #FFD700;    /* Jaune doré - Renaissance */
@@ -599,11 +609,17 @@ main {
 
 .section-header {
     max-width: 60ch;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
 }
 
 .section-title {
     font-size: clamp(2rem, 4vw, 2.6rem);
     font-weight: 2000;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .section-subtitle {
@@ -1782,6 +1798,11 @@ body.print-all .toolbar {
     color: var(--color-encre);
     margin: 0;
     text-transform: none;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .cabinet-panel-context {
@@ -1856,13 +1877,13 @@ body.print-all .toolbar {
 
 .cabinet-tree-level {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 200px));
     justify-content: center;
     justify-items: center;
     align-items: stretch;
-    gap: 0.9rem 1rem;
+    gap: 0.6rem 0.7rem;
     width: 100%;
-    padding: clamp(0.5rem, 1.25vw, 0.9rem) clamp(0.6rem, 2vw, 1.2rem);
+    padding: clamp(0.25rem, 0.6vw, 0.5rem) clamp(0.35rem, 1vw, 0.7rem);
     border-radius: 10px;
     background: #ffffff;
     border: 1px solid rgba(17, 23, 39, 0.1);
@@ -1872,7 +1893,7 @@ body.print-all .toolbar {
 .cabinet-tree-level::before { content: none; }
 
 .cabinet-tree-level[data-depth="0"] {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 200px));
 }
 
 .cabinet-tree-level[data-depth="0"] {
@@ -1890,30 +1911,40 @@ body.print-all .toolbar {
     --cabinet-node-text: var(--color-encre);
     --cabinet-node-muted: var(--color-sesame);
     --cabinet-node-link: var(--color-panthere);
-    background: #ffffff;
-    border-radius: 8px;
-    border: 1px solid rgba(17, 23, 39, 0.14);
-    padding: 0.9rem 1rem;
-    min-width: 180px;
-    max-width: 260px;
-    text-align: left;
+    /* Harmonized panel look */
+    background: var(--modal-panel-bg);
+    border-radius: var(--modal-panel-radius, 12px);
+    border: 1px solid var(--modal-panel-border, rgba(17, 23, 39, 0.12));
+    padding: 0.6rem 0.75rem;
+    width: 200px;
+    height: 220px;
+    text-align: center;
     box-shadow: none;
     display: grid;
-    gap: 0.5rem;
+    justify-items: center;
+    gap: 0.4rem;
     position: relative;
     color: var(--cabinet-node-text);
     overflow: hidden;
 }
 
+.cabinet-node::before { content: none; }
+
+.cabinet-node:hover,
+.cabinet-node:focus-within {
+    box-shadow: 0 10px 22px rgba(17, 23, 39, 0.08);
+    border-color: rgba(17, 23, 39, 0.18);
+}
+
 .cabinet-node-avatar {
-    width: 62px;
-    height: 62px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     overflow: hidden;
     border: 2px solid rgba(255, 255, 255, 0.92);
-    box-shadow: 0 12px 26px rgba(17, 23, 39, 0.22);
+    box-shadow: 0 10px 22px rgba(17, 23, 39, 0.18);
     background: rgba(255, 255, 255, 0.65);
-    margin-bottom: 0.35rem;
+    margin: 0 auto 0.35rem;
 }
 
 .cabinet-node-avatar img {
@@ -1943,20 +1974,54 @@ body.print-all .toolbar {
 
 .cabinet-node-name {
     font-weight: 700;
+    font-size: 0.92rem;
+    line-height: 1.15;
     color: var(--cabinet-node-text);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .cabinet-node-title,
 .cabinet-node-role {
     margin: 0;
     color: var(--cabinet-node-muted);
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     letter-spacing: 0.01em;
+    text-align: center;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .cabinet-node-email {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--cabinet-node-link);
+    text-decoration: none;
+    display: inline-block;
+    margin: 0 auto;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 520px) {
+    .cabinet-tree-level { grid-template-columns: repeat(auto-fit, minmax(180px, 180px)); }
+    .cabinet-node { width: 180px; height: 210px; }
+    .cabinet-node-avatar { width: 48px; height: 48px; }
+    .cabinet-node-name { font-size: 0.9rem; }
+    .cabinet-node-title, .cabinet-node-role { font-size: 0.8rem; }
+}
+.cabinet-node-email:hover,
+.cabinet-node-email:focus {
+    text-decoration: underline;
 }
 
 .cabinet-node[data-grade="direcab"],
@@ -2132,6 +2197,11 @@ body.print-all .toolbar {
     text-transform: none;
     letter-spacing: 0.01em;
     color: var(--color-encre);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .executive-cabinet__poles {
@@ -2561,7 +2631,7 @@ body.print-all .toolbar {
 .modal-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(17, 23, 39, 0.65);
+    background: var(--modal-backdrop);
 }
 
 .modal-content {
@@ -2570,11 +2640,11 @@ body.print-all .toolbar {
     width: clamp(320px, 92vw, 1400px);
     min-height: clamp(520px, 85vh, 1200px);
     max-height: min(96vh, 1500px);
-    background: var(--color-perle);
-    border-radius: var(--radius-base);
-    box-shadow: 0 40px 80px rgba(17, 23, 39, 0.28);
+    background: var(--modal-surface);
+    border-radius: var(--modal-radius);
+    box-shadow: var(--modal-shadow);
     overflow: hidden;
-    border: 1px solid rgba(62, 62, 61, 0.12);
+    border: 1px solid var(--modal-border);
     display: flex;
     flex-direction: column;
 }
@@ -2650,6 +2720,17 @@ body.print-all .toolbar {
     border-radius: 50%;
     font-size: 1.5rem;
     cursor: pointer;
+    transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.modal-close:hover,
+.modal-close:focus {
+    background: rgba(17, 23, 39, 0.08);
+}
+
+.modal-close:focus-visible {
+    outline: 2px solid var(--color-panthere);
+    outline-offset: 2px;
 }
 
 .modal-body {
@@ -2666,12 +2747,22 @@ body.print-all .toolbar {
     align-items: start;
 }
 
+/* Unify module titles across sections inside modal */
+.modal-module-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-encre);
+}
+
 .modal-module {
     position: relative;
-    background: rgba(255, 255, 255, 0.92);
-    border-radius: 18px;
+    background: var(--modal-panel-bg);
+    border-radius: var(--modal-panel-radius);
     padding: clamp(1.25rem, 3vw, 1.8rem);
-    border: 1px solid rgba(62, 62, 61, 0.08);
+    border: 1px solid var(--modal-panel-border);
     box-shadow: 0 26px 54px rgba(17, 23, 39, 0.12);
     display: flex;
     flex-direction: column;
@@ -2688,13 +2779,14 @@ body.print-all .toolbar {
     align-items: center;
     justify-content: center;
     padding: clamp(1rem, 2.8vw, 1.5rem);
-    background: linear-gradient(135deg, rgba(17, 23, 39, 0.08), rgba(100, 215, 205, 0.18));
+    /* unified white panel background inside modal */
+    background: var(--modal-panel-bg);
 }
 
 .modal-photo-frame {
     width: clamp(160px, 22vw, 220px);
     aspect-ratio: 3 / 4; /* align with .minister-photo ratio */
-    border-radius: 20px;
+    border-radius: var(--modal-panel-radius);
     overflow: hidden;
     box-shadow: 0 30px 60px rgba(17, 23, 39, 0.18);
     border: 2px solid rgba(255, 255, 255, 0.65);
@@ -2784,10 +2876,10 @@ body.print-all .toolbar {
 .modal-module--description {
     --description-accent: var(--color-curacao);
     color: var(--color-poivre);
-    background: color-mix(in srgb, var(--description-accent) 5%, #ffffff);
-    border: 1px solid color-mix(in srgb, var(--description-accent) 16%, rgba(17, 23, 39, 0.08));
-    border-left: 5px solid var(--description-accent);
-    border-radius: 14px;
+    /* unified white panel background inside modal */
+    background: var(--modal-panel-bg);
+    border: 1px solid var(--modal-panel-border);
+    border-radius: var(--modal-panel-radius);
     padding: 0.85rem 1rem 1rem;
     box-shadow: 0 10px 22px rgba(17, 23, 39, 0.06);
 }
@@ -2804,243 +2896,110 @@ body.print-all .toolbar {
     grid-column: 1 / -1;
 }
 
+/* Biography module */
 .modal-module--biography {
-    --biography-accent: var(--color-curacao);
-    background: color-mix(in srgb, var(--biography-accent) 6%, #ffffff);
-    border: 1px solid color-mix(in srgb, var(--biography-accent) 22%, rgba(17, 23, 39, 0.08));
-    border-left: 6px solid var(--biography-accent);
-    border-radius: 16px;
-    padding: 1rem 1.25rem 1.25rem;
-    box-shadow: 0 10px 26px rgba(17, 23, 39, 0.08);
+    --biography-accent: var(--color-panthere);
+    grid-column: 1 / -1;
+    /* unified white panel background inside modal */
+    background: var(--modal-panel-bg);
+    border: 1px solid var(--modal-panel-border);
+    border-radius: var(--modal-panel-radius);
+    padding: clamp(1rem, 2vw, 1.25rem) clamp(1rem, 2vw, 1.25rem);
 }
 
 .modal-module--biography .modal-module-title {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.15rem;
-    font-weight: 700;
+    margin: 0 0 0.75rem 0;
     color: var(--color-encre);
-    position: relative;
 }
 
-.modal-module--biography .modal-module-title::after {
-    content: "";
-    display: block;
-    width: 44px;
-    height: 3px;
-    margin-top: 6px;
-    border-radius: 2px;
-    background: var(--biography-accent);
-}
-
-.modal-biography {
-    display: grid;
-    gap: 1.75rem;
+/* Responsive: stack modal modules on smaller viewports for harmony */
+@media (max-width: 980px) {
+    .modal-layout {
+        grid-template-columns: 1fr;
+    }
+    .modal-module--photo,
+    .modal-module--identity {
+        grid-column: 1 / -1;
+    }
 }
 
 .biography-groups {
     display: grid;
-    gap: 1.5rem;
-    margin: 0;
+    gap: 0.9rem 1rem;
 }
 
 .biography-group {
     display: grid;
-    gap: 1rem;
+    gap: 0.2rem 0.5rem;
+    padding: 0.6rem 0.75rem;
+    background: rgba(236, 234, 237, 0.35);
+    border: 1px solid rgba(62, 62, 61, 0.08);
+    border-radius: 10px;
 }
 
 .biography-group__title {
-    margin: 0;
-    font-size: 0.95rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    font-weight: 600;
-    color: var(--biography-accent);
+    margin: 0.1rem 0 0.4rem 0;
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid rgba(62, 62, 61, 0.12);
+    color: var(--color-encre);
+    font-weight: 800;
+    letter-spacing: 0.01em;
 }
 
 .biography-list {
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 0 0 0 0.25rem;
     display: grid;
-    gap: 1rem;
+    gap: 0.25rem;
 }
 
 .biography-entry {
     position: relative;
-    padding: 1.25rem 1.5rem 1.25rem 2.75rem;
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(17, 23, 39, 0.08);
-    box-shadow: 0 18px 45px rgba(17, 23, 39, 0.12);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    --biography-entry-color: var(--biography-accent);
+    padding-left: 1rem;
 }
 
 .biography-entry::before {
-    content: "";
+    content: '';
     position: absolute;
-    inset-inline-start: 1rem;
-    inset-block-start: 1.35rem;
-    width: 0.75rem;
-    height: 0.75rem;
+    top: 0.6em;
+    left: 0.25rem;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    background: var(--biography-entry-color);
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--biography-entry-color) 20%, transparent);
-}
-
-.biography-entry:hover,
-.biography-entry:focus-within {
-    transform: translateY(-4px);
-    box-shadow: 0 26px 60px rgba(17, 23, 39, 0.22);
+    background: var(--biography-entry-color, var(--biography-accent));
+    box-shadow: 0 0 0 2px rgba(62,62,61,0.06);
 }
 
 .biography-entry__header {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    font-weight: 700;
+    color: var(--color-encre);
+    margin: 0;
 }
 
 .biography-entry__period {
     margin: 0;
-    font-weight: 600;
-    font-size: 0.85rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--biography-entry-color);
 }
 
-.biography-entry__badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.25rem 0.6rem;
-    border-radius: 999px;
-    font-size: 0.72rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--biography-entry-color);
-    background: color-mix(in srgb, var(--biography-entry-color) 18%, rgba(255, 255, 255, 0.92));
-    border: 1px solid color-mix(in srgb, var(--biography-entry-color) 55%, rgba(17, 23, 39, 0.08));
-}
-
-.biography-entry__badge::before {
-    content: "";
-    width: 0.4rem;
-    height: 0.4rem;
-    border-radius: 50%;
-    background: currentColor;
-}
-
-.biography-entry__title {
-    margin: 0;
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: var(--color-encre);
-}
-
-.biography-entry__org {
-    margin: 0.35rem 0 0;
-    font-size: 0.95rem;
-    color: var(--color-sesame);
-}
+.biography-entry__line { margin: 0; color: var(--color-encre); }
+.biography-entry__period,
+.biography-entry__title,
+.biography-entry__org,
+.biography-entry__sep { display: inline; }
+.biography-entry__period { font-weight: 700; margin-right: 0.35rem; }
+.biography-entry__title { font-weight: 500; }
+.biography-entry__org { color: var(--color-sesame); }
 
 .biography-entry__details {
-    margin: 0.75rem 0 0;
-    padding-inline-start: 1.3rem;
-    display: grid;
-    gap: 0.35rem;
-    color: var(--color-poivre);
-    font-size: 0.95rem;
+    margin: 0.2rem 0 0.2rem 0;
+    padding-left: 1rem;
 }
 
-.biography-entry__details li::marker {
-    color: var(--biography-entry-color);
-}
-
-@media (min-width: 768px) {
-    .biography-groups {
-        gap: 1.75rem;
-    }
-
-    .biography-entry {
-        padding-inline-start: 3rem;
-    }
-
-    .biography-entry::before {
-        inset-inline-start: 1.2rem;
-    }
+.biography-entry__details li {
+    list-style: disc;
 }
 
 /* mission module removed */
-
-/* ===== Biography – Compact, sober bullets ===== */
-.biography-group__title {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--color-encre);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
-.biography-list {
-    list-style: disc;
-    padding-left: 1.15rem;
-    gap: 0.5rem;
-}
-
-.biography-list > li.biography-entry {
-    position: static;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-}
-
-.biography-entry::before { content: none; }
-.biography-entry:hover,
-.biography-entry:focus-within { transform: none; box-shadow: none; }
-
-.biography-entry__header { display: inline; margin: 0; }
-.biography-entry__period {
-    margin: 0;
-    font-weight: 700;
-    font-size: 0.95rem;
-    letter-spacing: 0.01em;
-    text-transform: none;
-    color: var(--color-encre);
-}
-.biography-entry__badge {
-    display: inline-flex;
-    gap: 0.3rem;
-    padding: 0 0.35rem;
-    border-radius: 4px;
-    font-size: 0.72rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--color-sesame);
-    background: transparent;
-    border: 0;
-}
-.biography-entry__title { display: inline; margin: 0 0 0 0.25rem; font-size: 0.95rem; font-weight: 500; color: var(--color-encre); }
-.biography-entry__org { display: inline; margin: 0 0 0 0.25rem; font-size: 0.95rem; color: var(--color-sesame); }
-.biography-entry__org::before { content: " — "; color: var(--color-sesame); }
-
-.biography-entry__details {
-    margin: 0.35rem 0 0.15rem 0;
-    padding-inline-start: 1rem;
-    gap: 0.25rem;
-    color: var(--color-poivre);
-    font-size: 0.92rem;
-    list-style: circle;
-}
-.biography-entry__details li::marker { color: var(--color-sesame); }
-.biography-list > li::marker { color: var(--color-panthere); font-size: 0.9em; }
-
-@media (min-width: 768px) {
-    .biography-entry { padding-inline-start: 0 !important; }
-}
 
 .modal-meta {
     display: grid;

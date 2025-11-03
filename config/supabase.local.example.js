@@ -6,7 +6,9 @@
     url: "https://YOUR-PROJECT.ref.supabase.co",
     anonKey: "YOUR_ANON_PUBLIC_KEY",
     ministersTable: "persons",
-    careersTable: "person_careers"
+    careersTable: "person_careers",
+    // Optionnel: si vous utilisez une vue SQL pour la biographie
+    // laissez "biographyView" vide pour utiliser la table ci-dessus
+    biographyView: "person_careers"
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
-

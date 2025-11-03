@@ -161,7 +161,7 @@
                     <a class="btn btn-primary" href="mailto:contact@rumeurpublique.com">contact@rumeurpublique.com</a>
                 </div>
                 <div class="contact-card">
-                    <h3>En savoir plus</h3>
+                    <h3>Collaborer avec notre equipe d'affaires publiques</h3>
                     <p>Découvrez l'univers créatif et stratégique de Rumeur Publique à travers nos projets.</p>
                     <a class="btn btn-ghost" href="https://www.rumeurpublique.fr" target="_blank" rel="noopener">rumeurpublique.fr</a>
                 </div>
@@ -182,24 +182,21 @@
         </div>
     </footer>
 
-    <!-- ================= MODALE MINISTRE ================= -->
+    <!-- ================= Mit sous forme de grille c'étiat le plus simple, quelque problème graphqiue dans la grid, les ministres avec plein de ministre délégué déforme les cards et rendent leur collègue tout petit à côté d'eux ================= -->
     <div class="modal" id="minister-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
         <div class="modal-backdrop" data-dismiss></div>
         <div class="modal-content" role="document">
             <button class="modal-close" type="button" aria-label="Fermer" data-dismiss>&times;</button>
             <div class="modal-body">
                 <div class="modal-layout">
-                    <div class="modal-module modal-module--identity">
-                        <h3 class="modal-identity-title" id="modal-title"></h3>
-                        <p class="modal-portfolio" id="modal-portfolio"></p>
-                    </div>
-                    <div class="modal-module modal-module--export">
-                        <button id="export-minister-pdf" class="modal-export" type="button">Exporter cette fiche</button>
-                    </div>
                     <div class="modal-module modal-module--photo">
                         <div class="modal-photo-frame">
                             <img class="modal-photo" id="modal-photo" src="" alt="" />
                         </div>
+                    </div>
+                    <div class="modal-module modal-module--identity">
+                        <h3 class="modal-identity-title" id="modal-title"></h3>
+                        <p class="modal-portfolio" id="modal-portfolio"></p>
                     </div>
                     <div class="modal-module modal-module--description">
                         <p class="modal-description" id="modal-description"></p>
@@ -209,13 +206,15 @@
                         <h4 class="modal-module-title">Ministres délégués</h4>
                         <div id="modal-delegates" class="modal-delegates-list" role="list"></div>
                     </div>
-                    <section class="modal-module modal-module--biography" hidden>
-                        <div class="modal-biography" role="region" aria-labelledby="modal-biography-title">
-                            <h4 class="modal-module-title" id="modal-biography-title">Biographie</h4>
-                            <div id="modal-biography-root" class="biography-groups" role="list"></div>
-                        </div>
-                    </section>
+                    <!-- Biographie -->
+                    <div class="modal-module modal-module--biography" hidden>
+                        <h4 class="modal-module-title">Biographie</h4>
+                        <div class="biography-groups" id="modal-biography-root"></div>
+                    </div>
                     
+                    <div class="modal-module modal-module--export">
+                        <button id="export-minister-pdf" class="modal-export" type="button">Exporter cette fiche</button>
+                    </div>
                     <div class="modal-module modal-module--footer">
                         <!-- Disclaimer & contact prompt -->
                         <div class="modal-footer-cta" aria-hidden="true">

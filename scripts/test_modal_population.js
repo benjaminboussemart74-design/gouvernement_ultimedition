@@ -24,7 +24,7 @@ try {
 const SUPABASE_URL = supabaseConfig && supabaseConfig.url ? supabaseConfig.url : '';
 const SUPABASE_ANON_KEY = supabaseConfig && supabaseConfig.anonKey ? supabaseConfig.anonKey : '';
 const SUPABASE_PERSONS_TABLE = supabaseConfig && supabaseConfig.ministersTable ? supabaseConfig.ministersTable : 'persons';
-const SUPABASE_BIOGRAPHY_VIEW = supabaseConfig && supabaseConfig.biographyView ? supabaseConfig.biographyView : 'biography_entries_view';
+const SUPABASE_BIOGRAPHY_VIEW = supabaseConfig && supabaseConfig.biographyView ? supabaseConfig.biographyView : 'person_careers';
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error('Missing Supabase credentials. Provide SUPABASE_URL and SUPABASE_ANON_KEY via environment variables or config/supabase.local.json.');
@@ -71,7 +71,7 @@ async function fetchBiographyFor(personId) {
   const endpoint = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/${SUPABASE_BIOGRAPHY_VIEW}`;
   const params = new URLSearchParams({
     person_id: `eq.${personId}`,
-    order: 'category.asc,sort_weight.asc,start_date_nullsafe.desc,created_at.desc',
+    order: 'sort_index.asc,start_date.desc,created_at.desc',
   });
   const q = `${endpoint}?${params.toString()}`;
   const res = await httpGet(q, {
