@@ -1198,6 +1198,61 @@ body.print-all .toolbar {
     zoom: 1 !important;
 }
 
+/* Search loupe (floating, expandable) */
+.search-bar {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(62, 62, 61, 0.14);
+    border-radius: 30px;
+    padding: 0.4rem;
+    backdrop-filter: blur(6px);
+    transition: width 0.28s ease, background-color 0.28s ease;
+    width: 40px;
+    overflow: hidden;
+    z-index: 100000;
+}
+
+.search-bar.active {
+    width: 220px;
+    background: rgba(255,255,255,0.92);
+}
+
+.search-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--color-encre, #111727);
+    cursor: pointer;
+    outline: none;
+    padding: 4px;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 0 0.5rem;
+    background: transparent;
+    font-size: 1rem;
+    color: var(--color-encre, #111727);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+}
+
+.search-bar.active .search-input {
+    opacity: 1;
+}
+
+/* Ensure search control is not scaled by layout-dezoom */
+.layout-dezoom .search-bar {
+    transform: none !important;
+    zoom: 1 !important;
+}
+
 /* Apply a global dezoom when the layout-dezoom helper is enabled.
    Use `zoom` where available and `transform: scale()` as a fallback. */
 .layout-dezoom {
