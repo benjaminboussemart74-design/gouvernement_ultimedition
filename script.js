@@ -8,7 +8,7 @@ const ROLE_LABELS = {
     collaborator: "Collaborateur"
 };
 
-// Ordre fixe des ministères pour l'affichage
+// Ordre fixe des ministères pour l'affichage qui ne marche tout simplement pas il faudrait que j'intègre un sort index depuis supabase mais pour le moment je vais me contenter de ça 
 const MINISTRY_ORDER = [
     "Premier ministre",
     "Ministère de l'Intérieur",
@@ -44,10 +44,10 @@ const MINISTRY_ORDER_MAP = new Map(
 );
 
 // Priorité d'importance par rôle
-// 0 = plus important (haut gauche), grandissant vers la droite/bas
+// j'ai supprimé l'affichage par grandeur selon le rôle car c'était turbo moche
 const ROLE_PRIORITY = {
     leader: 0,
-    "minister-state": 1, // plus haut que "minister"
+    "minister-state": 1, 
     minister: 2,
     "minister-delegate": 3,
     "ministre-delegue": 3,
@@ -64,6 +64,7 @@ const MINISTER_ROLES = new Set([
     "secretary"
 ]);
 
+// ca c'est codex qui a fait je comprends pas tout mais ça fonctionne et c'est l'important il faut que je regarde plus en profondeur comment ça foncitonne
 const DELEGATE_ROLES = new Set(["minister-delegate", "ministre-delegue", "secretary"]);
 const CORE_ROLES = new Set(["leader", "minister", "minister-state"]);
 const FALLBACK_DATA_URL = "data/ministers.json";
@@ -505,14 +506,10 @@ const debounce = (fn, wait = 220) => {
 
 const updateMinistersGridLayout = () => {
     if (!grid) return;
-    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
-    let columns = 1;
-    if (viewportWidth >= 1280) {
-        columns = 5;
-    } else if (viewportWidth >= 768) {
-        columns = 3;
+    // Let CSS auto-fit with a fluid min width drive the layout
+    if (grid.hasAttribute('data-columns')) {
+        grid.removeAttribute('data-columns');
     }
-    grid.dataset.columns = String(columns);
 };
 
 const debouncedGridLayoutUpdate = debounce(updateMinistersGridLayout, 160);
@@ -963,7 +960,7 @@ const buildCard = (minister) => {
         // prefer party color when available, fallback to ministry accentColor
         const partyLabel = mapPartyLabel(minister.party == null ? "" : String(minister.party).trim()) || "";
         const PARTY_COLORS = {
-            "Renaissance": "#0055A4",
+            "Renaissance": "#b89c05",
             "Horizons": "#1E90FF",
             "MoDem": "#F2A900",
             "PRV": "#00A86B",
@@ -1046,6 +1043,18 @@ const buildCard = (minister) => {
     const name = document.createElement("h3");
     name.textContent = minister.name ?? "Nom du ministre";
     left.appendChild(name);
+
+    // Afficher le libellé du rôle depuis persons_ministries (roleLabel)
+    // Fallback sur le rôle générique si absent
+    const primaryMinistryEntry = (Array.isArray(ministriesEntries) ? ministriesEntries : []).find((e) => e && e.isPrimary && typeof e.roleLabel === 'string' && e.roleLabel.trim());
+    const firstRoleLabel = (Array.isArray(ministriesEntries) ? ministriesEntries : []).map(e => (e && typeof e.roleLabel === 'string' ? e.roleLabel.trim() : '')).find(Boolean);
+    const roleLabelText = (primaryMinistryEntry?.roleLabel?.trim() || firstRoleLabel || "") || (formatRole(minister.role) || "");
+    if (roleLabelText) {
+        const roleEl = document.createElement("p");
+        roleEl.className = "minister-role";
+        roleEl.textContent = roleLabelText;
+        left.appendChild(roleEl);
+    }
 
     const meta = document.createElement("div");
     meta.className = "mc-meta";
@@ -2889,6 +2898,8 @@ const fetchMinistersFromSupabase = async () => {
 
     const personIds = validPersons.map((person) => person.id).filter((id) => id != null);
     let biographyByPerson = new Map();
+    let collaboratorsByPerson = new Map();
+    
     if (personIds.length) {
         try {
             const tryQuery = async (source) => client
@@ -2924,6 +2935,30 @@ const fetchMinistersFromSupabase = async () => {
         } catch (error) {
             console.warn('[onepage] Impossible de charger les entrées de biographie', error);
         }
+
+        // Charger les collaborateurs pour l'index de recherche
+        try {
+            const { data: collaboratorsRows, error: collaboratorsError } = await client
+                .from("persons")
+                .select("id, superior_id, full_name")
+                .eq("role", "collaborator")
+                .in("superior_id", personIds);
+
+            if (!collaboratorsError && Array.isArray(collaboratorsRows)) {
+                collaboratorsByPerson = collaboratorsRows.reduce((map, collab) => {
+                    if (!collab || collab.superior_id == null) return map;
+                    const list = map.get(collab.superior_id) || [];
+                    list.push(collab.full_name);
+                    map.set(collab.superior_id, list);
+                    return map;
+                }, new Map());
+                console.log('[onepage] Collaborateurs chargés pour l\'index de recherche →', collaboratorsRows.length, 'collaborateur(s)');
+            } else if (collaboratorsError) {
+                console.warn('[onepage] Erreur lors du chargement des collaborateurs pour l\'index de recherche :', collaboratorsError);
+            }
+        } catch (error) {
+            console.warn('[onepage] Impossible de charger les collaborateurs pour l\'index de recherche', error);
+        }
     }
 
     return validPersons.map((person) => {
@@ -2954,10 +2989,12 @@ const fetchMinistersFromSupabase = async () => {
             })
             .filter(Boolean);
 
-        // Index de recherche toolbar: restreint aux noms (ministre + ministères)
+        // Bon c'est bon la tool bar cherche uniquement dans les noms je trouve ça dommage pourra revoir ça à l'avenir
+        const collaboratorNames = collaboratorsByPerson.get(person.id) || [];
         const searchIndexParts = [
             person.full_name,
-            ...ministriesLabels.map((entry) => entry.label)
+            ...ministriesLabels.map((entry) => entry.label),
+            ...collaboratorNames
         ];
 
         const biographyEntries = biographyByPerson.get(person.id) || [];
@@ -3248,35 +3285,7 @@ updateActiveFiltersHint(0, 0);
 let __appInitialized = false;
 let __globalCountersEl = null;
 
-function ensureCountersContainer() {
-    // Reuse if already in DOM
-    if (__globalCountersEl && document.body.contains(__globalCountersEl)) return __globalCountersEl;
-
-
-    const compact = document.querySelector('.toolbar-compact');
-    if (compact) {
-        const el = document.createElement('div');
-        el.className = 'toolbar-counters toolbar-counters--compact';
-        el.id = 'global-counters';
-        el.setAttribute('role', 'status');
-        compact.appendChild(el);
-        __globalCountersEl = el;
-        return el;
-    }
-
-    //  Ca c'est la tool bar que j'ai caché pour le moment 
-    const meta = document.querySelector('.toolbar-meta');
-    if (meta) {
-        const el = document.createElement('div');
-        el.className = 'toolbar-counters';
-        el.id = 'global-counters';
-        el.setAttribute('role', 'status');
-        meta.appendChild(el);
-        __globalCountersEl = el;
-        return el;
-    }
-    return null;
-}
+function ensureCountersContainer() { return null; }
 
 async function fetchCollaboratorCounters() {
     const client = ensureSupabaseClient();
@@ -3305,43 +3314,18 @@ async function fetchCollaboratorCounters() {
     }
 }
 
-async function updateGlobalCounters() {
-    const host = ensureCountersContainer();
-    if (!host) return;
-    const ministersCount = Array.isArray(coreMinisters) ? coreMinisters.length : 0;
-    host.innerHTML = '';
-    const makePill = (cls, label, value, detail = '') => {
-        const pill = document.createElement('span');
-        pill.className = `counter-pill ${cls}`;
-        const dot = document.createElement('span');
-        dot.className = 'counter-pill__dot';
-        const text = document.createElement('span');
-        text.textContent = `${label}: ${value}`;
-        pill.appendChild(dot);
-        pill.appendChild(text);
-        if (detail) {
-            const more = document.createElement('span');
-            more.className = 'counter-pill__detail';
-            more.textContent = ` ${detail}`;
-            pill.appendChild(more);
-        }
-        return pill;
-    };
-    host.appendChild(makePill('counter-pill--ministers', 'Ministres', ministersCount));
-    const delegatesCount = Array.isArray(delegateMinisters) ? delegateMinisters.length : 0;
-    host.appendChild(makePill('counter-pill--delegates', 'Délégués', delegatesCount));
-    // Try to fetch collaborator counters; if unavailable, skip gracefully
-    try {
-        const { dircab, chefcab, conseiller, ok } = await fetchCollaboratorCounters();
-        if (ok) {
-            const total = (dircab || 0) + (chefcab || 0) + (conseiller || 0);
-            const detail = `(DirCab ${dircab} · ChefCab ${chefcab} · Cons. ${conseiller})`;
-            host.appendChild(makePill('counter-pill--collabs', 'Collaborateurs', total, detail));
-        }
-    } catch (_) {
-        // ignore
-    }
-}
+// Contact button: assemble email on click to deter bots
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('contactBtn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+        const user = btn.dataset.u || 'contact';
+        const domain = btn.dataset.d || 'rumeurpublique.fr';
+        window.location.href = `mailto:${user}@${domain}`;
+    });
+});
+
+async function updateGlobalCounters() { /* counters disabled */ return; }
 const initApp = () => {
     if (__appInitialized) return;
     __appInitialized = true;

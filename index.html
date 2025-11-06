@@ -16,7 +16,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title></title>
-    <!-- Supabase runtime configuration (public anon key only) -->
+    <!-- Favicon dont je trouve la taille un peu petite, à revoir ? J'ai essayé de mettre le blanc mais du coup on le voit pas quand l'écran et sur mode claire y'a un truc que j'ia pas du saisir dans les explications de chat gepeto mais se renseigner pour la prochaine fois-->
+    <link rel="icon" href="assets/LogoRP_Tete_logo_RP_bleu.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/LogoRP_Bloc_logo_RP_bleu.png" />
+    <meta name="theme-color" content="#002E5B" />
+    <!-- Ca il faut que je le mette dans le dépo local si je veux éviter qu'on fasse n'importe quoi avec le serveur -->
     <meta name="supabase-url" content="https://yyquczbuhxbfnefwgxxc.supabase.co" />
     <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cXVjemJ1aHhiZm5lZndneHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3ODI5NjcsImV4cCI6MjA3NTM1ODk2N30.0IDUEP96IQQ4Ylz-YoTY1UzoySLT9Wq2YLC2zAb7jds" />
     <!-- Font & CSS -->
@@ -25,11 +29,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body class="layout-enlarge-cards">
     <!-- ================= HEADER ================= -->
      <!revoir la manière dont le header s'affiche, l'affichage des collabs au sein des pages parce que là c'est hyper moche>
     <header class="site-header" id="top">
-        <!-- Header simplified: only the logo (branding moved here) -->
+        <!-- Le header avec le logo, ça a été une galère de l'intégrer -->
         <div class="brand-block">
             <a href="#top" class="brand-logo" aria-label="Rumeur Maps">
                 <img
@@ -48,15 +52,8 @@
         <section id="ministres" class="section ministers">
             <div class="section-header">
                 <style>
-                @font-face {
-                    font-family: "XO Pretty Havelock";
-                    src: url("XO, Pretty - Havelock Inline.local.otf") format("opentype");
-                    font-weight: normal;
-                    font-style: normal;
-                    font-display: swap;
-                }
                 .section-title.xo-font {
-                    font-family: "XO Pretty Havelock", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                    font-family: 'Space Grotesk', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
                 }
                 </style>
                 <h1 class="section-title xo-font">Gouvernement Lecornu II</h1>
@@ -151,19 +148,19 @@
         <!-- Section contact -->
         <section id="contact" class="section contact">
             <div class="section-header">
-                <h2 class="section-title">Contact</h2>
-                <p class="section-subtitle">Collaborer avec Rumeur Publique</p>
+
             </div>
             <div class="contact-grid">
                 <div class="contact-card">
-                    <h3>Nous écrire</h3>
-                    <p>Envoyez vos demandes d'actualisation de l'organigramme ou vos propositions de contenu éditorial.</p>
-                    <a class="btn btn-primary" href="mailto:contact@rumeurpublique.com">contact@rumeurpublique.com</a>
-                </div>
-                <div class="contact-card">
-                    <h3>Collaborer avec notre equipe d'affaires publiques</h3>
-                    <p>Découvrez l'univers créatif et stratégique de Rumeur Publique à travers nos projets.</p>
-                    <a class="btn btn-ghost" href="https://www.rumeurpublique.fr" target="_blank" rel="noopener">rumeurpublique.fr</a>
+                    <h3>Contact</h3>
+                    <p>Découvrez l'univers créatif et stratégique de Rumeur Publique à travers nos projets.
+                   <img class="footer-logo-img" src="assets/LogoRP_Tete_logo_RP_blanc.svg" alt="Grosse tête de tigre" />     
+                    </p>
+                    <!-- ================= le bouton contact mail est caché ================= -->
+                    <div class="contact-actions">
+                        <button id="contactBtn" class="btn btn-ghost" type="button" data-u="contact" data-d="rumeurpublique.fr">Nous contacter</button>
+                        <a class="btn btn-ghost" href="https://www.rumeurpublique.fr" target="_blank" rel="noopener">rumeurpublique.fr</a>
+                    </div>
                 </div>
             </div>
         </section>
@@ -173,16 +170,10 @@
     <footer class="site-footer">
         <div class="footer-inner">
             <div class="footer-brand">
-                <a href="#top" class="footer-logo" aria-label="Rumeur Maps">
-                    <img class="footer-logo-img" src="assets/RUMEUR_white_MAPS_red_by_white_logo_white_font1_30px.png" alt="Logo Rumeur Maps by Rumeur Publique" />
-                </a>
-                <p class="footer-copy">© 2025 Rumeur Publique — Tout droit réservé</p>
-            </div>
-            <a class="btn btn-ghost" href="#top">Remonter en haut</a>
-        </div>
     </footer>
 
-    <!-- ================= Mit sous forme de grille c'étiat le plus simple, quelque problème graphqiue dans la grid, les ministres avec plein de ministre délégué déforme les cards et rendent leur collègue tout petit à côté d'eux ================= -->
+    <!-- ================= L'intérieur des grilles est ici
+     Mit sous forme de grille c'étiat le plus simple, quelque problème graphqiue dans la grid, les ministres avec plein de ministre délégué déforme les cards et rendent leur collègue tout petit à côté d'eux ================= -->
     <div class="modal" id="minister-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
         <div class="modal-backdrop" data-dismiss></div>
         <div class="modal-content" role="document">
@@ -234,7 +225,7 @@
         </div>
     </div>
 
-    <!-- ================= SCRIPTS ================= -->
+    <!-- ================= SCRIPTS qui sont faits pour vérifier que supabase s'initialise bien ================= -->
     <!-- Supabase configuration and lightweight client -->
     <!-- Optional local override (gitignored): create config/supabase.local.js to set __SUPABASE_CONFIG__. 404 is fine in prod. -->
     <script src="config/supabase.local.js?v=14a6c69" onerror="void 0"></script>
