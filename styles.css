@@ -1237,6 +1237,12 @@ body.print-all .toolbar {
     padding: 4px;
 }
 
+.search-btn svg {
+    width: 1rem;
+    height: 1rem;
+    display: block;
+}
+
 .search-input {
     flex: 1;
     border: none;

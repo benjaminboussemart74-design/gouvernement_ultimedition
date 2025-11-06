@@ -11,7 +11,9 @@
             btn.className = 'search-btn';
             btn.id = 'search-toggle';
             btn.setAttribute('aria-label','Ouvrir la recherche');
-            btn.innerHTML = '<span aria-hidden="true">🔍</span>';
+            // Icon: magnifying glass SVG (author attribution: Ayub Irawan — Flaticon)
+            // Source: https://www.flaticon.com/fr/icones-gratuites/loupe
+            btn.innerHTML = '<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img"><title>Recherche</title><circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
 
             const input = document.createElement('input');
             input.className = 'search-input';
