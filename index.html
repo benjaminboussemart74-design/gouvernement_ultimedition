@@ -58,60 +58,7 @@
                 </style>
                 <h1 class="section-title xo-font">Gouvernement Lecornu II</h1>
             </div>
-            <div class="toolbar" role="region" aria-label="Outils de filtrage des ministres">
-                <div class="toolbar-compact">
-                    <!-- Search replaced by floating loupe - removed inline search to avoid duplication -->
-                    <div class="toolbar-search-placeholder"></div>
-                </div>
-                <div class="toolbar-advanced" id="advanced-search-panel" hidden>
-                    <div class="toolbar-primary">
-                        <div class="toolbar-meta" aria-live="polite">
-                            <p class="results-count">
-                                <span id="results-count-current">0</span>
-                                <span id="results-count-label">résultat</span>
-                                <span class="results-total">sur <span id="results-count-total">0</span></span>
-                            </p>
-                            <p class="filters-hint" id="active-filters-hint">Tous les profils sont affichés.</p>
-                        </div>
-                        <button id="export-page-pdf" class="btn btn-ghost" type="button">Exporter la page</button>
-                    </div>
-                    <div class="toolbar-filters" role="group" aria-label="Filtres par catégorie">
-                        <div class="filter-pills" role="group" aria-label="Catégories de rôle">
-                            <button class="filter-btn is-active" data-role="all" type="button">Tous</button>
-                            <button class="filter-btn" data-role="leader" type="button">Premier ministre</button>
-                            <button class="filter-btn" data-role="minister-state" type="button">Ministres d'État</button>
-                            <button class="filter-btn" data-role="minister" type="button">Ministres</button>
-                            <button class="filter-btn" data-role="secretary" type="button">Secrétaires d'État</button>
-                        </div>
-                        <label class="party-filter" for="party-filter">
-                            <span class="party-filter-label">Parti</span>
-                            <select id="party-filter" name="party">
-                                <option value="">Tous partis</option>
-                            </select>
-                        </label>
-                    </div>
-                    <div class="toolbar-actions">
-                        <label class="sort-control" for="sort-order">
-                            <span class="sort-label">Trier</span>
-                            <select id="sort-order" name="sort-order">
-                                <option value="role">Ordre protocolaire</option>
-                                <option value="alpha">Ordre alphabétique</option>
-                                <option value="portfolio">Nom du portefeuille</option>
-                            </select>
-                        </label>
-                        <label class="toggle-control" for="filter-delegates">
-                            <input type="checkbox" id="filter-delegates" name="filter-delegates" />
-                            <span class="toggle-shape" aria-hidden="true"></span>
-                            <span class="toggle-text">Cabinet renseigné</span>
-                        </label>
-                        <label class="toggle-control" for="filter-bio">
-                            <input type="checkbox" id="filter-bio" name="filter-bio" />
-                            <span class="toggle-shape" aria-hidden="true"></span>
-                        </label>
-                        <button class="toolbar-reset" id="filters-reset" type="button">Réinitialiser</button>
-                    </div>
-                </div>
-            </div>
+            <!-- toolbar removed: replaced by floating loupe and controls -->
             <!-- Grille des ministres -->
             <div id="ministers-grid" class="ministers-grid" role="list" aria-live="polite"></div>
             <p id="ministers-empty" class="empty-state" hidden>Les données Supabase ne sont pas disponibles pour le moment. Vérifiez votre configuration.</p>
