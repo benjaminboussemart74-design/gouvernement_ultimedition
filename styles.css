@@ -691,7 +691,10 @@ main {
 }
 
 .toolbar-advanced-toggle {
-    display: inline-flex;
+    display: fixed;
+    top: 1rem;
+    left: 50%;                      /* Centrage horizontal */
+    transform: translateX(-50%);  
     align-items: center;
     gap: 0.4rem;
     padding: 0.6rem 1.05rem;
@@ -1133,6 +1136,66 @@ body.print-all .toolbar {
 /* Smooth transition when switching layouts */
 .ministers-grid {
     transition: grid-template-columns 240ms ease, gap 180ms ease;
+}
+
+/* Style for the floating layout control + collaborators list */
+#layout-toggle-control {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.45rem;
+    background: rgba(255,255,255,0.9);
+    border-radius: 10px;
+    box-shadow: 0 12px 30px rgba(17,23,39,0.12);
+    border: 1px solid rgba(17,23,39,0.06);
+    max-width: 320px;
+    min-width: 160px;
+    font-family: inherit;
+}
+
+#layout-toggle-control .layout-toggle-btn {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: 6px;
+    border: 1px solid rgba(17,23,39,0.06);
+    background: transparent;
+    cursor: pointer;
+}
+
+#layout-toggle-control .toolbar-collabs {
+    max-height: 160px;
+    overflow: auto;
+    background: rgba(255,255,255,0.02);
+    border-radius: 6px;
+    padding: 6px;
+    display: grid;
+    gap: 4px;
+    align-content: start;
+}
+
+#layout-toggle-control .toolbar-collabs button {
+    text-align: left;
+    padding: 6px 8px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+#layout-toggle-control .toolbar-collabs button:hover {
+    background: rgba(7, 188, 184, 0.08);
+}
+
+/* Ensure control is not scaled by layout-dezoom */
+.layout-dezoom #layout-toggle-control {
+    transform: none !important;
+    zoom: 1 !important;
 }
 
 /* Apply a global dezoom when the layout-dezoom helper is enabled.
