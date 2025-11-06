@@ -691,10 +691,11 @@ main {
 }
 
 .toolbar-advanced-toggle {
-    display: fixed;
-    top: 1rem;
-    left: 50%;                      /* Centrage horizontal */
-    transform: translateX(-50%);  
+    /* inline-flex so the toggle behaves like a control inside the toolbar
+       (previously `display: fixed` was used which is invalid CSS and prevented
+       the rule from behaving as expected). */
+    display: inline-flex;
+    position: relative;
     align-items: center;
     gap: 0.4rem;
     padding: 0.6rem 1.05rem;
@@ -710,9 +711,11 @@ main {
     justify-self: start;
 }
 
-/* Hide the advanced search toggle button when requested */
-#advanced-search-toggle,
-.toolbar-advanced-toggle {
+/* Hide the advanced search toggle button only when explicitly hidden via the
+   `hidden` attribute. Avoid a global `display:none !important` which would
+   permanently hide the control even when created by JS. */
+#advanced-search-toggle[hidden],
+.toolbar-advanced-toggle[hidden] {
     display: none !important;
 }
 
@@ -822,8 +825,11 @@ body.print-all .toolbar {
 .search-icon {
     position: absolute;
     left: 0.8rem;
-    width: 16px;
-    height: 16px;
+    /* Use a compact icon size that matches the input padding to avoid it
+       being rendered outside the visible area (50px was far too large). */
+    width: 1rem;
+    height: 1rem;
+    display: inline-block;
     color: var(--color-sesame);
     opacity: 0.6;
     pointer-events: none;
