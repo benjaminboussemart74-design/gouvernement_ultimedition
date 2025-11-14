@@ -118,6 +118,7 @@ body {
     min-height: 100vh;
     font-family: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
     font-weight: 300;
+    font-size: clamp(0.92rem, calc(0.9rem + 0.2vw), 1rem);
     background-color: var(--color-perle);
     color: var(--color-poivre);
     line-height: 1.15;
@@ -598,17 +599,17 @@ main > * { position: relative; z-index: 2; }
 
 main {
     display: grid;
-    gap: clamp(3rem, 8vw, 6rem);
-    row-gap: clamp(3rem, 8vw, 6rem);
-    column-gap: clamp(3rem, 8vw, 6rem);
+    gap: clamp(2.25rem, 6vw, 4.5rem);
+    row-gap: clamp(2.25rem, 6vw, 4.5rem);
+    column-gap: clamp(2.25rem, 6vw, 4.5rem);
 
     /* padding avec des valeurs valides */
-    padding: clamp(1rem, 5vw, 6rem) clamp(1.5rem, 5vw, 4rem) 5rem;
+    padding: clamp(0.75rem, 4vw, 4.5rem) clamp(1rem, 4vw, 3rem) clamp(3rem, 6vw, 4rem);
 }
 
 .section {
     display: grid;
-    gap: clamp(1.75rem, 4vw, 2.5rem);
+    gap: clamp(1.25rem, 3vw, 2rem);
 }
 
 .section-header {
@@ -1144,7 +1145,7 @@ body.print-all .toolbar {
 }
 
 .layout-dezoom .ministers-grid {
-    --card-min-width: clamp(180px, 18vw, 240px); /* smaller cards, more columns visible */
+    --card-min-width: clamp(165px, 16vw, 220px); /* smaller cards, more columns visible */
 }
 
 /* Smooth transition when switching layouts */
@@ -1519,8 +1520,8 @@ body.print-all .toolbar {
 }
 
 .minister-card .minister-photo {
-    width: clamp(88px, 9vw, 128px);
-    height: clamp(88px, 9vw, 128px);
+    width: clamp(76px, 8vw, 112px);
+    height: clamp(76px, 8vw, 112px);
     object-fit: cover;
     border-radius: 50%;
     background: #fff;
@@ -1530,7 +1531,7 @@ body.print-all .toolbar {
 }
 
 .minister-card h3 {
-    font-size: 1.35rem;
+    font-size: 1.25rem;
     line-height: 1.2;
     margin: 0;
     font-weight: 800;
@@ -1589,7 +1590,7 @@ body.print-all .toolbar {
 .mc-right {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.6rem;
     /* Fonction qui permet Centre horizontalement les éléments (photo + bouton) pour que
        le bouton "Voir la fiche" soit aligné sous la photo. Comme je suis un gros neuneu c'était flex-end */
     align-items: center;
