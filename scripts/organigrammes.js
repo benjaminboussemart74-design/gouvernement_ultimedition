@@ -274,17 +274,19 @@
   function renderPMCcabinet(leader, collabs){
     const DIR = new Set(['dircab', 'diradj', 'chefcab', 'chefadj']);
     const directReports = collabs.filter(p => String(p.superior_id) === String(leader.id));
-    const direction = directReports.filter(p => DIR.has(p.collab_grade) || p.collab_grade === 'conseiller').sort(byRankOrderThenName);
+    const cabinetCoeur = directReports
+      .filter(p => p.collab_grade !== 'chefpole')
+      .sort(byRankOrderThenName);
     const chefsDePole = directReports.filter(p => p.collab_grade === 'chefpole').sort(byRankOrderThenName);
 
     const polePalette = ['#2563eb', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#f97316', '#ec4899'];
 
     let html = '';
     html += `<section class="pm-cabinet"><div class="cabinet-header"><h2>Cabinet du Premier ministre</h2></div><div class="cabinet-inner">`;
-    if (direction.length === 0){
+    if (cabinetCoeur.length === 0){
       html += '<div class="placeholder">Aucune direction renseignée.</div>';
     } else {
-      direction.forEach(person => {
+      cabinetCoeur.forEach(person => {
         const isHead = DIR.has(person.collab_grade);
         html += renderPersonCard(person, { size: isHead ? 64 : 56, head: isHead });
       });
@@ -297,7 +299,9 @@
     } else {
       chefsDePole.forEach((head, index) => {
         const accent = polePalette[index % polePalette.length];
-        const members = collabs.filter(p => p.collab_grade === 'conseiller' && String(p.superior_id) === String(head.id)).sort(byRankOrderThenName);
+        const members = collabs
+          .filter(p => String(p.superior_id) === String(head.id))
+          .sort(byRankOrderThenName);
         let poleName = head.job_title || head.cabinet_role || head.full_name;
         if (poleName && !/^p[oô]le\b/i.test(poleName)){
           poleName = `Pôle ${poleName}`;
