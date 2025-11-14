@@ -1128,13 +1128,13 @@ body.print-all .toolbar {
 }
 
 .ministers-grid {
-    /* Balance: prevent overlap mais privilégier davantage de colonnes */
-    --card-min-width: clamp(185px, 18vw, 250px);
+    /* Balance: prevent overlap but keep more columns */
+    --card-min-width: clamp(200px, 20vw, 280px);
     display: grid;
-    gap: clamp(0.8rem, 2vw, 1.4rem);
+    gap: clamp(1rem, 2.6vw, 1.75rem);
     grid-template-columns: repeat(auto-fit, minmax(var(--card-min-width), 1fr));
     align-items: stretch;
-    padding: clamp(0.5rem, 1.6vw, 1.25rem);
+    padding: clamp(0.75rem, 2vw, 1.5rem);
     position: relative;
 }
 
@@ -1395,18 +1395,18 @@ body.print-all .toolbar {
 .minister-card {
     position: relative;
     border-radius: calc(var(--radius-base) + 6px);
-    padding: 1.45rem 1.3rem 1.15rem;
+    padding: 1.8rem 1.6rem 1.4rem;
     background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(244,246,248,0.96));
     border: 1px solid rgba(17, 23, 39, 0.06);
-    box-shadow: 0 20px 44px rgba(17, 23, 39, 0.08);
+    box-shadow: 0 24px 52px rgba(17, 23, 39, 0.08);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(108px, auto);
-    gap: 0.85rem 1.25rem;
+    grid-template-columns: minmax(0, 1fr) minmax(120px, auto);
+    gap: 1.1rem 1.5rem;
     align-items: start;
     align-content: start;
     cursor: pointer;
     transition: transform 180ms ease, box-shadow 180ms ease;
-    min-height: 210px;
+    min-height: 230px;
     height: 100%;
     /* allow the grid item to shrink correctly and prevent its content from forcing overflow */
     min-width: 0;
