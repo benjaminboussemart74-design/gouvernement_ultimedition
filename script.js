@@ -981,10 +981,13 @@ const buildCard = (minister) => {
     const right = document.createElement("div");
     right.className = "mc-right";
 
-    const portfolio = document.createElement("div");
-    portfolio.className = "mc-ministry";
-    portfolio.textContent = minister.portfolio ?? "Portefeuille à préciser";
-    left.appendChild(portfolio);
+    // Do not show ministry label for the leader card
+    if (roleKey !== "leader") {
+        const portfolio = document.createElement("div");
+        portfolio.className = "mc-ministry";
+        portfolio.textContent = minister.portfolio ?? "Portefeuille à préciser";
+        left.appendChild(portfolio);
+    }
 
     const ministriesEntries = Array.isArray(minister.ministries) ? minister.ministries : [];
     const normalizedPortfolio = normalise(minister.portfolio || "");

@@ -14,7 +14,7 @@
 <head>
     <!-- Métadonnées et ressources -->
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=0,7" />
     <title></title>
     <!-- Favicon dont je trouve la taille un peu petite, à revoir ? J'ai essayé de mettre le blanc mais du coup on le voit pas quand l'écran et sur mode claire y'a un truc que j'ia pas du saisir dans les explications de chat gepeto mais se renseigner pour la prochaine fois-->
     <link rel="icon" href="assets/LogoRP_Tete_logo_RP_bleu.svg" type="image/svg+xml" />
@@ -101,7 +101,11 @@
             <button class="modal-close" type="button" aria-label="Fermer" data-dismiss>&times;</button>
             <div class="modal-body">
                 <div class="modal-layout">
-                    <!-- modal photo module removed -->
+                    <div class="modal-module modal-module--photo">
+                        <div class="modal-photo-frame">
+                            <img class="modal-photo" id="modal-photo" src="" alt="" />
+                        </div>
+                    </div>
                     <div class="modal-module modal-module--identity">
                         <h3 class="modal-identity-title" id="modal-title"></h3>
                         <p class="modal-portfolio" id="modal-portfolio"></p>

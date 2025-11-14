@@ -1,4 +1,5 @@
 :root {
+    /* La charte grapihque fabuleuse de rumeur publique */
     --color-panthere: #002E5B;
     --color-perle: #F2F2F2;
     --color-guimauve: #ECEAED;
@@ -25,7 +26,7 @@
     --cabinet-cloud-three: radial-gradient(circle at 80% 96%, rgba(105, 135, 255, 0.22), transparent 68%);
     --cabinet-cloud-four: radial-gradient(circle at 5% 92%, rgba(240, 160, 140, 0.2), transparent 60%);
 
-    /* Modal design tokens (harmonized) */
+    /* Les fenêtres sont design ici */
     --modal-backdrop: rgba(17, 23, 39, 0.65);
     --modal-surface: #ffffff;
     --modal-border: rgba(17, 23, 39, 0.12);
@@ -85,7 +86,7 @@
     letter-spacing: 0.02em;
 }
 
-/* Havelock title for main header */
+/* J'ai tout mis en space grotesk, :'( adieu havelock je ne t'oublierai jamais*/
 .havelock-title {
     font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
     font-size: clamp(2.2rem, 4vw, 3.6rem);
@@ -150,9 +151,9 @@ a:focus {
 }
 
 .site-header {
-    /* Use solid "bleu panthère" for header background */
+    /* On me dit que l'on veut pas que logo soit en rouge ce qui me chafouine puisque j'aime bien cette coueleur
+    Aucun autre couleur ne va avec le bleu panthère c'est horrible*/
     background: var(--color-panthere);
-    color: var(--color-perle);
     padding: 3.5rem clamp(1.5rem, 3vw, 3.5rem) 2rem;
     display: grid;
     gap: 3rem;
@@ -163,11 +164,11 @@ a:focus {
 
 
 .site-header::after {
+    /* Decorative overlays removed so header uses a plain background color */
     content: "";
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 20% 20%, rgba(100, 215, 205, 0.25), transparent 55%),
-                radial-gradient(circle at 80% 0%, rgba(105, 135, 255, 0.25), transparent 60%);
+    background: none;
     pointer-events: none;
 }
 
@@ -260,7 +261,7 @@ a:focus {
     z-index: 0;
 }
 .header-logo-panel {
-    /* subtle translucent panel that blends with the gradient */
+    /* J'ai enlevé le dégradé en bleu curaçao parce que ça faisait ressortir le fait que le logo était de mauvaise qualité */
     background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
     backdrop-filter: blur(6px) saturate(120%);
     -webkit-backdrop-filter: blur(6px) saturate(120%);
@@ -414,19 +415,22 @@ main > * { position: relative; z-index: 2; }
     transform: translateY(-4px) scale(1.01);
 }
 
-/* Suggestions dropdown */
 .header-suggestions {
+    /* Anchor the dropdown to the search field/button: appear under the control */
     position: absolute;
-    left: 0;
     top: calc(100% + 8px);
-    width: 100%;
+    right: 0;
+    left: auto;
+    min-width: 260px;
+    max-width: 420px;
+    width: auto;
     background: var(--color-perle);
     border: 1px solid rgba(62,62,61,0.08);
     border-radius: 10px;
     box-shadow: 0 12px 30px rgba(17,23,39,0.12);
     max-height: 360px;
     overflow: auto;
-    z-index: 60;
+    z-index: 10010;
 }
 .header-suggestion {
     padding: 0.65rem 0.9rem;
@@ -595,7 +599,11 @@ main > * { position: relative; z-index: 2; }
 main {
     display: grid;
     gap: clamp(3rem, 8vw, 6rem);
-    padding: clamp(3rem, 6vw, 6rem) clamp(1.5rem, 5vw, 4rem) 5rem;
+    row-gap: clamp(3rem, 8vw, 6rem);
+    column-gap: clamp(3rem, 8vw, 6rem);
+
+    /* padding avec des valeurs valides */
+    padding: clamp(1rem, 5vw, 6rem) clamp(1.5rem, 5vw, 4rem) 5rem;
 }
 
 .section {
@@ -1129,6 +1137,13 @@ body.print-all .toolbar {
     position: relative;
 }
 
+/* Force exactly 4 columns in normal mode on wide screens */
+@media (min-width: 1200px) {
+    body:not(.layout-dezoom):not(.layout-enlarge-cards) .ministers-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
 /* Layout utility helpers: allow quick toggles between wider cards or a 'dezoom' (more cards visible) */
 /* Apply one of these classes on the <body> to switch the grid behaviour without editing core rules. */
 .layout-enlarge-cards .ministers-grid {
@@ -1225,6 +1240,9 @@ body.print-all .toolbar {
 .search-bar.active {
     width: 220px;
     background: rgba(255,255,255,0.92);
+    /* Allow the absolute-positioned dropdown to escape the rounded container
+       instead of being clipped by the compact search pill. */
+    overflow: visible !important;
 }
 
 .search-btn {
@@ -1259,24 +1277,68 @@ body.print-all .toolbar {
     opacity: 1;
 }
 
+/* Search results dropdown for floating search */
+.search-results {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 220px;
+    max-width: 420px;
+    max-height: 340px;
+    overflow: auto;
+    background: #ffffff;
+    border: 1px solid rgba(17,23,39,0.08);
+    box-shadow: 0 8px 24px rgba(17,23,39,0.08);
+    border-radius: 8px;
+    padding: 6px;
+    z-index: 100001;
+}
+
+/* Defensive override: if any CSS elsewhere force-hides .search-results with
+   a high-specificity rule or `!important`, ensure it becomes visible when the
+   floating search is active. This helps when JS toggles the `hidden` attr or
+   when layout rules accidentally collapse the dropdown. */
+.search-bar.active .search-results {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 200000 !important;
+}
+
+.search-results-list { list-style: none; margin: 0; padding: 0; }
+.search-result-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--color-encre);
+}
+.search-result-item + .search-result-item { margin-top: 4px; }
+.search-result-item:hover,
+.search-result-item.is-selected { background: color-mix(in srgb, var(--accent-primary, var(--color-curacao)) 8%, #fff); }
+.search-result-item .sr-meta { color: rgba(17,23,39,0.5); font-size: 0.85rem; }
+
+
 /* Ensure search control is not scaled by layout-dezoom */
 .layout-dezoom .search-bar {
     transform: none !important;
-    zoom: 1 !important;
+    zoom: 3 !important;
 }
 
 /* Apply a global dezoom when the layout-dezoom helper is enabled.
    Use `zoom` where available and `transform: scale()` as a fallback. */
 .layout-dezoom {
-    zoom: 0.67; /* primary (supported by WebKit/Chromium/Edge/IE) */
+    zoom: 0.3; /* 80% scale (WebKit/Chromium/Edge/IE) */
 }
 
 @supports not (zoom: 1) {
     .layout-dezoom {
-        transform: scale(0.67);
+        transform: scale(0.8); /* 80% fallback */
         transform-origin: 0 0;
         /* increase the containing block width so scaled content doesn't get clipped */
-        width: calc(100% / 0.67);
+        width: calc(100% / 0.8);
     }
 }
 
@@ -1422,6 +1484,32 @@ body.print-all .toolbar {
 
 .minister-card.is-leader .minister-role {
     font-size: 1rem;
+}
+
+/* When multiple leader cards exist, render them inline (side by side)
+   by removing the full-width centering constraints and restoring
+   standard card sizing/typography. Uses :has to detect 2nd leader. */
+.ministers-grid:has(.minister-card.is-leader ~ .minister-card.is-leader) .minister-card.is-leader {
+    grid-column: auto;
+    max-width: none;
+    margin-inline: 0.6rem; /* add extra breathing room between the two leaders */
+    padding: 1.6rem 1.4rem 1.25rem; /* match regular card padding */
+    container-type: inline-size;    /* re-enable container queries */
+}
+.ministers-grid:has(.minister-card.is-leader ~ .minister-card.is-leader) .minister-card.is-leader h3 {
+    font-size: 1.35rem; /* match regular card title */
+}
+.ministers-grid:has(.minister-card.is-leader ~ .minister-card.is-leader) .minister-card.is-leader .minister-role {
+    font-size: 0.9rem;  /* match regular role size */
+}
+
+/* If there are 3 or more leader cards, tighten margins and allow
+   smaller min-width so at least three fit per row comfortably. */
+.ministers-grid:has(.minister-card.is-leader ~ .minister-card.is-leader ~ .minister-card.is-leader) {
+    --card-min-width: clamp(160px, 16vw, 220px);
+}
+.ministers-grid:has(.minister-card.is-leader ~ .minister-card.is-leader ~ .minister-card.is-leader) .minister-card.is-leader {
+    margin-inline: 0.25rem; /* reduce extra spacing so three can fit */
 }
 
 .minister-card:hover,
@@ -3923,4 +4011,12 @@ body.print-single #print-sheet {
         font-size: 0.9rem;
         color: var(--color-poivre);
     }
+}
+
+/* Global site scale override requested by user: reduce visual scale to 80% while
+     compensating width to avoid empty bands. Applied to a `.site` wrapper element. */
+.site {
+    transform: scale(0.8);        /* 0.8 = 80% de la taille */
+    transform-origin: top left;   /* point d’ancrage en haut à gauche */
+    width: 125%;                  /* compense le shrink pour éviter les bandes vides */
 }
