@@ -1133,12 +1133,39 @@ body.print-all .toolbar {
     --card-row-height: clamp(320px, 32vw, 420px);
     display: grid;
     gap: clamp(1rem, 2.6vw, 1.75rem);
-    grid-template-columns: repeat(auto-fit, minmax(var(--card-min-width), 1fr));
+    grid-template-columns: repeat(1, minmax(var(--card-min-width), 1fr));
     /* Force rows to share a consistent baseline while letting taller cards grow when needed */
     grid-auto-rows: minmax(var(--card-row-height), auto);
     align-items: stretch;
     padding: clamp(0.75rem, 2vw, 1.5rem);
     position: relative;
+    width: 100%;
+    max-width: 1380px;
+    margin-inline: auto;
+}
+
+@media (min-width: 600px) {
+    .ministers-grid {
+        grid-template-columns: repeat(2, minmax(var(--card-min-width), 1fr));
+    }
+}
+
+@media (min-width: 768px) {
+    .ministers-grid {
+        grid-template-columns: repeat(3, minmax(var(--card-min-width), 1fr));
+    }
+}
+
+@media (min-width: 1200px) {
+    .ministers-grid {
+        grid-template-columns: repeat(4, minmax(var(--card-min-width), 1fr));
+    }
+}
+
+@media (min-width: 1500px) {
+    .ministers-grid {
+        grid-template-columns: repeat(5, minmax(var(--card-min-width), 1fr));
+    }
 }
 
 /* Layout utility helpers: allow quick toggles between wider cards or a 'dezoom' (more cards visible) */
