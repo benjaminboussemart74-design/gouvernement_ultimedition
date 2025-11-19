@@ -1147,10 +1147,6 @@ body.print-all .toolbar {
     --card-min-width: clamp(260px, 24vw, 360px); /* fewer columns, wider cards */
 }
 
-.layout-dezoom .ministers-grid {
-    --card-min-width: clamp(165px, 16vw, 220px); /* smaller cards, more columns visible */
-}
-
 /* Smooth transition when switching layouts */
 .ministers-grid {
     transition: grid-template-columns 240ms ease, gap 180ms ease;
@@ -1208,12 +1204,6 @@ body.print-all .toolbar {
 
 #layout-toggle-control .toolbar-collabs button:hover {
     background: rgba(7, 188, 184, 0.08);
-}
-
-/* Ensure control is not scaled by layout-dezoom */
-.layout-dezoom #layout-toggle-control {
-    transform: none !important;
-    zoom: 1 !important;
 }
 
 /* Search loupe (floating, expandable) */
@@ -1318,26 +1308,7 @@ body.print-all .toolbar {
 .search-result-item .sr-meta { color: rgba(17,23,39,0.5); font-size: 0.85rem; }
 
 
-/* Ensure search control is not scaled by layout-dezoom */
-.layout-dezoom .search-bar {
-    transform: none !important;
-    zoom: 3 !important;
-}
-
-/* Apply a global dezoom when the layout-dezoom helper is enabled.
-   Use `zoom` where available and `transform: scale()` as a fallback. */
-.layout-dezoom {
-    zoom: 0.3; /* 80% scale (WebKit/Chromium/Edge/IE) */
-}
-
-@supports not (zoom: 1) {
-    .layout-dezoom {
-        transform: scale(0.8); /* 80% fallback */
-        transform-origin: 0 0;
-        /* increase the containing block width so scaled content doesn't get clipped */
-        width: calc(100% / 0.8);
-    }
-}
+/* Ensure search control remains consistent regardless of layout utilities */
 
 .ministers-grid[data-columns="1"] {
     grid-template-columns: 1fr;
