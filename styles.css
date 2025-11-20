@@ -612,6 +612,13 @@ main {
     gap: clamp(1.25rem, 3vw, 2rem);
 }
 
+.section.ministers {
+    max-width: 1380px;
+    width: 100%;
+    margin-inline: auto;
+    padding-inline: clamp(1rem, 3vw, 1.5rem);
+}
+
 .section-header {
     max-width: 60ch;
     margin-left: auto;
