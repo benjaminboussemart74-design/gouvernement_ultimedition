@@ -976,8 +976,15 @@ const buildCard = (minister) => {
         };
         }
 
+    const content = document.createElement("div");
+    content.className = "minister-content";
+
     const left = document.createElement("div");
     left.className = "mc-left";
+
+    const header = document.createElement("header");
+    header.className = "minister-header";
+
     const right = document.createElement("div");
     right.className = "mc-right";
 
@@ -986,7 +993,7 @@ const buildCard = (minister) => {
         const portfolio = document.createElement("div");
         portfolio.className = "mc-ministry";
         portfolio.textContent = minister.portfolio ?? "Portefeuille à préciser";
-        left.appendChild(portfolio);
+        header.appendChild(portfolio);
     }
 
     const ministriesEntries = Array.isArray(minister.ministries) ? minister.ministries : [];
@@ -1040,12 +1047,12 @@ const buildCard = (minister) => {
             ministriesContainer.appendChild(badge);
         });
 
-        left.appendChild(ministriesContainer);
+        header.appendChild(ministriesContainer);
     }
 
     const name = document.createElement("h3");
     name.textContent = minister.name ?? "Nom du ministre";
-    left.appendChild(name);
+    header.appendChild(name);
 
     // Afficher le libellé du rôle depuis persons_ministries (roleLabel)
     // Fallback sur le rôle générique si absent
@@ -1056,11 +1063,13 @@ const buildCard = (minister) => {
         const roleEl = document.createElement("p");
         roleEl.className = "minister-role";
         roleEl.textContent = roleLabelText;
-        left.appendChild(roleEl);
+        header.appendChild(roleEl);
     }
 
+    left.appendChild(header);
+
     const meta = document.createElement("div");
-    meta.className = "mc-meta";
+    meta.className = "minister-meta";
 
     const partyValue = minister.party;
     const partyBadge = createPartyBadge(partyValue == null ? "" : String(partyValue).trim());
@@ -1103,6 +1112,7 @@ const buildCard = (minister) => {
 
     const delegates = Array.isArray(minister.delegates) ? minister.delegates : [];
     // Do not render the delegates module for ministers that are themselves delegates
+    let delegatesFooter = null;
     if (!DELEGATE_ROLES.has(roleKey) && delegates.length) {
         const delegatesContainer = document.createElement("div");
         delegatesContainer.className = "delegates";
@@ -1144,11 +1154,18 @@ const buildCard = (minister) => {
             delegatesContainer.appendChild(btn);
         });
 
-        left.appendChild(delegatesContainer);
+        delegatesFooter = document.createElement("footer");
+        delegatesFooter.className = "minister-delegates";
+        delegatesFooter.appendChild(delegatesContainer);
     }
 
-    card.appendChild(left);
-    card.appendChild(right);
+    content.appendChild(left);
+    content.appendChild(right);
+
+    card.appendChild(content);
+    if (delegatesFooter) {
+        card.appendChild(delegatesFooter);
+    }
 
     return card;
 };

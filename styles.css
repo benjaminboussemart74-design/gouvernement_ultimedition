@@ -1407,11 +1407,9 @@ body.print-all .toolbar {
     background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(244,246,248,0.96));
     border: 1px solid rgba(17, 23, 39, 0.06);
     box-shadow: 0 24px 52px rgba(17, 23, 39, 0.08);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(120px, auto);
-    gap: 1.1rem 1.5rem;
-    align-items: start;
-    align-content: start;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
     cursor: pointer;
     transition: transform 180ms ease, box-shadow 180ms ease;
     min-height: 230px;
@@ -1435,11 +1433,11 @@ body.print-all .toolbar {
 
 /* Container-adaptive layout to avoid overlap at narrow widths */
 @container (max-width: 320px) {
-    .minister-card {
+    .minister-content {
         grid-template-columns: 1fr;
         gap: 0.75rem;
     }
-    .minister-card .minister-photo {
+    .minister-content .minister-photo {
         width: 84px;
         height: 84px;
     }
@@ -1527,7 +1525,7 @@ body.print-all .toolbar {
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
 
-.minister-card .minister-photo {
+.minister-content .minister-photo {
     width: clamp(76px, 8vw, 112px);
     height: clamp(76px, 8vw, 112px);
     object-fit: cover;
@@ -1595,6 +1593,20 @@ body.print-all .toolbar {
     min-width: 0;
 }
 
+.minister-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(120px, auto);
+    gap: 1.1rem 1.5rem;
+    align-items: start;
+    align-content: start;
+}
+
+.minister-header {
+    display: grid;
+    gap: 0.35rem;
+    align-content: start;
+}
+
 .mc-right {
     display: flex;
     flex-direction: column;
@@ -1605,7 +1617,7 @@ body.print-all .toolbar {
     justify-content: flex-start;
     min-width: 0;
 }
-.mc-meta {
+.minister-meta {
     display: flex;
     gap: 0.35rem 0.5rem;
     align-items: center;
@@ -1738,9 +1750,17 @@ body.print-all .toolbar {
     margin: 0;
 }
 
+.minister-delegates {
+    margin-top: 0.25rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(62, 62, 61, 0.1);
+    display: grid;
+    gap: 0.6rem;
+}
+
 /* Conteneur des ministres délégués affichés directement sous leur ministre */
 .delegates {
-    margin-top: 0.5rem;
+    margin: 0;
     display: grid;
     gap: 0.5rem;
     align-content: start;
@@ -1798,7 +1818,7 @@ body.print-all .toolbar {
 }
 
 /* Keep party badge visual mapping defined above; only adjust spacing here * effectivement si je modifie pas le pading rien n'est aligné/
-.mc-meta .party-badge {
+.minister-meta .party-badge {
     display: inline-flex;
     align-items: center;
     margin-top: 0rem;
@@ -1832,7 +1852,7 @@ body.print-all .toolbar {
         --card-row-height: clamp(260px, 64vw, 360px);
     }
 
-    .minister-card {
+    .minister-content {
         grid-template-columns: 1fr;
         gap: 0.9rem;
     }
@@ -1845,7 +1865,7 @@ body.print-all .toolbar {
         width: 100%;
     }
 
-    .minister-card .minister-photo {
+    .minister-content .minister-photo {
         max-width: 108px;
     }
 
@@ -1870,11 +1890,11 @@ body.print-all .toolbar {
         gap: 0.25rem;
     }
 
-    .mc-meta {
+    .minister-meta {
         gap: 0.3rem 0.45rem;
     }
 
-    .minister-card .minister-photo {
+    .minister-content .minister-photo {
         max-width: 96px;
     }
 }
@@ -3734,7 +3754,7 @@ body.print-all .toolbar {
         color: var(--color-encre);
     }
 
-    body.print-all .mc-meta {
+    body.print-all .minister-meta {
         gap: 0.28cm;
     }
 
