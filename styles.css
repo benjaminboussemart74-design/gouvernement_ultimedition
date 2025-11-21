@@ -1475,6 +1475,17 @@ body.print-all .toolbar {
     );
 }
 
+.minister-card.has-accent {
+    border-color: color-mix(in srgb, var(--accent-color) 30%, rgba(17, 23, 39, 0.06));
+}
+
+.minister-card.has-accent::before {
+    background: linear-gradient(180deg,
+        var(--accent-color),
+        color-mix(in srgb, var(--accent-color) 70%, #ffffff 30%)
+    );
+}
+
 /* Premier ministre mis en avant, centré */
 .minister-card.is-leader {
     grid-column: 1 / -1;
