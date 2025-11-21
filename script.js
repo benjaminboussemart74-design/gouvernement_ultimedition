@@ -1051,7 +1051,7 @@ const buildLeftSection = ({ minister, roleKey, ministriesEntries, ministriesBadg
             ministriesContainer.appendChild(badge);
         });
 
-        left.appendChild(ministriesContainer);
+        header.appendChild(ministriesContainer);
     }
 
     const meta = document.createElement("div");
