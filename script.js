@@ -161,6 +161,22 @@ const KNOWN_PARTIES = Array.from(new Set(PARTY_MAP.values())).sort((a, b) =>
     a.localeCompare(b, "fr", { sensitivity: "base" })
 );
 
+const PARTY_COLORS = {
+    "Renaissance": "#b89c05",
+    "Horizons": "#1E90FF",
+    "MoDem": "#F2A900",
+    "PRV": "#00A86B",
+    "Centristes": "#8A2BE2",
+    "UDI": "#0A4D8C",
+    "LR": "#0055A4",
+    "RN": "#2E3348",
+    "Reconquête": "#E10600",
+    "Patriotes": "#7A0019",
+    "PS": "#E61F5A",
+    "Génération.s": "#6CC02B",
+    "EELV": "#2FA34A",
+};
+
 const mapPartyLabel = (raw) => {
     if (!raw) return null;
     const k = normalise(raw).replace(/[\s\u00A0]+/g, " ");
@@ -956,25 +972,15 @@ const buildCard = (minister) => {
         card.setAttribute("aria-label", "Premier ministre");
     }
 
-    if (minister.accentColor) {
-        // prefer party color when available, fallback to ministry accentColor
-        const partyLabel = mapPartyLabel(minister.party == null ? "" : String(minister.party).trim()) || "";
-        const PARTY_COLORS = {
-            "Renaissance": "#b89c05",
-            "Horizons": "#1E90FF",
-            "MoDem": "#F2A900",
-            "PRV": "#00A86B",
-            "Centristes": "#8A2BE2",
-            "UDI": "#0A4D8C",
-            "LR": "#0055A4",
-            "RN": "#2E3348",
-            "Reconquête": "#E10600",
-            "Patriotes": "#7A0019",
-            "PS": "#E61F5A",
-            "Génération.s": "#6CC02B",
-            "EELV": "#2FA34A",
-        };
-        }
+    const accentPartyLabel = _partyLabelForCard || "";
+    const accentFromParty = accentPartyLabel && PARTY_COLORS[accentPartyLabel] ? PARTY_COLORS[accentPartyLabel] : "";
+    const accentFromMinister = minister.accentColor ? String(minister.accentColor).trim() : "";
+    const resolvedAccent = accentFromParty || accentFromMinister;
+    if (resolvedAccent) {
+        card.style.setProperty("--accent-color", resolvedAccent);
+        card.classList.add("has-accent");
+        card.dataset.accentColor = resolvedAccent;
+    }
 
     const left = document.createElement("div");
     left.className = "mc-left";
