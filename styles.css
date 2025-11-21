@@ -1409,7 +1409,7 @@ body.print-all .toolbar {
     box-shadow: 0 24px 52px rgba(17, 23, 39, 0.08);
     display: flex;
     flex-direction: column;
-    gap: 0.9rem;
+    gap: 1rem;
     cursor: pointer;
     transition: transform 180ms ease, box-shadow 180ms ease;
     min-height: 230px;
@@ -1420,6 +1420,15 @@ body.print-all .toolbar {
     overflow: visible;
     /* Enable container queries based on card width */
     container-type: inline-size;
+}
+
+.minister-content {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem 1.25rem;
+    align-items: start;
+    align-content: start;
+    min-width: 0;
 }
 
 /* Prevent long content from forcing overflow */
@@ -1463,6 +1472,17 @@ body.print-all .toolbar {
     background: linear-gradient(180deg,
         var(--accent-color, var(--color-curacao)),
         color-mix(in srgb, var(--accent-color, var(--color-curacao)) 70%, #ffffff 30%)
+    );
+}
+
+.minister-card.has-accent {
+    border-color: color-mix(in srgb, var(--accent-color) 30%, rgba(17, 23, 39, 0.06));
+}
+
+.minister-card.has-accent::before {
+    background: linear-gradient(180deg,
+        var(--accent-color),
+        color-mix(in srgb, var(--accent-color) 70%, #ffffff 30%)
     );
 }
 
@@ -1589,7 +1609,7 @@ body.print-all .toolbar {
 
 .mc-left {
     display: grid;
-    gap: 0.35rem;
+    gap: 0.45rem;
     min-width: 0;
 }
 
@@ -1617,7 +1637,17 @@ body.print-all .toolbar {
     justify-content: flex-start;
     min-width: 0;
 }
+
+.minister-header {
+    display: grid;
+    gap: 0.2rem;
+    align-items: start;
+}
+
 .minister-meta {
+    margin-top: 0.2rem;
+}
+.mc-meta {
     display: flex;
     gap: 0.35rem 0.5rem;
     align-items: center;
@@ -1732,6 +1762,12 @@ body.print-all .toolbar {
     border-radius: 12px;
 }
 
+.minister-actions {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
 /* Ensure the CTA button is horizontally centered under the photo on
    wider screens. On small screens the CTA becomes full-width (handled
    by the existing mobile media query). */
@@ -1767,6 +1803,11 @@ body.print-all .toolbar {
     max-height: 220px;
     overflow: auto;
     padding: 0.1rem;
+}
+
+.delegates-footer {
+    border-top: 1px solid rgba(62, 62, 61, 0.12);
+    padding-top: 0.6rem;
 }
 
 .delegate-card {

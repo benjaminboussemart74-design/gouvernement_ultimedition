@@ -161,6 +161,22 @@ const KNOWN_PARTIES = Array.from(new Set(PARTY_MAP.values())).sort((a, b) =>
     a.localeCompare(b, "fr", { sensitivity: "base" })
 );
 
+const PARTY_COLORS = {
+    "Renaissance": "#b89c05",
+    "Horizons": "#1E90FF",
+    "MoDem": "#F2A900",
+    "PRV": "#00A86B",
+    "Centristes": "#8A2BE2",
+    "UDI": "#0A4D8C",
+    "LR": "#0055A4",
+    "RN": "#2E3348",
+    "Reconquête": "#E10600",
+    "Patriotes": "#7A0019",
+    "PS": "#E61F5A",
+    "Génération.s": "#6CC02B",
+    "EELV": "#2FA34A",
+};
+
 const mapPartyLabel = (raw) => {
     if (!raw) return null;
     const k = normalise(raw).replace(/[\s\u00A0]+/g, " ");
@@ -940,16 +956,17 @@ const ensureSupabaseClient = () => {
     return null;
 };
 
-const buildCard = (minister) => {
+const createCardContainer = (minister) => {
     const card = document.createElement("article");
     card.className = "minister-card";
     card.setAttribute("role", "listitem");
     card.dataset.role = minister.role ?? "";
     // expose normalized party on the card so CSS can style it (and so tests/selectors can read it)
-    const _rawParty = minister.party == null ? "" : String(minister.party).trim();
-    const _partyLabelForCard = mapPartyLabel(_rawParty) || (_rawParty ? "" : "Sans étiquette");
-    if (_partyLabelForCard) card.dataset.party = _partyLabelForCard;
+    const rawParty = minister.party == null ? "" : String(minister.party).trim();
+    const partyLabelForCard = mapPartyLabel(rawParty) || (rawParty ? "" : "Sans étiquette");
+    if (partyLabelForCard) card.dataset.party = partyLabelForCard;
     if (minister.id != null) card.dataset.personId = String(minister.id);
+
     const roleKey = minister.role || "";
     if (roleKey === "leader") {
         card.classList.add("is-leader");
@@ -958,7 +975,7 @@ const buildCard = (minister) => {
 
     if (minister.accentColor) {
         // prefer party color when available, fallback to ministry accentColor
-        const partyLabel = mapPartyLabel(minister.party == null ? "" : String(minister.party).trim()) || "";
+        const partyLabel = mapPartyLabel(rawParty) || "";
         const PARTY_COLORS = {
             "Renaissance": "#b89c05",
             "Horizons": "#1E90FF",
@@ -974,19 +991,19 @@ const buildCard = (minister) => {
             "Génération.s": "#6CC02B",
             "EELV": "#2FA34A",
         };
-        }
+        const accent = partyLabel && PARTY_COLORS[partyLabel] ? PARTY_COLORS[partyLabel] : minister.accentColor;
+        card.style.setProperty("--accent-color", accent);
+    }
 
-    const content = document.createElement("div");
-    content.className = "minister-content";
+    return { card, roleKey };
+};
 
+const buildLeftSection = ({ minister, roleKey, ministriesEntries, ministriesBadges, partyBadge }) => {
     const left = document.createElement("div");
     left.className = "mc-left";
 
-    const header = document.createElement("header");
+    const header = document.createElement("div");
     header.className = "minister-header";
-
-    const right = document.createElement("div");
-    right.className = "mc-right";
 
     // Do not show ministry label for the leader card
     if (roleKey !== "leader") {
@@ -995,6 +1012,146 @@ const buildCard = (minister) => {
         portfolio.textContent = minister.portfolio ?? "Portefeuille à préciser";
         header.appendChild(portfolio);
     }
+
+    const name = document.createElement("h3");
+    name.textContent = minister.name ?? "Nom du ministre";
+    header.appendChild(name);
+
+    // Afficher le libellé du rôle depuis persons_ministries (roleLabel)
+    // Fallback sur le rôle générique si absent
+    const primaryMinistryEntry = (Array.isArray(ministriesEntries) ? ministriesEntries : []).find((e) => e && e.isPrimary && typeof e.roleLabel === 'string' && e.roleLabel.trim());
+    const firstRoleLabel = (Array.isArray(ministriesEntries) ? ministriesEntries : []).map(e => (e && typeof e.roleLabel === 'string' ? e.roleLabel.trim() : '')).find(Boolean);
+    const roleLabelText = (primaryMinistryEntry?.roleLabel?.trim() || firstRoleLabel || "") || (formatRole(minister.role) || "");
+    if (roleLabelText) {
+        const roleEl = document.createElement("p");
+        roleEl.className = "minister-role";
+        roleEl.textContent = roleLabelText;
+        header.appendChild(roleEl);
+    }
+
+    left.appendChild(header);
+
+    if (ministriesBadges.length) {
+        const ministriesContainer = document.createElement("div");
+        ministriesContainer.className = "mc-ministries";
+
+        ministriesBadges.forEach((entry) => {
+            const badge = document.createElement("span");
+            badge.className = "mc-ministry-badge";
+            if (entry.isPrimary) {
+                badge.classList.add("is-primary");
+            }
+            if (entry.label && entry.roleLabel) {
+                badge.textContent = `${entry.label} • ${entry.roleLabel}`;
+            } else if (entry.roleLabel) {
+                badge.textContent = entry.roleLabel;
+            } else {
+                badge.textContent = entry.displayLabel;
+            }
+            ministriesContainer.appendChild(badge);
+        });
+
+        header.appendChild(ministriesContainer);
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "mc-meta minister-meta";
+    if (partyBadge) {
+        meta.appendChild(partyBadge);
+    }
+    left.appendChild(meta);
+
+    if (roleKey === "leader") {
+        const bio = document.createElement("p");
+        bio.className = "mc-bio";
+        bio.textContent = (minister.description || "").trim() || "Biographie prochainement disponible.";
+        left.appendChild(bio);
+    }
+
+    return left;
+};
+
+const buildRightSection = (minister) => {
+    const right = document.createElement("div");
+    right.className = "mc-right";
+
+    const photo = document.createElement("img");
+    photo.className = "minister-photo";
+    photo.src = ensureImageSource(minister.photo);
+    photo.onerror = () => {
+        photo.onerror = null;
+        photo.src = "assets/placeholder-minister.svg";
+    };
+    photo.alt = minister.photoAlt ?? `Portrait de ${minister.name ?? "ministre"}`;
+    right.appendChild(photo);
+
+    const actions = document.createElement("div");
+    actions.className = "minister-actions";
+
+    const cta = document.createElement("button");
+    cta.type = "button";
+    cta.className = "btn btn-primary minister-cta";
+    cta.textContent = "Voir la fiche";
+    cta.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        openModal(minister);
+    });
+    actions.appendChild(cta);
+
+    right.appendChild(actions);
+    return right;
+};
+
+const buildDelegatesSection = (roleKey, delegates) => {
+    const items = Array.isArray(delegates) ? delegates : [];
+    // Do not render the delegates module for ministers that are themselves delegates
+    if (DELEGATE_ROLES.has(roleKey) || !items.length) return null;
+
+    const delegatesContainer = document.createElement("div");
+    delegatesContainer.className = "delegates delegates-footer";
+
+    items.forEach((delegate) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "delegate-card";
+
+        const info = document.createElement("div");
+        info.className = "delegate-info";
+
+        const dn = document.createElement("p");
+        dn.className = "delegate-name";
+        // keep the minister's name visible
+        dn.textContent = delegate.name || "";
+        info.appendChild(dn);
+
+        const dr = document.createElement("p");
+        dr.className = "delegate-role";
+        // prefer role_label from person_ministries (available as mission) as the displayed role
+        dr.textContent = delegate.mission || delegate.portfolio || formatRole(delegate.role) || "";
+        info.appendChild(dr);
+
+        btn.appendChild(info);
+
+        const delegateBadge = createPartyBadge(
+            delegate.party == null ? "" : String(delegate.party).trim()
+        );
+        if (delegateBadge) {
+            btn.appendChild(delegateBadge);
+        }
+
+        btn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            openModal(delegate);
+        });
+
+        delegatesContainer.appendChild(btn);
+    });
+
+    return delegatesContainer;
+};
+
+const buildCard = (minister) => {
+    const { card, roleKey } = createCardContainer(minister);
 
     const ministriesEntries = Array.isArray(minister.ministries) ? minister.ministries : [];
     const normalizedPortfolio = normalise(minister.portfolio || "");
@@ -1027,144 +1184,18 @@ const buildCard = (minister) => {
         })
         .filter(Boolean);
 
-    if (ministriesBadges.length) {
-        const ministriesContainer = document.createElement("div");
-        ministriesContainer.className = "mc-ministries";
+    const partyBadge = createPartyBadge(minister.party == null ? "" : String(minister.party).trim());
 
-        ministriesBadges.forEach((entry) => {
-            const badge = document.createElement("span");
-            badge.className = "mc-ministry-badge";
-            if (entry.isPrimary) {
-                badge.classList.add("is-primary");
-            }
-            if (entry.label && entry.roleLabel) {
-                badge.textContent = `${entry.label} • ${entry.roleLabel}`;
-            } else if (entry.roleLabel) {
-                badge.textContent = entry.roleLabel;
-            } else {
-                badge.textContent = entry.displayLabel;
-            }
-            ministriesContainer.appendChild(badge);
-        });
-
-        header.appendChild(ministriesContainer);
-    }
-
-    const name = document.createElement("h3");
-    name.textContent = minister.name ?? "Nom du ministre";
-    header.appendChild(name);
-
-    // Afficher le libellé du rôle depuis persons_ministries (roleLabel)
-    // Fallback sur le rôle générique si absent
-    const primaryMinistryEntry = (Array.isArray(ministriesEntries) ? ministriesEntries : []).find((e) => e && e.isPrimary && typeof e.roleLabel === 'string' && e.roleLabel.trim());
-    const firstRoleLabel = (Array.isArray(ministriesEntries) ? ministriesEntries : []).map(e => (e && typeof e.roleLabel === 'string' ? e.roleLabel.trim() : '')).find(Boolean);
-    const roleLabelText = (primaryMinistryEntry?.roleLabel?.trim() || firstRoleLabel || "") || (formatRole(minister.role) || "");
-    if (roleLabelText) {
-        const roleEl = document.createElement("p");
-        roleEl.className = "minister-role";
-        roleEl.textContent = roleLabelText;
-        header.appendChild(roleEl);
-    }
-
-    left.appendChild(header);
-
-    const meta = document.createElement("div");
-    meta.className = "minister-meta";
-
-    const partyValue = minister.party;
-    const partyBadge = createPartyBadge(partyValue == null ? "" : String(partyValue).trim());
-    if (partyBadge) {
-        meta.appendChild(partyBadge);
-    }
-
-    left.appendChild(meta);
-
-    const missionText = (minister.mission ?? "").trim();
-    // user requested: do not render mission paragraph for ministers in the grid
-    // (keep mission available in modals/prints)
-
-    if (roleKey === "leader") {
-        const bio = document.createElement("p");
-        bio.className = "mc-bio";
-        bio.textContent = (minister.description || "").trim() || "Biographie prochainement disponible.";
-        left.appendChild(bio);
-    }
-
-    const photo = document.createElement("img");
-    photo.className = "minister-photo";
-    photo.src = ensureImageSource(minister.photo);
-    photo.onerror = () => {
-        photo.onerror = null;
-        photo.src = "assets/placeholder-minister.svg";
-    };
-    photo.alt = minister.photoAlt ?? `Portrait de ${minister.name ?? "ministre"}`;
-    right.appendChild(photo);
-
-    const cta = document.createElement("button");
-    cta.type = "button";
-    cta.className = "btn btn-primary minister-cta";
-    cta.textContent = "Voir la fiche";
-    cta.addEventListener("click", (ev) => {
-        ev.stopPropagation();
-        openModal(minister);
-    });
-    right.appendChild(cta);
-
-    const delegates = Array.isArray(minister.delegates) ? minister.delegates : [];
-    // Do not render the delegates module for ministers that are themselves delegates
-    let delegatesFooter = null;
-    if (!DELEGATE_ROLES.has(roleKey) && delegates.length) {
-        const delegatesContainer = document.createElement("div");
-        delegatesContainer.className = "delegates";
-
-        delegates.forEach((delegate) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "delegate-card";
-
-            const info = document.createElement("div");
-            info.className = "delegate-info";
-
-            const dn = document.createElement("p");
-            dn.className = "delegate-name";
-            // keep the minister's name visible
-            dn.textContent = delegate.name || "";
-            info.appendChild(dn);
-
-            const dr = document.createElement("p");
-            dr.className = "delegate-role";
-            // prefer role_label from person_ministries (available as mission) as the displayed role
-            dr.textContent = delegate.mission || delegate.portfolio || formatRole(delegate.role) || "";
-            info.appendChild(dr);
-
-            btn.appendChild(info);
-
-            const delegateBadge = createPartyBadge(
-                delegate.party == null ? "" : String(delegate.party).trim()
-            );
-            if (delegateBadge) {
-                btn.appendChild(delegateBadge);
-            }
-
-            btn.addEventListener("click", (event) => {
-                event.stopPropagation();
-                openModal(delegate);
-            });
-
-            delegatesContainer.appendChild(btn);
-        });
-
-        delegatesFooter = document.createElement("footer");
-        delegatesFooter.className = "minister-delegates";
-        delegatesFooter.appendChild(delegatesContainer);
-    }
-
-    content.appendChild(left);
-    content.appendChild(right);
+    const content = document.createElement("div");
+    content.className = "minister-content";
+    content.appendChild(buildRightSection(minister));
+    content.appendChild(buildLeftSection({ minister, roleKey, ministriesEntries, ministriesBadges, partyBadge }));
 
     card.appendChild(content);
-    if (delegatesFooter) {
-        card.appendChild(delegatesFooter);
+
+    const delegatesSection = buildDelegatesSection(roleKey, minister.delegates);
+    if (delegatesSection) {
+        card.appendChild(delegatesSection);
     }
 
     return card;
