@@ -39,19 +39,45 @@
                 if(ev.key === 'Escape') close();
                 if(ev.key === 'Enter') {
                     try{
-                        const q = String(input.value || '').trim().toLowerCase();
+                        const qRaw = String(input.value || '').trim();
+                        const q = qRaw.toLowerCase();
                         if(!q) return;
-                        const nodes = Array.from(document.querySelectorAll('.collab-name, .minister-card h3, .collab-meta .collab-name'));
-                        let first = null;
-                        nodes.forEach(n => {
+
+                        // broaden selectors to cabinet nodes, minister names, delegates and common collab name classes
+                        const nodes = Array.from(document.querySelectorAll('.cabinet-node, .cabinet-node-name, .collab-name, .minister-card h3, .delegate-name, .delegate-card, .collab-card'));
+                        let firstMatch = null;
+
+                        for (const n of nodes) {
                             const text = (n.textContent||'').toLowerCase();
-                            if(text.includes(q)){
-                                const card = n.closest('.minister-card, .collab-card');
-                                if(card) card.classList.add('layout-highlight');
-                                if(!first) first = n;
+                            if (!text.includes(q)) continue;
+
+                            // find an enclosing element that might carry data-person-id / data-superior-id
+                            const container = n.closest('[data-person-id], [data-superior-id], .minister-card, .collab-card, .cabinet-node');
+                            if (container) {
+                                // If collaborator element has a superior id, open the minister fiche
+                                const superiorId = container.dataset && container.dataset.superiorId;
+                                const personId = container.dataset && container.dataset.personId;
+                                if (superiorId && typeof window.openMinisterById === 'function') {
+                                    // open minister fiche for the superior
+                                    window.openMinisterById(superiorId, { openModalIfFound: true });
+                                    firstMatch = container;
+                                    break;
+                                }
+                                // If element is a minister card (personId) open that minister fiche
+                                if (personId && typeof window.openMinisterById === 'function') {
+                                    window.openMinisterById(personId, { openModalIfFound: true });
+                                    firstMatch = container;
+                                    break;
+                                }
                             }
-                        });
-                        if(first && typeof first.scrollIntoView === 'function') first.scrollIntoView({behavior:'smooth', block:'center'});
+
+                            // fallback: highlight and scroll to the matching node
+                            const card = n.closest('.minister-card, .collab-card, .cabinet-node');
+                            if (card) card.classList.add('layout-highlight');
+                            if (!firstMatch) firstMatch = n;
+                        }
+
+                        if(firstMatch && typeof firstMatch.scrollIntoView === 'function') firstMatch.scrollIntoView({behavior:'smooth', block:'center'});
                         setTimeout(()=> document.querySelectorAll('.layout-highlight').forEach(el=>el.classList.remove('layout-highlight')), 2500);
                     } catch (e) { console.warn('floating search error', e); }
                 }

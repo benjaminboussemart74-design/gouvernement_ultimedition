@@ -99,6 +99,21 @@
   border: 2px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
   background: var(--color-border);
   flex-shrink: 0;
+  /* default background color for the avatar area */
+  background: var(--color-border);
+  /* fallback logo when no photo is provided (centered, contained)
+    the SVG file is stored in the project's assets/ folder
+    Use a relative path from this CSS file (styles/) to assets/ */
+  background-image: url("../assets/LogoRP_Tete_logo_RP_bleu.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 60%;
+
+}
+
+/* When parent has .no-img, hide the <img> so the background logo shows through */
+.cabinet-node-avatar.no-img img {
+  display: none;
 }
 
 .cabinet-node-avatar img {

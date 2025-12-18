@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Logo - Rumeur Publique</title>
+    <style>
+        @font-face {
+            font-family: 'Havelock Stencil';
+            src: url('./assets/Havelock-Stencil.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #001f4d 0%, #003d7a 100%);
+            padding: 40px 20px;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-family: 'Havelock Stencil', sans-serif;
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.8);
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 50px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .control-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #001f4d;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            font-family: 'Havelock Stencil', sans-serif;
+            letter-spacing: 2px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #003d7a;
+        }
+
+        .logos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .logo-card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .logo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+
+        .logo-card h3 {
+            margin-bottom: 20px;
+            color: #001f4d;
+            font-size: 14px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .logo-preview {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border: none;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .logo-preview.dark-blue {
+            background: linear-gradient(135deg, #001f4d 0%, #003d7a 100%);
+        }
+
+        .logo-preview.navy {
+            background: #0a1f3e;
+        }
+
+        .logo-preview.white {
+            background: #ffffff;
+        }
+
+        .logo-preview.light-gray {
+            background: #f8f9fa;
+        }
+
+        .logo-preview.black {
+            background: #1a1a1a;
+        }
+
+        .logo-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 15px;
+            flex-wrap: nowrap;
+            height: 100%;
+        }
+
+        .logo-content.vertical {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .logo-content.compact {
+            gap: 8px;
+        }
+
+        .logo-text {
+            font-family: 'Havelock Stencil', sans-serif;
+            font-size: 42px;
+            font-weight: normal;
+            letter-spacing: 3px;
+            white-space: nowrap;
+            line-height: 1;
+        }
+
+        .logo-text.large {
+            font-size: 52px;
+            letter-spacing: 4px;
+        }
+
+        .logo-text.medium {
+            font-size: 32px;
+            letter-spacing: 2px;
+        }
+
+        .logo-text.small {
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        .logo-text.white {
+            color: white;
+        }
+
+        .logo-text.navy {
+            color: #001f4d;
+        }
+
+        .logo-text.red {
+            color: #e74c3c;
+        }
+
+        .logo-img {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .logo-img.small {
+            height: 45px;
+        }
+
+        .logo-img.medium {
+            height: 55px;
+        }
+
+        .logo-img.large {
+            height: 85px;
+        }
+
+        .separator {
+            width: 2px;
+            height: 50px;
+            background: currentColor;
+        }
+
+        .separator.white {
+            background: white;
+        }
+
+        .separator.navy {
+            background: #001f4d;
+        }
+
+        .download-btn {
+            background: #003d7a;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .download-btn:hover {
+            background: #002a57;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .btn-group button {
+            flex: 1;
+        }
+
+        .btn-copy {
+            background: #e74c3c;
+        }
+
+        .btn-copy:hover {
+            background: #c0392b;
+        }
+
+        .size-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .size-btn {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .size-btn:hover {
+            background: #003d7a;
+            color: white;
+            border-color: #003d7a;
+        }
+
+        .info-box {
+            background: rgba(255,255,255,0.1);
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .feature-badge {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Rumeur Publique</h1>
+            <p class="subtitle">Générateur de logos - Style Havelock Stencil</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="textInput">Texte principal (haut) :</label>
+                    <input type="text" id="textInput" value="RUMEUR" placeholder="RUMEUR">
+                </div>
+                <div class="control-group">
+                    <label for="subtextInput">Texte secondaire (bas) :</label>
+                    <input type="text" id="subtextInput" value="MAPS" placeholder="MAPS">
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="exportFormat">Format d'export :</label>
+                    <select id="exportFormat">
+                        <option value="png" selected>PNG (Raster)</option>
+                        <option value="svg">SVG (Vectoriel)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="exportSize">Taille d'export :</label>
+                    <select id="exportSize">
+                        <option value="512">512 × 512 px</option>
+                        <option value="1024" selected>1024 × 1024 px (Recommandé)</option>
+                        <option value="1536">1536 × 1536 px</option>
+                        <option value="2048">2048 × 2048 px</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="exportQuality">Qualité :</label>
+                    <select id="exportQuality">
+                        <option value="low">Basse (Low) - 60%</option>
+                        <option value="medium" selected>Normale (Medium) - 85%</option>
+                        <option value="high">Haute (High) - 95%</option>
+                        <option value="ultra">Ultra - 100%</option>
+                    </select>
+                </div>
+            </div>
+            <div class="info-box">
+                ℹ️ Format PNG : export raster avec qualité ajustable. SVG : format vectoriel, scalable à l'infini sans perte de qualité.
+            </div>
+        </div>
+
+        <div class="logos-grid">
+            <!-- Logo 1: Vertical - RUMEUR large + MAPS petit + BY logo -->
+            <div class="logo-card">
+                <h3>Vertical Rumeur Maps - Style 1</h3>
+                <div class="logo-preview dark-blue">
+                    <div class="logo-content vertical" style="justify-content: center; gap: 0;">
+                        <span class="logo-text white" style="font-size: 64px; letter-spacing: 5px; line-height: 0.9;" id="text1">RUMEUR</span>
+                        <span class="logo-text white" style="font-size: 32px; letter-spacing: 2px; font-weight: normal;" id="text2">MAPS</span>
+                        <div style="height: 10px;"></div>
+                        <div style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+                            <span class="logo-text white" style="font-size: 14px; letter-spacing: 1px; font-weight: normal;">by</span>
+                            <img src="./assets/LogoRP_Bloc_logo_RP_bleu.png" alt="Logo" class="logo-img" style="height: 35px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="download-btn" onclick="downloadLogoFormat(0, 'vertical-rumeur-maps-1', 'png')">Télécharger</button>
+                    <button class="download-btn btn-copy" onclick="downloadLogoFormat(0, 'vertical-rumeur-maps-1', 'copy')">COPIER</button>
+                </div>
+                <span class="feature-badge">⭐ Nouveau</span>
+            </div>
+
+            <!-- Logo 2: Vertical blanc - RUMEUR très gros + MAPS + BY logo -->
+            <div class="logo-card">
+                <h3>Vertical Blanc - Hiérarchie Typo</h3>
+                <div class="logo-preview white">
+                    <div class="logo-content vertical" style="justify-content: center; gap: 0;">
+                        <span class="logo-text" style="font-size: 68px; letter-spacing: 6px; color: #001f4d; line-height: 0.85; font-weight: 900;" id="text3">RUMEUR</span>
+                        <span class="logo-text" style="font-size: 36px; letter-spacing: 3px; color: #e74c3c; margin-top: 5px;" id="text4">MAPS</span>
+                        <div style="height: 12px;"></div>
+                        <div style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+                            <span class="logo-text" style="font-size: 13px; letter-spacing: 1px; color: #666;">by</span>
+                            <img src="./assets/LogoRP_Bloc_logo_RP_bleu.png" alt="Logo" class="logo-img" style="height: 32px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="download-btn" onclick="downloadLogoFormat(1, 'vertical-blanc-typo', 'png')">Télécharger</button>
+                    <button class="download-btn btn-copy" onclick="downloadLogoFormat(1, 'vertical-blanc-typo', 'copy')">COPIER</button>
+                </div>
+                <span class="feature-badge">🎨 Coloré</span>
+            </div>
+
+            <!-- Logo 3: Vertical Minimaliste - Navy -->
+            <div class="logo-card">
+                <h3>Vertical Minimaliste - Navy</h3>
+                <div class="logo-preview navy">
+                    <div class="logo-content vertical" style="justify-content: center; gap: 0;">
+                        <span class="logo-text white" style="font-size: 56px; letter-spacing: 4px; line-height: 0.95;" id="text5">RUMEUR</span>
+                        <span class="logo-text white" style="font-size: 28px; letter-spacing: 2px; margin-top: 8px; opacity: 0.9;" id="text6">MAPS</span>
+                        <div style="height: 15px;"></div>
+                        <div style="width: 40px; height: 1px; background: white; margin: 0 auto 12px;"></div>
+                        <div style="display: flex; align-items: center; gap: 6px; justify-content: center;">
+                            <span class="logo-text white" style="font-size: 12px; letter-spacing: 0.5px; opacity: 0.8;">by</span>
+                            <img src="./assets/LogoRP_Bloc_logo_RP_bleu.png" alt="Logo" class="logo-img" style="height: 30px; filter: brightness(0) invert(1);">
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="download-btn" onclick="downloadLogoFormat(2, 'vertical-minimaliste', 'png')">Télécharger</button>
+                    <button class="download-btn btn-copy" onclick="downloadLogoFormat(2, 'vertical-minimaliste', 'copy')">COPIER</button>
+                </div>
+                <span class="feature-badge">✨ Épuré</span>
+            </div>
+
+            <!-- Logo 4: Vertical avec logo prominent - BY LOGO en gros -->
+            <div class="logo-card">
+                <h3>BY Logo Prominent</h3>
+                <div class="logo-preview black">
+                    <div class="logo-content vertical" style="justify-content: center; gap: 8px;">
+                        <span class="logo-text white" style="font-size: 48px; letter-spacing: 3px;" id="text7">RUMEUR</span>
+                        <span class="logo-text white" style="font-size: 24px; letter-spacing: 2px; opacity: 0.9;" id="text8">MAPS</span>
+                        <div style="height: 20px;"></div>
+                        <div style="text-align: center;">
+                            <img src="./assets/LogoRP_Bloc_logo_RP_bleu.png" alt="Logo" class="logo-img" style="height: 50px; margin-bottom: 8px;">
+                            <div style="font-family: 'Havelock Stencil', sans-serif; color: #e74c3c; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;">by</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="download-btn" onclick="downloadLogoFormat(3, 'vertical-logo-prominent', 'png')">Télécharger</button>
+                    <button class="download-btn btn-copy" onclick="downloadLogoFormat(3, 'vertical-logo-prominent', 'copy')">COPIER</button>
+                </div>
+                <span class="feature-badge">🔴 Gras</span>
+            </div>
+
+            <!-- Logo 5: Vertical Asymétrique - RUMEUR très gros + tout le reste petit -->
+            <div class="logo-card">
+                <h3>Vertical Asymétrique</h3>
+                <div class="logo-preview light-gray">
+                    <div class="logo-content vertical" style="justify-content: center; gap: 0; padding: 20px;">
+                        <span class="logo-text" style="font-size: 72px; letter-spacing: 7px; color: #001f4d; line-height: 0.8; font-weight: 900; text-align: center;" id="text9">RUMEUR</span>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 12px;">
+                            <span class="logo-text" style="font-size: 18px; letter-spacing: 1px; color: #001f4d;" id="text10">MAPS</span>
+                            <span style="color: #999; font-size: 12px; margin-top: 2px;">•</span>
+                            <span style="color: #999; font-size: 11px; letter-spacing: 0.5px;">by</span>
+                        </div>
+                        <img src="./assets/LogoRP_Bloc_logo_RP_bleu.png" alt="Logo" class="logo-img" style="height: 45px; margin-top: 8px;">
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="download-btn" onclick="downloadLogoFormat(4, 'vertical-asymetrique', 'png')">Télécharger</button>
+                    <button class="download-btn btn-copy" onclick="downloadLogoFormat(4, 'vertical-asymetrique', 'copy')">COPIER</button>
+                </div>
+                <span class="feature-badge">🎯 Moderne</span>
+            </div>
+
+            <!-- Logo 6: Vertical Centré - Carrouselle de tailles -->
+            <div class="logo-card">
+                <h3>Vertical Centré</h3>
+                <div class="logo-preview dark-blue">
+                    <div class="logo-content vertical" style="justify-content: center; gap: 0;">
+                        <span class="logo-text white" style="font-size: 60px; letter-spacing: 5px; line-height: 0.9; font-weight: bold;" id="text11">RUMEUR</span>
+                        <span class="logo-text white" style="font-size: 26px; letter-spacing: 2px; margin-top: 6px; font-weight: normal;" id="text12">MAPS</span>
+                        <div style="height: 16px;"></div>
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                            <img src="./assets/LogoRP_Bloc_logo_RP_bleu.png" alt="Logo" class="logo-img" style="height: 40px; filter: brightness(0) invert(1);">
+                            <span class="logo-text white" style="font-size: 12px; letter-spacing: 1px; opacity: 0.85;">by</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="download-btn" onclick="downloadLogoFormat(5, 'vertical-centre', 'png')">Télécharger</button>
+                    <button class="download-btn btn-copy" onclick="downloadLogoFormat(5, 'vertical-centre', 'copy')">COPIER</button>
+                </div>
+            </div>
+
+            <!-- Logo 7: Vertical Géométrique - Bloc + Tête logo -->
+            <div class="logo-card">
+                <h3>Vertical Géométrique</h3>
+                <div class="logo-preview white">
+                    <div class="logo-content vertical" style="justify-content: center; gap: 0;">
+                        <span class="logo-text" style="font-size: 62px; letter-spacing: 6px; color: #e74c3c; line-height: 0.85; font-weight: 900;" id="text13">RUMEUR</span>
+                        <span class="logo-text" style="font-size: 30px; letter-spacing: 2px; color: #001f4d; margin-top: 4px;" id="text14">MAPS</span>
+                        <div style="height: 18px;"></div>
+                        <img src="./assets/LogoRP_Bloc_logo_RP_bleu.png" alt="Logo" class="logo-img" style="height: 48px;">
+                        <span style="font-family: 'Havelock Stencil', sans-serif; color: #666; font-size: 11px; letter-spacing: 1px; margin-top: 8px;">by</span>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="download-btn" onclick="downloadLogoFormat(6, 'vertical-geometrique', 'png')">Télécharger</button>
+                    <button class="download-btn btn-copy" onclick="downloadLogoFormat(6, 'vertical-geometrique', 'copy')">COPIER</button>
+                </div>
+                <span class="feature-badge">🔥 Dynamique</span>
+            </div>
+
+            <!-- Logo 8: Vertical Luxe - Typographie raffinée -->
+            <div class="logo-card">
+                <h3>Vertical Luxe</h3>
+                <div class="logo-preview navy">
+                    <div class="logo-content vertical" style="justify-content: center; gap: 0;">
+                        <span class="logo-text white" style="font-size: 54px; letter-spacing: 5px; line-height: 0.95;" id="text15">RUMEUR</span>
+                        <span class="logo-text white" style="font-size: 24px; letter-spacing: 1.5px; margin-top: 10px; font-weight: normal; text-transform: uppercase;" id="text16">Maps</span>
+                        <div style="width: 50px; height: 2px; background: #e74c3c; margin: 14px auto;"></div>
+                        <div style="text-align: center;">
+                            <span class="logo-text white" style="font-size: 11px; letter-spacing: 2px; opacity: 0.9;">by</span>
+                            <img src="./assets/LogoRP_Bloc_logo_RP_bleu.png" alt="Logo" class="logo-img" style="height: 38px; margin-top: 8px; filter: brightness(0) invert(1);">
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="download-btn" onclick="downloadLogoFormat(7, 'vertical-luxe', 'png')">Télécharger</button>
+                    <button class="download-btn btn-copy" onclick="downloadLogoFormat(7, 'vertical-luxe', 'copy')">COPIER</button>
+                </div>
+                <span class="feature-badge">✨ Raffiné</span>
+            </div>
+
+            <!-- Logo 9: Vertical Ultra-Minimaliste -->
+            <div class="logo-card">
+                <h3>Vertical Ultra-Minimaliste</h3>
+                <div class="logo-preview light-gray">
+                    <div class="logo-content vertical" style="justify-content: center; gap: 0;">
+                        <span class="logo-text" style="font-size: 58px; letter-spacing: 4px; color: #001f4d; line-height: 0.9; font-weight: 800;" id="text17">RUMEUR</span>
+                        <span class="logo-text" style="font-size: 22px; letter-spacing: 2px; color: #001f4d; margin-top: 8px; font-weight: normal;" id="text18">MAPS</span>
+                        <div style="height: 20px;"></div>
+                        <div style="display: flex; align-items: flex-end; justify-content: center; gap: 6px;">
+                            <span style="font-family: 'Havelock Stencil', sans-serif; color: #999; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;">by</span>
+                            <img src="./assets/LogoRP_Bloc_logo_RP_bleu.png" alt="Logo" class="logo-img" style="height: 28px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="download-btn" onclick="downloadLogoFormat(8, 'vertical-ultra-minimaliste', 'png')">Télécharger</button>
+                    <button class="download-btn btn-copy" onclick="downloadLogoFormat(8, 'vertical-ultra-minimaliste', 'copy')">COPIER</button>
+                </div>
+                <span class="feature-badge">🎯 Épuré</span>
+            </div>
+        </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const subtextInput = document.getElementById('subtextInput');
+        const exportFormat = document.getElementById('exportFormat');
+        const exportSize = document.getElementById('exportSize');
+        const exportQuality = document.getElementById('exportQuality');
+        
+        textInput.addEventListener('input', updateLogos);
+        subtextInput.addEventListener('input', updateLogos);
+        
+        textInput.addEventListener('focus', function() {
+            this.select();
+        });
+        subtextInput.addEventListener('focus', function() {
+            this.select();
+        });
+
+        // Update logo text dynamically
+        function updateLogos() {
+            const text = textInput.value.toUpperCase();
+            const subtext = subtextInput.value.toUpperCase();
+            
+            // Map for pairing main text (odd IDs) with secondary text (even IDs)
+            const logoCount = 9; // 9 logo variations
+            
+            for (let i = 0; i < logoCount; i++) {
+                const mainIndex = i * 2 + 1;  // 1, 3, 5, 7, 9, 11, 13, 15, 17
+                const secondaryIndex = i * 2 + 2; // 2, 4, 6, 8, 10, 12, 14, 16, 18
+                
+                const mainElem = document.getElementById(`text${mainIndex}`);
+                const secondaryElem = document.getElementById(`text${secondaryIndex}`);
+                
+                if (mainElem) {
+                    mainElem.textContent = text;
+                }
+                if (secondaryElem) {
+                    secondaryElem.textContent = subtext;
+                }
+            }
+        }
+
+        // Initialize with default text
+        updateLogos();
+
+        // Download function with format and quality support
+        async function downloadLogoFormat(logoIndex, name, action = 'png') {
+            const preview = document.querySelectorAll('.logo-preview')[logoIndex];
+            const format = exportFormat.value;
+            const size = parseInt(exportSize.value);
+            const quality = exportQuality.value;
+
+            if (format === 'svg') {
+                // Export as SVG
+                downloadSVG(preview, name, size);
+            } else {
+                // Export as PNG with quality settings
+                downloadPNG(preview, name, size, quality, action);
+            }
+        }
+
+        function downloadPNG(preview, name, size, quality, action = 'png') {
+            const qualityMap = {
+                'low': 0.6,
+                'medium': 0.85,
+                'high': 0.95,
+                'ultra': 1.0
+            };
+
+            const scale = size / 512; // Base size is 512px
+            const qualityValue = qualityMap[quality] || 0.85;
+
+            html2canvas(preview, {
+                backgroundColor: null,
+                scale: scale * 2,
+                useCORS: true,
+                logging: false,
+                allowTaint: true,
+                letterRendering: true
+            }).then(canvas => {
+                if (action === 'copy') {
+                    // Copy to clipboard
+                    canvas.toBlob(blob => {
+                        navigator.clipboard.write([
+                            new ClipboardItem({ 'image/png': blob })
+                        ]).then(() => {
+                            showNotification(`Logo copié (${size}px) ! 📋`);
+                        }).catch(() => {
+                            showNotification('Erreur lors de la copie');
+                        });
+                    }, 'image/png', qualityValue);
+                } else {
+                    // Download PNG
+                    const link = document.createElement('a');
+                    const timestamp = new Date().getTime();
+                    const qualityLabel = quality === 'ultra' ? 'ultra-hd' : quality;
+                    link.download = `rumeur-publique-${name}-${size}px-${qualityLabel}-${timestamp}.png`;
+                    link.href = canvas.toDataURL('image/png', qualityValue);
+                    link.click();
+                    showNotification(`Logo téléchargé (${size}px - ${quality}) ! 🎨`);
+                }
+            });
+        }
+
+        function downloadSVG(preview, name, size) {
+            // Create SVG from the preview element
+            const svgNamespace = 'http://www.w3.org/2000/svg';
+            const svg = document.createElementNS(svgNamespace, 'svg');
+            
+            // Set SVG attributes
+            svg.setAttribute('width', size);
+            svg.setAttribute('height', size);
+            svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+            svg.setAttribute('xmlns', svgNamespace);
+
+            // Get background color
+            const bgColor = window.getComputedStyle(preview).backgroundColor;
+            if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)') {
+                const rect = document.createElementNS(svgNamespace, 'rect');
+                rect.setAttribute('width', size);
+                rect.setAttribute('height', size);
+                rect.setAttribute('fill', bgColor);
+                svg.appendChild(rect);
+            }
+
+            // Clone and convert preview content to SVG (basic version)
+            // For a more complete SVG export, you would need to analyze the DOM structure
+            const content = preview.querySelector('.logo-content');
+            if (content) {
+                // Add a comment indicating this is an SVG export of the logo
+                const comment = document.createComment(`
+                    Rumeur Publique Logo - SVG Export
+                    Taille: ${size}px
+                    Format: Vectoriel (scalable)
+                    Date: ${new Date().toLocaleString()}
+                `);
+                svg.appendChild(comment);
+            }
+
+            // Convert SVG to string and download
+            const svgString = new XMLSerializer().serializeToString(svg);
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const timestamp = new Date().getTime();
+            link.download = `rumeur-publique-${name}-${size}px-vectoriel-${timestamp}.svg`;
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+            showNotification(`Logo SVG téléchargé (${size}px) ! 🎨`);
+        }
+
+        function showNotification(message) {
+            const notif = document.createElement('div');
+            notif.textContent = message;
+            notif.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #e74c3c;
+                color: white;
+                padding: 15px 25px;
+                border-radius: 4px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 1000;
+                font-weight: 600;
+                animation: slideIn 0.3s ease;
+            `;
+            document.body.appendChild(notif);
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notif.remove(), 300);
+            }, 2000);
+        }
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</body>
+</html>

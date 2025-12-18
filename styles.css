@@ -74,6 +74,259 @@
     box-sizing: border-box;
 }
 
+/* Le logo, j'ai tenté comme un neuneu de le générer et de le créer alors qu'il suffit de l'écrire, je suis pas le pinguoin le plus afuté de la pièce monté*/
+@font-face {
+    font-family: 'HavelockStencil';
+    src: url('assets/Havelock-Stencil.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/**/
+.brand-logo-wrapper {
+    text-decoration: none;
+    display: inline-block;
+    position: relative;
+}
+
+.brand-logo-wrapper:hover {
+    text-decoration: none;
+}
+
+/* Logo container - holds icon + text with transparent background */
+.brand-logo-container {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    padding: 1rem 0;
+    background: transparent;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.brand-logo-wrapper:hover .brand-logo-container {
+    transform: translateY(-3px);
+}
+
+/* Wrapper for A letter transformation */
+.brand-a-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 1.3em;
+    height: 1.3em;
+    vertical-align: middle;
+}
+
+/* Icon/letter animation: smoother, better easing and performance hints */
+.brand-logo-icon-inline {
+    display: inline-block !important;
+    width: 1.3em;
+    height: 1.3em;
+    vertical-align: middle;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+    margin: 0 0.02em;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 50% 50%;
+    will-change: transform, opacity, filter;
+    backface-visibility: hidden;
+    /* animation disabled globally per user request - show final typographic 'A' immediately */
+    animation: none !important;
+    opacity: 0; /* hide the tiger icon when animation is disabled */
+    display: none; /* remove from layout/flow */
+}
+
+.brand-a-letter {
+    display: inline-block;
+    font-family: 'HavelockStencil', 'Space Grotesk', system-ui, sans-serif;
+    font-size: 1em;
+    font-weight: 400;
+    color: var(--color-perle);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    /* show the typographic A immediately (no intro animation) */
+    opacity: 1 !important;
+    transform: none !important;
+    will-change: auto;
+    animation: none !important;
+}
+
+@keyframes logoIntroSpinFade {
+    0% {
+        transform: translateY(0.12em) rotate(0deg) scale(1.45);
+        filter: drop-shadow(0 6px 28px rgba(100,215,205,0.85));
+        opacity: 1;
+    }
+    30% {
+        transform: translateY(0.06em) rotate(720deg) scale(1.55);
+        opacity: 1;
+    }
+    60% {
+        transform: translateY(0.04em) rotate(900deg) scale(1.2);
+        opacity: 1;
+    }
+    80% {
+        transform: translateY(0.02em) rotate(990deg) scale(1.02);
+        filter: drop-shadow(0 3px 14px rgba(100,215,205,0.45));
+        opacity: 0.85;
+    }
+    92% {
+        transform: translateY(0.01em) rotate(1040deg) scale(0.92);
+        opacity: 0.45;
+        filter: none;
+    }
+    100% {
+        transform: translateY(0) rotate(1080deg) scale(0.82);
+        opacity: 0;
+        filter: none;
+    }
+}
+
+@keyframes letterAFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(0.12em) scale(.6);
+    }
+    70% {
+        opacity: 0;
+        transform: translateY(0.06em) scale(.6);
+    }
+    85% {
+        opacity: 0.55;
+        transform: translateY(0.03em) scale(.88);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .brand-logo-icon-inline,
+    .brand-a-letter {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+    /* ensure the A is visible in reduced-motion mode */
+    .brand-logo-icon-inline { display: none !important; }
+}
+
+/* Text wrapper */
+.brand-text-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.brand-text {
+    font-family: 'HavelockStencil', 'Space Grotesk', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Each brand line */
+.brand-line {
+    display: block;
+    color: var(--color-perle);
+    transition: all 0.35s ease;
+}
+
+/* Main brand line "RUMEUR" */
+.brand-main {
+    font-size: 4.4rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-shadow: 
+        0 4px 16px rgba(0, 0, 0, 0.4),
+        0 0 35px rgba(100, 215, 205, 0.25);
+    line-height: 0.95;
+    text-align: center;
+}
+
+.brand-logo-wrapper:hover .brand-main {
+    text-shadow: 
+        0 6px 20px rgba(0, 0, 0, 0.5),
+        0 0 50px rgba(100, 215, 205, 0.5);
+    letter-spacing: 0.1em;
+}
+
+/* Sub brand line "Maps" */
+.brand-sub {
+    font-size: 3.2rem;
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    opacity: 0.9;
+    margin-top: -0.3rem;
+    color: rgba(242, 242, 242, 0.92);
+    text-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.brand-logo-wrapper:hover .brand-sub {
+    opacity: 1;
+    color: var(--color-curacao);
+    text-shadow: 0 4px 18px rgba(100, 215, 205, 0.6);
+}
+
+/* Responsive adjustments for logo */
+@media (max-width: 768px) {
+    .brand-logo-container {
+        gap: 2rem;
+        padding: 0.8rem 0;
+    }
+    
+    .brand-main {
+        font-size: 3.8rem;
+        letter-spacing: 0.06em;
+    }
+    
+    .brand-sub {
+        font-size: 2.8rem;
+        letter-spacing: 0.12em;
+    }
+}
+
+@media (max-width: 480px) {
+    .brand-logo-container {
+        gap: 1.6rem;
+        padding: 0.6rem 0;
+    }
+    
+    .brand-main {
+        font-size: 3.2rem;
+        letter-spacing: 0.05em;
+    }
+    
+    .brand-sub {
+        font-size: 2.4rem;
+        letter-spacing: 0.1em;
+    }
+}
+
+/* === IMAGES UNIVERSELLES - Prévention de débordement === */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Images spécifiques aux cartes minister */
+.minister-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
+
 /* Local display font for ministry short names */
 
 /* Les titres de ministres sont affichés en Havelock Inline mais il faut modifier ça  */
@@ -83,7 +336,490 @@
  .modal-portfolio,
  .print-sheet-portfolio {
     font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+}
+
+/* === STYLES POUR LES PÔLES DU PREMIER MINISTRE === */
+
+/* Wrapper général pour toutes les sections du cabinet */
+.pm-cabinet-wrapper {
+    margin: 2rem 0;
+}
+
+/* Section principale du cabinet */
+.pm-cabinet-section {
+    margin: 2rem 0;
+}
+
+.pm-cabinet-section-title {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-encre);
+    text-align: center;
+}
+
+/* Grille du cabinet principal (directeur, chefs, etc.) */
+.pm-cabinet-top-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* Carte de membre du cabinet */
+.pm-cabinet-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(17, 23, 39, 0.08);
+    border-radius: var(--radius-base);
+    box-shadow: 0 4px 20px rgba(39, 8, 59, 0.06);
+    transition: all 0.2s ease;
+}
+
+.pm-cabinet-card:hover {
+    box-shadow: 0 8px 30px rgba(39, 8, 59, 0.12);
+    transform: translateY(-2px);
+}
+
+.pm-cabinet-card-avatar {
+    flex-shrink: 0;
+}
+
+.pm-cabinet-card-avatar img {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(100, 215, 205, 0.4);
+}
+
+.pm-cabinet-card-main {
+    flex: 1;
+}
+
+.pm-cabinet-card-name {
+    font-weight: 600;
+    color: var(--color-encre);
+    font-size: 1rem;
+    margin: 0 0 0.3rem 0;
+}
+
+.pm-cabinet-card-role {
+    font-size: 0.85rem;
+    color: var(--color-sesame);
+    font-weight: 500;
+    margin: 0;
+    line-height: 1.3;
+}
+
+/* Container des pôles */
+.pm-poles-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+}
+
+/* Boîte de pôle */
+.pm-pole-box {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(17, 23, 39, 0.08);
+    border-radius: var(--radius-base);
+    padding: 1.25rem;
+    box-shadow: 0 4px 20px rgba(39, 8, 59, 0.06);
+    transition: all 0.2s ease;
+}
+
+.pm-pole-box:hover {
+    box-shadow: 0 8px 30px rgba(39, 8, 59, 0.12);
+    transform: translateY(-2px);
+}
+
+/* Titre du pôle */
+.pm-pole-title {
+    margin: 0 0 1rem 0;
+    border-bottom: 1px solid rgba(134, 136, 149, 0.2);
+    padding-bottom: 0.75rem;
+}
+
+.pm-pole-title-text {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-poivre);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+/* Header avec le chef de pôle */
+.pm-pole-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0 1rem 0;
+    border-bottom: 1px solid rgba(134, 136, 149, 0.15);
+    margin-bottom: 1rem;
+}
+
+.pm-pole-leader-avatar {
+    flex-shrink: 0;
+}
+
+.pm-pole-leader-avatar img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(100, 215, 205, 0.3);
+}
+
+.pm-pole-leader-info {
+    flex: 1;
+}
+
+.pm-pole-leader-name {
+    font-weight: 600;
+    color: var(--color-encre);
+    font-size: 0.95rem;
+    margin: 0 0 0.25rem 0;
+}
+
+.pm-pole-leader-job {
+    font-size: 0.8rem;
+    color: var(--color-sesame);
+    font-weight: 500;
+    margin: 0 0 0.25rem 0;
+    text-transform: uppercase;
     letter-spacing: 0.02em;
+}
+
+.pm-pole-leader-specialty {
+    font-size: 0.8rem;
+    color: var(--color-poivre);
+    font-style: italic;
+    margin: 0;
+}
+
+/* Liste des membres */
+.pm-pole-members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Membre individuel */
+.pm-pole-member {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem;
+    background: rgba(242, 242, 242, 0.3);
+    border-radius: 8px;
+    transition: background-color 0.15s ease;
+}
+
+.pm-pole-member:hover {
+    background: rgba(242, 242, 242, 0.5);
+}
+
+.pm-pole-member-avatar {
+    flex-shrink: 0;
+}
+
+.pm-pole-member-avatar img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(134, 136, 149, 0.2);
+}
+
+.pm-pole-member-main {
+    flex: 1;
+}
+
+.pm-pole-member-name {
+    font-weight: 500;
+    color: var(--color-encre);
+    font-size: 0.9rem;
+    margin: 0 0 0.2rem 0;
+}
+
+.pm-pole-member-job {
+    font-size: 0.75rem;
+    color: var(--color-sesame);
+    margin: 0;
+    line-height: 1.3;
+}
+
+/* État vide */
+.pm-cabinet-empty {
+    display: block;
+    text-align: center;
+    color: var(--color-sesame);
+    font-style: italic;
+    font-size: 0.85rem;
+    padding: 1rem;
+    background: rgba(242, 242, 242, 0.2);
+    border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .pm-poles-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .pm-cabinet-top-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+    
+    .pm-pole-box {
+        padding: 1rem;
+    }
+    
+    .pm-cabinet-section-title {
+        font-size: 1.5rem;
+    }
+    
+    .pm-pole-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .pm-pole-leader-avatar img {
+        width: 42px;
+        height: 42px;
+    }
+    
+    .pm-cabinet-card-avatar img {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pm-cabinet-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+    
+    .pm-pole-member {
+        padding: 0.5rem;
+        gap: 0.6rem;
+    }
+    
+    .pm-pole-member-avatar img {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .pm-cabinet-card-avatar img {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+/* === STYLES POUR LE CABINET DU PRÉSIDENT DE LA RÉPUBLIQUE === */
+
+/* Wrapper général */
+.president-cabinet-wrapper {
+    margin: 2rem 0;
+    padding: 0 1rem;
+}
+
+/* Header du cabinet présidentiel */
+.president-cabinet-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.president-cabinet-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-encre);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+.president-cabinet-subtitle {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--color-sesame);
+    font-style: italic;
+}
+
+/* Conteneur des pôles présidentiels */
+.president-poles-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Boîte de pôle présidentiel */
+.president-pole-box {
+    background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(242,242,242,0.5));
+    border: 1px solid rgba(17, 23, 39, 0.1);
+    border-radius: var(--radius-base);
+    padding: 1.5rem;
+    box-shadow: 0 6px 24px rgba(39, 8, 59, 0.08);
+    transition: all 0.25s ease;
+}
+
+.president-pole-box:hover {
+    box-shadow: 0 12px 36px rgba(39, 8, 59, 0.14);
+    transform: translateY(-3px);
+}
+
+/* Titre du pôle présidentiel */
+.president-pole-title {
+    margin: 0 0 1.25rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--color-curacao);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-panthere);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+/* Liste des membres d'un pôle présidentiel */
+.president-pole-members {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+/* Carte d'un membre du cabinet présidentiel */
+.president-pole-member {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(17, 23, 39, 0.06);
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.president-pole-member:hover {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 4px 16px rgba(39, 8, 59, 0.1);
+    transform: translateX(4px);
+}
+
+/* Avatar du membre */
+.president-pole-member-avatar {
+    flex-shrink: 0;
+}
+
+.president-pole-member-avatar img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--color-curacao);
+    box-shadow: 0 2px 8px rgba(100, 215, 205, 0.25);
+}
+
+/* Infos du membre */
+.president-pole-member-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.president-pole-member-name {
+    font-weight: 600;
+    color: var(--color-encre);
+    font-size: 0.95rem;
+    margin: 0 0 0.25rem 0;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+.president-pole-member-role {
+    font-size: 0.8rem;
+    color: var(--color-sesame);
+    font-weight: 500;
+    margin: 0 0 0.2rem 0;
+    line-height: 1.3;
+}
+
+.president-pole-member-email {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--color-lavande);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.president-pole-member-email:hover {
+    color: var(--color-framboise);
+    text-decoration: underline;
+}
+
+/* État vide */
+.president-cabinet-empty {
+    display: block;
+    text-align: center;
+    color: var(--color-sesame);
+    font-style: italic;
+    font-size: 0.9rem;
+    padding: 1.5rem;
+    background: rgba(242, 242, 242, 0.3);
+    border-radius: 10px;
+    margin: 1rem 0;
+}
+
+/* Responsive pour le cabinet présidentiel */
+@media (max-width: 768px) {
+    .president-poles-container {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+    
+    .president-pole-box {
+        padding: 1.25rem;
+    }
+    
+    .president-cabinet-title {
+        font-size: 1.5rem;
+    }
+    
+    .president-pole-member-avatar img {
+        width: 42px;
+        height: 42px;
+    }
+}
+
+@media (max-width: 480px) {
+    .president-cabinet-wrapper {
+        padding: 0 0.5rem;
+    }
+    
+    .president-pole-member {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.6rem;
+        padding: 0.6rem;
+    }
+    
+    .president-pole-member-avatar img {
+        width: 38px;
+        height: 38px;
+    }
+    
+    .president-pole-title {
+        font-size: 1rem;
+    }
 }
 
 /* J'ai tout mis en space grotesk, :'( adieu havelock je ne t'oublierai jamais*/
@@ -613,11 +1349,23 @@ main {
 }
 
 .section.ministers {
-    max-width: 1380px;
-    width: 100%;
-    margin-inline: auto;
-    padding-inline: clamp(1rem, 3vw, 1.5rem);
+    position: relative;
+    padding: clamp(1rem, 3vw, 1.75rem) 0; /* sobre: on s'aligne au container principal */
+    background: transparent; /* supprime les dégradés colorés */
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+    border-top: 1px solid rgba(17, 23, 39, 0.06);  /* séparateurs discrets */
+    border-bottom: 1px solid rgba(17, 23, 39, 0.06);
 }
+
+.section.ministers::after { content: none; }
+
+/* Un titre plus sobre avec un espacement cohérent */
+.section.ministers .section-header { margin-bottom: 0.5rem; }
+.section.ministers .section-title { font-weight: 600; }
+
+/* Removed full-bleed viewport rule to keep section within main */
 
 .section-header {
     max-width: 60ch;
@@ -645,6 +1393,83 @@ main {
     gap: 1.5rem;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
+
+/* ================= CARTES GÉNÉRIQUES ================= */
+
+.card {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 16px;
+    padding: 1.2rem;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.08);
+    height: 100%;
+    border: 1px solid rgba(17, 23, 39, 0.06);
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+    cursor: pointer;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    border-color: rgba(17, 23, 39, 0.1);
+}
+
+.card .photo {
+    width: 100%;
+    height: 160px;
+    overflow: hidden;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
+.card .photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.card .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.card .content h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-encre);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.card .content p {
+    font-size: 1rem;
+    color: var(--color-poivre);
+    margin: 0;
+    flex: 1;
+    line-height: 1.4;
+}
+
+.card .content button {
+    padding: 0.75rem 1.5rem;
+    background: var(--color-curacao);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 200ms ease;
+    margin-top: auto;
+}
+
+.card .content button:hover {
+    background: color-mix(in srgb, var(--color-curacao) 85%, var(--color-panthere) 15%);
+}
+
+/* ================= CARTES SPÉCIALISÉES ================= */
 
 .info-card {
     background: var(--color-guimauve);
@@ -698,7 +1523,9 @@ main {
 
 .toolbar-primary {
     display: grid;
-    gap: 1rem;
+    gap: 3rem;
+    /* center the single branding block vertically inside the header */
+    align-items: center;
     align-items: start;
 }
 
@@ -978,9 +1805,10 @@ body.print-all .toolbar {
     text-align: center;
 }
 
+/* Footer logo sizing (larger and responsive) */
 .footer-logo img, .footer-logo .footer-logo-img {
     display: inline-block;
-    max-width: min(120px, 50vw);
+    width: clamp(120px, 16vw, 220px);
     height: auto;
 }
 
@@ -1135,56 +1963,81 @@ body.print-all .toolbar {
 }
 
 .ministers-grid {
-    /* Balance: prevent overlap but keep more columns */
-    --card-min-width: clamp(200px, 20vw, 280px);
-    --card-row-height: clamp(320px, 32vw, 420px);
+    /* GRILLE MODERNE optimisée - layout normal avec conteneur séparé pour leaders */
     display: grid;
-    gap: clamp(1rem, 2.6vw, 1.75rem);
-    grid-template-columns: repeat(1, minmax(var(--card-min-width), 1fr));
-    /* Force rows to share a consistent baseline while letting taller cards grow when needed */
-    grid-auto-rows: minmax(var(--card-row-height), auto);
-    align-items: stretch;
-    padding: clamp(0.75rem, 2vw, 1.5rem);
-    position: relative;
-    width: 100%;
-    max-width: 1380px;
-    margin-inline: auto;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 2rem;
+    align-items: start;
+    padding: 1rem;
+    max-width: 100%;
+    margin: 0 auto;
+
+    /* Design épuré pour one page */
+    background: transparent;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
 }
 
-@media (min-width: 600px) {
+/* Conteneur pour les leaders (président + PM) - s'affiche en ligne séparée */
+.leaders-row {
+    grid-column: 1 / -1; /* Occupe toute la largeur de la grille */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 2rem;
+    margin-bottom: 1rem; /* Espace supplémentaire sous les leaders */
+}
+
+/* Sur grands écrans, forcer exactement 2 colonnes pour les leaders */
+@media (min-width: 1024px) {
+    .leaders-row {
+        grid-template-columns: repeat(2, 1fr);
+        margin-bottom: 2rem;
+    }
+    
     .ministers-grid {
-        grid-template-columns: repeat(2, minmax(var(--card-min-width), 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1400px) {
     .ministers-grid {
-        grid-template-columns: repeat(3, minmax(var(--card-min-width), 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
     }
 }
 
-@media (min-width: 1200px) {
+/* GRILLLE HORRIBLE QUI NE FONCTIONNE PAS BORDEL DE MERDE*/
+@media (max-width: 600px) {
     .ministers-grid {
-        grid-template-columns: repeat(4, minmax(var(--card-min-width), 1fr));
+        grid-template-columns: 1fr;  /* Une seule colonne sur mobile */
+        gap: 1rem;
+        padding: 0.5rem;
+    }
+    
+    .minister-card {
+        flex-direction: column;      /* Stack vertical sur mobile */
+        text-align: center;
+    }
+    
+    .mc-right {
+        margin-top: 1rem;
+        flex-direction: row;         /* Photo + bouton en ligne */
+        justify-content: space-between;
+        align-items: center;
+        flex: 0 0 auto;
+    }
+    
+    .mc-right .minister-photo {
+        width: 100px;
+    }
+    
+    .mc-right .minister-cta {
+        margin-left: 1rem;
+        width: auto;
     }
 }
 
-@media (min-width: 1500px) {
-    .ministers-grid {
-        grid-template-columns: repeat(5, minmax(var(--card-min-width), 1fr));
-    }
-}
 
-/* Layout utility helpers: allow quick toggles between wider cards or a 'dezoom' (more cards visible) */
-/* Apply one of these classes on the <body> to switch the grid behaviour without editing core rules. */
-.layout-enlarge-cards .ministers-grid {
-    --card-min-width: clamp(260px, 24vw, 360px); /* fewer columns, wider cards */
-}
-
-/* Smooth transition when switching layouts */
-.ministers-grid {
-    transition: grid-template-columns 240ms ease, gap 180ms ease;
-}
 
 /* Style for the floating layout control + collaborators list */
 #layout-toggle-control {
@@ -1344,25 +2197,7 @@ body.print-all .toolbar {
 
 /* Ensure search control remains consistent regardless of layout utilities */
 
-.ministers-grid[data-columns="1"] {
-    grid-template-columns: 1fr;
-}
-
-.ministers-grid[data-columns="2"] {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.ministers-grid[data-columns="3"] {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.ministers-grid[data-columns="4"] {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.ministers-grid[data-columns="5"] {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-}
+/* Ancien système de colonnes par attributs supprimé - remplacé par le responsive CSS */
 
 .ministers-grid[aria-busy="true"] {
     /* No loading overlay on main grid → no extra space needed */
@@ -1373,10 +2208,6 @@ body.print-all .toolbar {
 .ministers-grid[aria-busy="true"]::after {
     content: none;
 }
-
-.ministers-grid[aria-busy="true"]::before { content: none; }
-
-.ministers-grid[aria-busy="true"]::after { content: none; }
 
 .ministers-grid[aria-busy="false"]::before,
 .ministers-grid[aria-busy="false"]::after {
@@ -1401,276 +2232,742 @@ body.print-all .toolbar {
 }
 
 .minister-card {
+    /* STRUCTURE RESTRUCTURÉE avec footer délégués */
     position: relative;
-    border-radius: calc(var(--radius-base) + 6px);
-    padding: 1.8rem 1.6rem 1.4rem;
-    background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(244,246,248,0.96));
+    height: 100%;
+    border-radius: 16px;
+    padding: 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.97));
     border: 1px solid rgba(17, 23, 39, 0.06);
-    box-shadow: 0 24px 52px rgba(17, 23, 39, 0.08);
+    box-shadow: 0 12px 32px rgba(17, 23, 39, 0.06);
+    cursor: pointer;
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+    overflow: visible;
+    
+    /* Layout : contenu principal + footer délégués - GRID pour permettre au footer de traverser */
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+/* Les cartes normales (non-leaders) commencent à partir de la ligne 3 sur grands écrans */
+@media (min-width: 1024px) {
+    .minister-card:not(.is-leader) {
+        grid-row: auto; /* Placement automatique mais après les leaders */
+    }
+}
+
+/* === CONTENU PRINCIPAL (texte + photo) === */
+.minister-content {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex: 1; /* Prend tout l'espace disponible */
+}
+
+/* === CONTENU PRINCIPAL : COLONNES TEXTE + PHOTO === */
+/* Zone gauche: contenu texte avec espace garanti */
+.minister-content .mc-left {
+    flex: 1 1 65%;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    cursor: pointer;
-    transition: transform 180ms ease, box-shadow 180ms ease;
-    min-height: 230px;
-    height: 100%;
-    /* allow the grid item to shrink correctly and prevent its content from forcing overflow */
-    min-width: 0;
-    z-index: 0;
-    overflow: visible;
-    /* Enable container queries based on card width */
-    container-type: inline-size;
+    gap: 0.75rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
-.minister-content {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 1rem 1.25rem;
-    align-items: start;
-    align-content: start;
-    min-width: 0;
+/* Zone droite: largeur flexible mais contrainte */
+.minister-content .mc-right {
+    flex: 0 0 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
 }
 
-/* Prevent long content from forcing overflow */
-.minister-card h3,
-.minister-card .mc-mission,
-.minister-card .mc-bio {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    min-width: 0;
+/* Photo sécurisée: ne peut jamais déborder */
+.minister-content .mc-right .minister-photo {
+    width: 100%;
+    aspect-ratio: 3 / 4;   /* ratio fixe portrait comme gouvernement.fr */
+    object-fit: cover;       /* l'image remplit sans déborder */
+    object-position: top;
+    border-radius: 8px;
+    display: block;
+    background: var(--color-perle);
 }
 
-/* Container-adaptive layout to avoid overlap at narrow widths */
-@container (max-width: 320px) {
-    .minister-content {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-    }
-    .minister-content .minister-photo {
-        width: 84px;
-        height: 84px;
-    }
-    .mc-right {
-        align-items: flex-start;
-    }
+/* When the actions container is inside the right column, use a compact
+   inline variant so the button sits directly under the photo and doesn't
+   inherit the footer layout used elsewhere. */
+.minister-content .mc-right .minister-actions--inline {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-@container (max-width: 260px) {
-    .minister-card h3 { font-size: 1.1rem; }
-    .minister-card .minister-role { font-size: 0.9rem; }
-    .minister-card .minister-photo { width: 72px; height: 72px; }
+.minister-content .mc-right .minister-actions--inline .minister-cta {
+    width: 100%;
+    max-width: 180px; /* keep a reasonable button width */
+    box-sizing: border-box;
+    margin: 0;
 }
 
-.minister-card::before {
-    content: "";
-    position: absolute;
-    left: 0.6rem;
-    top: 0.6rem;
-    bottom: 0.6rem;
-    width: 6px;
-    border-radius: 999px;
-    background: linear-gradient(180deg,
-        var(--accent-color, var(--color-curacao)),
-        color-mix(in srgb, var(--accent-color, var(--color-curacao)) 70%, #ffffff 30%)
-    );
-}
-
-.minister-card.has-accent {
-    border-color: color-mix(in srgb, var(--accent-color) 30%, rgba(17, 23, 39, 0.06));
-}
-
-.minister-card.has-accent::before {
-    background: linear-gradient(180deg,
-        var(--accent-color),
-        color-mix(in srgb, var(--accent-color) 70%, #ffffff 30%)
-    );
-}
-
-/* Premier ministre mis en avant, centré */
-.minister-card.is-leader {
-    grid-column: 1 / -1;
-    max-width: 760px;
-    margin-inline: auto;
-    padding: 1.25rem;
-    border: 1px solid rgba(62, 62, 61, 0.15);
-    box-shadow: var(--shadow-hover);
-    width: auto;            /* restore original behavior for leader */
-    container-type: normal; /* disable container queries on leader card */
-}
-
-.minister-card.is-leader h3 {
-    font-size: 1.8rem;
-}
-
-.minister-card.is-leader .minister-role {
-    font-size: 1rem;
-}
-
-/* When multiple leader cards exist, render them inline (side by side)
-   by removing the full-width centering constraints and restoring
-   standard card sizing/typography. Uses :has to detect 2nd leader. */
-.ministers-grid:has(.minister-card.is-leader ~ .minister-card.is-leader) .minister-card.is-leader {
-    grid-column: auto;
-    max-width: none;
-    margin-inline: 0.6rem; /* add extra breathing room between the two leaders */
-    padding: 1.6rem 1.4rem 1.25rem; /* match regular card padding */
-    container-type: inline-size;    /* re-enable container queries */
-}
-.ministers-grid:has(.minister-card.is-leader ~ .minister-card.is-leader) .minister-card.is-leader h3 {
-    font-size: 1.35rem; /* match regular card title */
-}
-.ministers-grid:has(.minister-card.is-leader ~ .minister-card.is-leader) .minister-card.is-leader .minister-role {
-    font-size: 0.9rem;  /* match regular role size */
-}
-
-/* If there are 3 or more leader cards, tighten margins and allow
-   smaller min-width so at least three fit per row comfortably. */
-.ministers-grid:has(.minister-card.is-leader ~ .minister-card.is-leader ~ .minister-card.is-leader) {
-    --card-min-width: clamp(160px, 16vw, 220px);
-}
-.ministers-grid:has(.minister-card.is-leader ~ .minister-card.is-leader ~ .minister-card.is-leader) .minister-card.is-leader {
-    margin-inline: 0.25rem; /* reduce extra spacing so three can fit */
-}
-
-.minister-card:hover,
-.minister-card:focus {
-    transform: translateY(-6px);
-    box-shadow: 0 30px 64px rgba(17, 23, 39, 0.16);
+/* HOVER optimisé pour ONE PAGE - plus subtil */
+.minister-card:hover {
+    transform: translateY(-2px); /* Réduit de -4px à -2px */
+    box-shadow: 0 20px 50px rgba(17, 23, 39, 0.10); /* Ombre plus subtile */
+    border-color: color-mix(in srgb, var(--accent-color, var(--color-curacao)) 40%, rgba(17, 23, 39, 0.06) 60%);
     z-index: 10;
 }
 
-/* Small interactive expansion state (optional) */
-.minister-card.expanded {
-    transform: scale(1.02);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-}
-
-.minister-content .minister-photo {
-    width: clamp(76px, 8vw, 112px);
-    height: clamp(76px, 8vw, 112px);
-    object-fit: cover;
-    border-radius: 50%;
-    background: #fff;
-    border: 3px solid rgba(255, 255, 255, 0.95);
-    box-shadow: 0 16px 36px rgba(17, 23, 39, 0.18);
-    flex-shrink: 0;
-}
-
-.minister-card h3 {
+/* Styles pour les textes et éléments dans mc-left */
+.minister-content .mc-left h3,
+.minister-content .mc-left .minister-name {
     font-size: 1.25rem;
     line-height: 1.2;
     margin: 0;
-    font-weight: 800;
-    letter-spacing: 0.005em;
-
-    /* Ensure long names wrap instead of overflowing/overlapping */
-    white-space: normal;
-    overflow-wrap: anywhere;
-}
-
-.mc-ministry {
-    font-size: 2,5rem;
     font-weight: 700;
     color: var(--color-encre);
-    margin-bottom: 0.25rem;
+    letter-spacing: -0.01em;
+    
+    /* Évite le chevauchement en forçant le saut de ligne */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-height: 4.3em;
 }
 
-.mc-ministries {
+/* Style pour les rôles dans mc-left */
+.minister-content .mc-left .minister-role {
+    font-size: 0.95rem;
+    color: var(--color-sesame);
+    margin: 0;
+    line-height: 1.3;
+    font-weight: 500;
+}
+
+/* Styles pour les ministères dans mc-left */
+.mc-left .mc-ministry {
+    font-size: 0.85rem;
+    color: var(--color-panthere);
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.mc-left .mc-ministries {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4rem;
-    align-items: center;
-    margin-bottom: 0.25rem;
-    font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
-.mc-ministry-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.25rem 0.6rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    line-height: 1.2;
-    color: var(--accent-color, var(--color-encre));
-    background: color-mix(in srgb, var(--accent-color, var(--color-curacao)) 14%, rgba(255,255,255,0.95));
-    border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--accent-color, var(--color-curacao)) 30%, rgba(17,23,39,0.08));
-    box-shadow: 0 4px 12px rgba(39, 8, 59, 0.06);
-    font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+.mc-left .mc-ministry-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--color-guimauve);
+    border-radius: 6px;
+    border: 1px solid rgba(17, 23, 39, 0.1);
 }
 
-.mc-ministry-badge.is-primary {
-    background: var(--accent-color, var(--color-curacao));
-    color: #0f172a;
-    border-color: rgba(17, 23, 39, 0.08);
-    box-shadow: 0 6px 14px color-mix(in srgb, var(--accent-color, var(--color-curacao)) 36%, rgba(17,23,39,0.12));
+/* Styles pour meta et party dans mc-left */
+.mc-left .mc-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: auto;
 }
 
-.mc-left {
-    display: grid;
-    gap: 0.45rem;
-    min-width: 0;
+/* Style pour meta et party dans mc-left */
+.mc-left .mc-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: auto;
 }
 
-.minister-content {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(120px, auto);
-    gap: 1.1rem 1.5rem;
-    align-items: start;
-    align-content: start;
+/* ✅ DÉLÉGUÉS : FOOTER PLEINE LARGEUR */
+/* 🆕 FOOTER pour delegate-cards - traverse toute la grille */
+.mc-footer {
+    grid-column: 1 / -1; /* prends toute la largeur */
+    margin-top: 0.8rem;
 }
 
-.minister-header {
-    display: grid;
-    gap: 0.35rem;
-    align-content: start;
-}
-
-.mc-right {
+/* 👉 Layout propre des delegate-cards dans le footer */
+.mc-footer .delegates {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    /* Fonction qui permet Centre horizontalement les éléments (photo + bouton) pour que
-       le bouton "Voir la fiche" soit aligné sous la photo. Comme je suis un gros neuneu c'était flex-end */
-    align-items: center;
-    justify-content: flex-start;
-    min-width: 0;
+    gap: 0.5rem;
 }
 
-.minister-header {
-    display: grid;
-    gap: 0.2rem;
-    align-items: start;
-}
-
-.minister-meta {
-    margin-top: 0.2rem;
-}
-.mc-meta {
+/* Delegates footer avec scroll bar */
+.delegates-footer {
     display: flex;
-    gap: 0.35rem 0.5rem;
-    align-items: center;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 300px; /* Hauteur maximale avant scroll */
+    overflow-y: auto; /* Active le scroll vertical */
+    overflow-x: visible; /* Permet aux cartes de déborder horizontalement si nécessaire */
+    padding-right: 0.5rem; /* Espace pour la scrollbar */
+}
+
+/* Les cartes délégués dans delegates-footer gardent leurs dimensions */
+.delegates-footer .delegate-card {
+    flex-shrink: 0; /* Empêche la réduction de la carte */
+    min-height: fit-content; /* Conserve la hauteur naturelle du contenu */
+}
+
+/* Style de la scrollbar pour delegates-footer */
+.delegates-footer::-webkit-scrollbar {
+    width: 8px;
+}
+
+.delegates-footer::-webkit-scrollbar-track {
+    background: rgba(17, 23, 39, 0.05);
+    border-radius: 4px;
+}
+
+.delegates-footer::-webkit-scrollbar-thumb {
+    background: rgba(17, 23, 39, 0.2);
+    border-radius: 4px;
+    transition: background 200ms ease;
+}
+
+.delegates-footer::-webkit-scrollbar-thumb:hover {
+    background: rgba(17, 23, 39, 0.4);
+}
+
+.minister-card .delegates {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(17, 23, 39, 0.08); /* Séparateur visuel */
+}
+
+/* ✅ DELEGATE-CARD : TOUTE LA LARGEUR DU FOOTER */
+.minister-card .delegates .delegate-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fafafa;
+    transition: background-color 200ms ease, transform 200ms ease;
+    width: 100%; /* Prend toute la largeur du footer */
+}
+
+/* Variantes ULTRA-SPÉCIFIQUES pour différents niveaux d'empiètement */
+.minister-card .delegates .delegate-card.delegate-card--small {
+    right: -60px !important;     /* Empiète de 60px */
+}
+
+.minister-card .delegates .delegate-card.delegate-card--medium {
+    right: -80px !important;     /* Empiète de 80px */
+}
+
+.minister-card .delegates .delegate-card.delegate-card--large {
+    right: -100px !important;    /* Empiète de 100px (par défaut) */
+}
+
+.minister-card .delegates .delegate-card.delegate-card--full {
+    right: -140px !important;    /* Empiète de 140px - recouvre la photo */
+}
+
+.delegate-info {
+    flex: 1;
+}
+
+.delegate-info p {
+    margin: 0;
+    line-height: 1.3;
+}
+
+/* Style pour le bouton CTA dans mc-right */
+.mc-right .minister-cta {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    border: 1px solid rgba(17, 23, 39, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.95);
+    color: rgba(17, 23, 39, 0.9);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 180ms ease;
+    text-transform: none;
+    letter-spacing: 0.01em;
+}
+
+.mc-right .minister-cta:hover {
+    background: rgba(17, 23, 39, 1);
+    color: white;
+    border-color: rgba(17, 23, 39, 1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(17, 23, 39, 0.3);
+}
+
+.minister-party {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 5px 10px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--accent-color, var(--color-sesame)) 15%, rgba(255, 255, 255, 0.9) 85%);
+    color: var(--accent-color, var(--color-sesame));
+    align-self: flex-start;
+    border: 1px solid color-mix(in srgb, var(--accent-color, var(--color-sesame)) 25%, rgba(17, 23, 39, 0.06) 75%);
+}
+
+/* ZONE 2: SECTION MINISTÈRE - ONE PAGE COMPACT */
+.ministry-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Réduit de 10px à 8px */
+}
+
+.ministry-title {
+    font-size: 1rem; /* Réduit de 1.05rem à 1rem */
+    font-weight: 650;
+    color: var(--color-panthere);
+    margin: 0;
+    line-height: 1.25; /* Réduit de 1.3 à 1.25 */
+    
+    /* Force le texte à s'étaler en hauteur plutôt qu'en largeur */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    
+    /* Permet jusqu'à 2 lignes pour plus de compacité */
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Réduit de 3 à 2 */
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    
+    /* Hauteur réduite */
+    min-height: 1.8em; /* Réduit de 2em */
+    max-height: 3.2em; /* Réduit de 4.5em */
+}
+
+.ministry-badges {
+    display: flex;
     flex-wrap: wrap;
+    gap: 6px; /* Réduit de 8px à 6px */
+    min-height: 24px; /* Réduit de 28px à 24px */
 }
 
-.mc-mission {
-    font-size: 0.95rem;
-    color: var(--color-poivre);
-    margin-top: 0.1rem;
-    margin-bottom: 0;
-    line-height: 1.4;
+.ministry-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px; /* Réduit de 5px à 4px */
+    padding: 4px 10px; /* Réduit de 5px 12px à 4px 10px */
+    font-size: 0.65rem; /* Réduit de 0.7rem à 0.65rem */
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--accent-color, var(--color-panthere));
+    background: color-mix(in srgb, var(--accent-color, var(--color-curacao)) 10%, rgba(255,255,255,0.95));
+    border-radius: 12px; /* Réduit de 14px à 12px */
+    border: 1px solid color-mix(in srgb, var(--accent-color, var(--color-curacao)) 22%, rgba(17,23,39,0.06));
+    
+    /* Troncature */
+    max-width: 160px; /* Réduit de 170px à 160px */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-/* Bio courte affichée dans la carte du Premier ministre */
-.mc-bio {
-    margin-top: 0.5rem;
-    color: var(--color-poivre);
-    line-height: 1.45;
+.ministry-badge.primary {
+    background: var(--accent-color, var(--color-curacao));
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-color, var(--color-curacao)) 32%, rgba(17,23,39,0.1));
 }
 
-/* Actions dans la carte (ex: bouton délégués) */
-.card-actions { margin-top: 0.5rem; }
+/* ZONE 3: DÉLÉGUÉS - ONE PAGE COMPACT */
+.delegates-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Réduit de 10px à 8px */
+    max-height: 120px; /* Réduit de 140px à 120px */
+    overflow: hidden;
+    background: rgba(248, 250, 252, 0.5);
+    border-radius: 12px; /* Réduit de 14px à 12px */
+    padding: 12px;
+    border: 1px solid rgba(17, 23, 39, 0.04);
+}
+
+.delegates-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-panthere);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.85;
+}
+
+.delegates-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    padding: 2px;
+    
+    /* Scrollbar personnalisée moderne */
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--accent-color, var(--color-curacao)) 60%, rgba(17, 23, 39, 0.2) 40%) transparent;
+}
+
+.delegates-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.delegates-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.delegates-list::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--accent-color, var(--color-curacao)) 50%, rgba(17, 23, 39, 0.2) 50%);
+    border-radius: 4px;
+}
+
+.delegate-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
+    cursor: pointer;
+    min-height: 42px;
+    max-height: 72px; /* Force containment for 2-line delegate text */
+    box-shadow: 0 1px 4px rgba(17, 23, 39, 0.04);
+    overflow: hidden; /* Prevent text from escaping button boundaries */
+}
+
+.delegate-info {
+    flex: 1;
+    min-width: 0;
+    max-width: 100%; /* Prevent expanding beyond button */
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    overflow: hidden; /* Clip overflowing text */
+}
+
+.delegate-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-encre);
+    margin: 0;
+    /* Allow multi-line truncation to avoid overflowing buttons when many delegates are present */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+    overflow: hidden;
+    word-break: break-word;
+    hyphens: auto;
+    line-height: 1.2;
+}
+
+.delegate-role {
+    font-size: 0.78rem;
+    color: var(--color-sesame);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.9;
+    line-height: 1.1;
+}
+
+.delegate-party {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 6px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--accent-color, var(--color-sesame)) 12%, rgba(255, 255, 255, 0.9) 88%);
+    color: var(--accent-color, var(--color-sesame));
+    flex-shrink: 0;
+    border: 1px solid color-mix(in srgb, var(--accent-color, var(--color-sesame)) 20%, rgba(17, 23, 39, 0.04) 80%);
+    line-height: 1;
+}
+
+/* Le footer des cartes à modifier pour afficher le ministre au mieux */
+.minister-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid rgba(17, 23, 39, 0.06);
+    margin-top: auto;
+    background: rgba(248, 250, 252, 0.3);
+    border-radius: 0 0 14px 14px;
+    margin: 0 -24px -24px -24px;
+    padding: 14px 24px;
+}
+
+.minister-cta {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.95);
+    color: rgba(17, 23, 39, 0.9);
+    border: 1px solid rgba(17, 23, 39, 0.12);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 180ms ease;
+    text-transform: none;
+    letter-spacing: 0.01em;
+}
+
+.minister-cta:hover {
+    background: rgba(17, 23, 39, 1);
+    color: white;
+    border-color: rgba(17, 23, 39, 1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(17, 23, 39, 0.3);
+}
+
+/* === PREMIER MINISTRE & PRÉSIDENT - Styles spéciaux === */
+.minister-card.is-leader {
+    min-height: 320px;
+    order: -1000; /* Priorité d'affichage maximale pour être vraiment au-dessus */
+    position: relative;
+}
+
+/* Les cartes dans le conteneur leaders-row sont plus imposantes sur grands écrans */
+@media (min-width: 1024px) {
+  .leaders-row > .minister-card.is-leader {
+    min-height: 450px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .leaders-row > .minister-card.is-leader {
+    min-height: 500px;
+  }
+}
+
+.minister-card.is-leader .minister-photo-container {
+    width: 110px;
+    height: 110px;
+    border: 4px solid rgba(100, 215, 205, 0.8);
+    /* Position absolue ajustée pour la photo du PM - resserrée */
+    top: 24px;
+    right: 24px;
+}
+
+.minister-card.is-leader .minister-identity {
+    /* Espace réduit pour permettre plus de texte horizontal */
+    padding-right: 120px;
+}
+
+.minister-card.is-leader .minister-name {
+    font-size: 1.6rem;
+    color: var(--color-panthere);
+    font-weight: 700;
+}
+
+.minister-card.is-leader .ministry-title {
+    font-size: 1.3rem;
+    color: var(--color-panthere);
+    font-weight: 700;
+}
+
+/* Barre latérale d'accent avec animation */
+.minister-card::before {
+    content: "";
+    position: absolute;
+    left: 14px;
+    top: 28px;
+    bottom: 28px;
+    width: 4px;
+    border-radius: 999px;
+    background: linear-gradient(180deg,
+        var(--accent-color, var(--color-curacao)),
+        color-mix(in srgb, var(--accent-color, var(--color-curacao)) 60%, #ffffff 40%)
+    );
+    transform: scaleY(0.7);
+    transform-origin: center;
+    transition: transform 200ms ease, width 200ms ease;
+}
+
+.minister-card:hover::before {
+    transform: scaleY(1);
+    width: 5px;
+}
+
+/* Pas de barre latérale pour les cartes leaders */
+.minister-card.is-leader::before {
+    display: none;
+}
+
+.minister-card.is-leader:hover::before {
+    display: none;
+}
+
+/* Anciens styles en conflit supprimés - remplacés par la nouvelle structure */
+
+/* Ancien style de photo supprimé - remplacé par la nouvelle structure positionnée */
+
+/* TITRE DU MINISTRE - Nom de la personne - AGRANDI */
+.minister-card h3 {
+    font-size: 1.2rem;
+    line-height: 1.3;
+    margin: 0;
+    font-weight: 700;
+    color: var(--color-encre);
+    letter-spacing: 0.01em;
+    
+    /* Troncature pour éviter les débordements */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* === RESPONSIVE POUR LES CARTES === */
+/* === RESPONSIVE POUR LA NOUVELLE STRUCTURE mc-left/mc-right === */
+@media (max-width: 768px) {
+    .minister-card {
+        flex-direction: column;
+        gap: 1rem;
+        height: auto;
+        min-height: 380px;
+    }
+    
+    .mc-right {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .mc-right .minister-photo {
+        width: 100px;
+    }
+    
+    .mc-right .minister-cta {
+        margin-left: 1rem;
+        width: auto;
+    }
+}
+
+/* Media query pour très petit écran */
+@media (max-width: 400px) {
+    .ministers-grid {
+        gap: 0.75rem;
+        padding: 0.25rem;
+    }
+    
+    .minister-card {
+        padding: 1rem;
+    }
+    
+    .mc-right .minister-photo {
+        width: 80px;
+    }
+    
+    .mc-left h3,
+    .minister-name {
+        font-size: 1.1rem;
+    }
+}
+
+/* Nouvelle structure appliquée - anciens fragments supprimés */
+    
+    .minister-card.is-leader .minister-photo-container {
+        width: 75px;
+        height: 75px;
+    }
+    
+    .minister-card.is-leader .minister-identity {
+        padding-right: 90px; /* Réduit pour le PM aussi */
+    }
+    
+    .minister-name {
+        font-size: 1.1rem;
+        /* Sur petit écran, peut prendre plus de lignes */
+        max-height: 4.8em; /* 4 lignes possible */
+        -webkit-line-clamp: 4;
+        line-clamp: 4;
+    }
+    
+    .mc-bio {
+        font-size: 0.8rem;
+        /* Biographie plus flexible sur petit mobile */
+        -webkit-line-clamp: 4;
+        line-clamp: 4;
+        max-height: 5.6em;
+    }
+    
+    .minister-role {
+        font-size: 0.8rem;
+        /* Rôle peut prendre plus de lignes si nécessaire */
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        max-height: 3.9em;
+    }
+    
+    .ministry-title {
+        font-size: 1rem;
+        /* Titre peut s'étaler sur plusieurs lignes sur petit écran */
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        max-height: 4.2em;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    .delegates-section {
+        padding: 12px;
+        max-height: 120px;
+    }
+    
+    .delegate-card {
+        min-height: 36px;
+        padding: 5px 8px;
+        gap: 6px;
+    }
+    
+    .delegate-name {
+        font-size: 0.75rem;
+    }
+    
+    .delegate-role {
+        font-size: 0.68rem;
+    }
+    
+    .delegate-party {
+        font-size: 0.6rem;
+        padding: 2px 4px;
+    }
+
+    .minister-actions {
+        padding: 14px 20px;
+        margin: 0 -20px -20px -20px;
+    }
+
+/* Anciens styles supprimés - remplacés par la nouvelle structure organisée */
 /* Badges de parti — forcément si j'oublie le margin-top */
 .party-badge {
     display: inline-block;
@@ -1692,6 +2989,7 @@ body.print-all .toolbar {
 .party-badge[data-party="Centristes"]      { color: var(--party-centristes); background: var(--color-perle); }
 .party-badge[data-party="UDI"]             { color: var(--party-udi); background: var(--color-perle); }
 .party-badge[data-party="LR"]              { color: var(--party-lr); background: var(--color-perle); }
+.party-badge[data-party="Les Républicains"] { color: var(--party-lr); background: var(--color-perle); }
 .party-badge[data-party="DLF"]             { color: var(--party-dlf); background: var(--color-perle); }
 .party-badge[data-party="Sans étiquette"]  { color: var(--color-encre); background: #d1d5db; }
 .party-badge[data-party="RN"]              { color: var(--party-rn); background: var(--color-perle); }
@@ -1717,7 +3015,7 @@ body.print-all .toolbar {
 .minister-card[data-party="PRV"]             { --accent-color: var(--party-prv); }
 .minister-card[data-party="Centristes"]      { --accent-color: var(--party-centristes); }
 .minister-card[data-party="UDI"]             { --accent-color: var(--party-udi); }
-.minister-card[data-party="LR"]              { --accent-color: var(--party-lr); }
+.minister-card[data-party="Les Républicains"]              { --accent-color: var(--party-lr); }
 .minister-card[data-party="DLF"]             { --accent-color: var(--party-dlf); }
 .minister-card[data-party="RN"]              { --accent-color: var(--party-rn); }
 .minister-card[data-party="Reconquête"]      { --accent-color: var(--party-reconquete); }
@@ -1760,22 +3058,35 @@ body.print-all .toolbar {
     justify-self: start;
     padding: 0.6rem 1.05rem;
     border-radius: 12px;
+    margin-top: auto; /* push CTA to bottom of right column when card is tall */
 }
 
-.minister-actions {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-}
+/* Anciens styles .mc-right supprimés - remplacés par la nouvelle structure */
 
-/* Ensure the CTA button is horizontally centered under the photo on
-   wider screens. On small screens the CTA becomes full-width (handled
-   by the existing mobile media query). */
-@media (min-width: 861px) {
-    .mc-right .minister-cta {
-        display: inline-block;
-        margin: 0 auto;
-    }
+/* === TEXTES ANTI-CHEVAUCHEMENT - Évitent la photo === */
+
+/* Biographie des leaders - Force le saut de ligne et s'étale en hauteur */
+.mc-bio {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--color-sesame);
+    margin: 8px 0 0 0;
+    padding-right: 10px; /* Sécurité réduite pour plus d'espace */
+    
+    /* Force le texte à passer à la ligne */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    
+    /* Permet jusqu'à 4 lignes pour s'étaler en hauteur */
+    max-height: 5.6em; /* ~4 lignes */
+    overflow: hidden;
+    
+    /* Assure un affichage propre même avec long texte */
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
 }
 
 .minister-role {
@@ -1784,82 +3095,185 @@ body.print-all .toolbar {
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin: 0;
+    
+    /* Force le texte à passer à la ligne si nécessaire */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    
+    /* Permet jusqu'à 3 lignes pour s'étaler en hauteur */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    
+    /* Hauteur augmentée pour plus de lignes */
+    max-height: 3.9em;
+    line-height: 1.3;
 }
 
-.minister-delegates {
-    margin-top: 0.25rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid rgba(62, 62, 61, 0.1);
-    display: grid;
-    gap: 0.6rem;
+/* ZONE 3: MINISTRES DÉLÉGUÉS - Réorganisée et homogénéisée */
+.delegates-section {
+    border-top: 1px solid rgba(17, 23, 39, 0.06);
+    padding-top: 12px;
 }
 
-/* Conteneur des ministres délégués affichés directement sous leur ministre */
+.delegates-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-sesame);
+    margin: 0 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
 .delegates {
-    margin: 0;
     display: grid;
-    gap: 0.5rem;
+    gap: 8px;
     align-content: start;
-    max-height: 220px;
-    overflow: auto;
-    padding: 0.1rem;
+
+    /* HAUTEUR CONTRÔLÉE - empêche les cartes de grandir infiniment */
+    max-height: 180px;
+    overflow-y: auto;
+    padding: 6px;
+
+    /* Zone scrollable discrète */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(17, 23, 39, 0.2) transparent;
 }
 
-.delegates-footer {
-    border-top: 1px solid rgba(62, 62, 61, 0.12);
-    padding-top: 0.6rem;
+.delegates::-webkit-scrollbar {
+    width: 4px;
+}
+
+.delegates::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.delegates::-webkit-scrollbar-thumb {
+    background: rgba(17, 23, 39, 0.2);
+    border-radius: 3px;
 }
 
 .delegate-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 0.65rem;
+    gap: 12px;
     width: 100%;
-    padding: 0.55rem 0.75rem;
+    padding: 10px 12px;
     border-radius: 10px;
-    border: 1px solid rgba(62, 62, 61, 0.12);
-    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(17, 23, 39, 0.1);
+    background: rgba(255, 255, 255, 0.96);
     cursor: pointer;
     text-align: left;
-    transition: transform 180ms ease, box-shadow 180ms ease;
+    transition: all 180ms ease;
+    min-height: 48px;
+    max-height: 80px; /* Prevent vertical overflow when many delegates present */
+    overflow: hidden; /* Clip text that exceeds button boundaries */
 }
 
-.delegate-card:hover,
-.delegate-card:focus-visible {
+.delegate-card:hover {
+    background: rgba(100, 215, 205, 0.1);
+    border-color: var(--color-curacao);
     transform: translateY(-1px);
-    box-shadow: 0 12px 24px rgba(39, 8, 59, 0.08);
-}
-
-.delegate-card:focus-visible {
-    outline: 2px solid var(--color-prune);
-    outline-offset: 2px;
 }
 
 .delegate-info {
-    display: grid;
-    gap: 0.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    max-width: 100%; /* Prevent expanding beyond delegate-card */
+    flex: 1;
+    overflow: hidden; /* Clip text that exceeds container */
 }
 
 .delegate-name {
     margin: 0;
     font-size: 0.95rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--color-encre);
+
+    /* Prefer a two-line clamp rather than forcing a single-line nowrap which can overflow */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+    overflow: hidden;
+    word-break: break-word;
 }
 
 .delegate-role {
     margin: 0;
     font-size: 0.85rem;
     color: var(--color-sesame);
+
+    /* Allow role to occupy up to two lines and break long words to avoid overflow */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+    overflow: hidden;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 .delegate-card .party-badge {
-    margin-top: 0;
+    font-size: 0.8rem;
+    padding: 0.15rem 0.5rem;
+    margin: 0;
+}
+
+/* Head cards (Président / Premier ministre): pas de limite de hauteur et grille en 2 colonnes */
+.minister-card.is-leader .delegates {
+    max-height: none;
+    overflow: visible;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+.minister-card.is-leader .delegate-name { font-size: 1rem; }
+.minister-card.is-leader .delegate-role { font-size: 0.9rem; }
+@media (max-width: 1024px) {
+    .minister-card.is-leader .delegates { grid-template-columns: 1fr; }
+}
+
+/* ZONE 4: ACTIONS - En bas de carte */
+.minister-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px solid rgba(17, 23, 39, 0.06);
+    margin-top: auto;
+}
+
+.minister-cta {
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.95);
+    color: rgba(17, 23, 39, 0.9);
+    border: 1px solid rgba(17, 23, 39, 0.12);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 180ms ease;
+    text-transform: none;
+    letter-spacing: 0.01em;
+}
+
+.minister-cta:hover {
+    background: rgba(17, 23, 39, 1);
+    color: white;
+    border-color: rgba(17, 23, 39, 1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(17, 23, 39, 0.3);
 }
 
 /* Keep party badge visual mapping defined above; only adjust spacing here * effectivement si je modifie pas le pading rien n'est aligné/
-.minister-meta .party-badge {
+.mc-meta .party-badge {
     display: inline-flex;
     align-items: center;
     margin-top: 0rem;
@@ -1893,20 +3307,14 @@ body.print-all .toolbar {
         --card-row-height: clamp(260px, 64vw, 360px);
     }
 
-    .minister-content {
+    .minister-card {
         grid-template-columns: 1fr;
         gap: 0.9rem;
     }
 
-    .mc-right {
-        flex-direction: row;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 0.75rem;
-        width: 100%;
-    }
+    /* Ancien style .mc-right supprimé - utilise la nouvelle structure */
 
-    .minister-content .minister-photo {
+    .minister-card .minister-photo {
         max-width: 108px;
     }
 
@@ -1931,11 +3339,11 @@ body.print-all .toolbar {
         gap: 0.25rem;
     }
 
-    .minister-meta {
+    .mc-meta {
         gap: 0.3rem 0.45rem;
     }
 
-    .minister-content .minister-photo {
+    .minister-card .minister-photo {
         max-width: 96px;
     }
 }
@@ -2047,7 +3455,6 @@ body.print-all .toolbar {
 .modal-body .modal-collaborators-toggle:hover,
 .modal-body .modal-collaborators-toggle:focus {
     background: #f8fafc;
-    border-color: rgba(17, 23, 39, 0.24);
     box-shadow: none;
 }
 
@@ -2143,8 +3550,8 @@ body.print-all .toolbar {
 }
 
 .cabinet-person img {
-    width: 64px;
-    height: 64px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
     overflow: hidden;
     box-shadow: 0 16px 32px rgba(15, 23, 42, 0.22);
@@ -2160,7 +3567,6 @@ body.print-all .toolbar {
     padding: clamp(1.2rem, 2.2vw, 2rem) clamp(1.25rem, 3vw, 2rem);
     border-radius: 10px;
     background: #ffffff;
-    border: 1px solid rgba(17, 23, 39, 0.12);
     box-shadow: none;
     width: min(100%, 1100px);
     margin-inline: auto;
@@ -2271,7 +3677,6 @@ body.print-all .toolbar {
     gap: clamp(1rem, 2.4vw, 1.8rem) clamp(1rem, 2.4vw, 1.8rem);
     width: 100%;
     padding: clamp(0.8rem, 2vw, 1.4rem) clamp(0.8rem, 2.4vw, 1.6rem);
-    border-radius: 14px;
     background: rgba(255, 255, 255, 0.94);
     border: 1px solid rgba(17, 23, 39, 0.08);
     box-shadow: 0 20px 42px rgba(17, 23, 39, 0.06);
@@ -2329,12 +3734,41 @@ body.print-all .toolbar {
     box-shadow: 0 10px 22px rgba(17, 23, 39, 0.18);
     background: rgba(255, 255, 255, 0.65);
     margin: 0 auto 0.35rem;
+    /* fallback logo when no photo provided - project assets/ folder */
+    background-image: url("assets/LogoRP_Tete_logo_RP_bleu.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 60%;
 }
 
 .cabinet-node-avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+/* Hide the <img> when JS marks the avatar container as .no-img so the background logo shows */
+.cabinet-node-avatar.no-img img { display: none; }
+
+/* Generic fallback element used by the global JS fallback: fills the parent's area */
+.avatar-fallback {
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 60%;
+}
+
+/* Ensure fallback element matches the avatar container exactly */
+.cabinet-node-avatar .avatar-fallback {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 60%;
+    background-color: transparent;
 }
 
 .cabinet-node-info {
@@ -2387,17 +3821,7 @@ body.print-all .toolbar {
     word-break: break-word;
 }
 
-.cabinet-node-email {
-    font-size: 0.8rem;
-    color: var(--cabinet-node-link);
-    text-decoration: none;
-    display: inline-block;
-    margin: 0 auto;
-    max-width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+
 
 @media (max-width: 520px) {
     .cabinet-tree-level { grid-template-columns: repeat(auto-fit, minmax(180px, 180px)); }
@@ -2630,12 +4054,23 @@ body.print-all .toolbar {
 }
 
 .executive-pole__title {
-    margin: 0 0 0 1.35rem; /* offset to account for accent stripe */
-    font-size: 1.2rem;
+    background: none;
+    color: var(--color-sesame);
+    padding: 4px 0;
+    margin: 0 0 12px 12px;
+    border: none;
+    border-left: 2px solid var(--color-guimauve);
+    padding-left: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: left;
     letter-spacing: 0.025em;
-    font-family: 'HavelockInlineXO', 'Space Grotesk', system-ui, sans-serif;
-    color: var(--executive-accent-color);
     text-transform: uppercase;
+    font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+    transition: none;
+    box-shadow: none;
+    border-radius: 0;
+    transform: none;
 }
 
 .executive-pole__layout {
@@ -2964,6 +4399,12 @@ body.print-all .toolbar {
     color: var(--color-perle);
 }
 
+/* Improve footer logo contrast on dark background */
+.site-footer .footer-logo-img {
+    opacity: 0.95;
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,0.25));
+}
+
 .footer-inner {
     display: flex;
     flex-wrap: wrap;
@@ -2986,7 +4427,7 @@ body.print-all .toolbar {
 
 .footer-logo img {
     display: block;
-    max-width: min(120px, 50vw);
+    width: clamp(120px, 16vw, 220px);
     height: auto;
 }
 
@@ -3007,7 +4448,7 @@ body.print-all .toolbar {
 .modal {
     position: fixed;
     inset: 0;
-    z-index: 100;
+    z-index: 999999;
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -3107,6 +4548,7 @@ body.print-all .toolbar {
     border-radius: 50%;
     font-size: 1.5rem;
     cursor: pointer;
+    z-index: 10;
     transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
@@ -3385,7 +4827,7 @@ body.print-all .toolbar {
 
 .biography-entry__details li { list-style: none; }
 
-/* mission module removed */
+
 
 .modal-meta {
     display: grid;
@@ -3651,14 +5093,34 @@ body.print-all .toolbar {
 
 /* Ensure the anchor wrapping the logo doesn't stretch and remains centered */
 .brand-logo {
-    display: inline-block;
-    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center; /* keep brand centered horizontally */
+    gap: 0.5rem;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    text-align: center; /* ensure stacked text centers */
+    gap: 0.5rem !important;
 }
 
-/* Compact header + hide decorative backdrops (requested) */
-.site-header {
-    padding: 0.75rem 0.75rem !important;
-    gap: 0.5rem !important;
+/* Ensure the brand text is exactly centered in the header (override other rules if needed) */
+.site-header .brand-logo {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.site-header .brand-text {
+    display: inline-block !important;
+    text-align: center !important;
+    margin: 0 auto !important;
+}
+
+.brand-line {
+    display: block;
+    text-align: center;
 }
 
 /* Hide large background logo layers */
@@ -3795,7 +5257,7 @@ body.print-all .toolbar {
         color: var(--color-encre);
     }
 
-    body.print-all .minister-meta {
+    body.print-all .mc-meta {
         gap: 0.28cm;
     }
 
@@ -4092,3 +5554,917 @@ body.print-single #print-sheet {
     transform-origin: top left;   /* point d’ancrage en haut à gauche */
     width: 125%;                  /* compense le shrink pour éviter les bandes vides */
 }
+
+
+/* =====================================
+   STYLES POUR PÔLES ET COLLABORATEURS - PREMIER MINISTRE UNIQUEMENT
+   ===================================== */
+
+/* Cabinet wrapper for PM structure */
+.pm-cabinet-wrapper {
+  font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--color-encre);
+}
+
+.pm-cabinet-section {
+  margin-bottom: 28px;
+}
+
+.pm-cabinet-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+  position: relative;
+  padding-left: 14px;
+}
+
+.pm-cabinet-section-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--accent-primary);
+  opacity: 0.6;
+}
+
+/* TOP CABINET */
+.pm-cabinet-top-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.pm-cabinet-card {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-base);
+  border: 1px solid var(--color-sesame);
+  background: var(--color-perle);
+  box-shadow: var(--shadow-soft);
+  transition: 0.2s ease;
+}
+
+.pm-cabinet-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+}
+
+.pm-cabinet-card-avatar {
+  flex: 0 0 46px;
+}
+
+.pm-cabinet-card-avatar img {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid var(--color-sesame);
+}
+
+.pm-cabinet-card-main {
+  flex: 1;
+}
+
+.pm-cabinet-card-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.pm-cabinet-card-role {
+  font-size: 0.8rem;
+  color: var(--cabinet-text-muted);
+}
+
+/* POLES */
+.pm-poles-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.pm-pole-box {
+  border: 1px solid var(--color-sesame);
+  border-radius: var(--radius-base);
+  padding: 14px;
+  background: var(--color-perle);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: 0.2s ease;
+}
+
+.pm-pole-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+}
+
+.pm-pole-header {
+  padding-bottom: 6px;
+  border-bottom: 1px solid #ececf0;
+  margin-bottom: 6px;
+  background: var(--color-guimauve);
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pm-pole-leader-avatar img {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid var(--color-sesame);
+}
+
+.pm-pole-leader-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.pm-pole-leader-job {
+  font-size: 0.8rem;
+  color: var(--cabinet-text-muted);
+}
+
+.pm-pole-members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--color-sesame);
+}
+
+.pm-pole-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  border: 1px solid #ececf0;
+  justify-content: flex-start;
+  transition: 0.15s ease;
+}
+
+.pm-pole-member:hover {
+  background: #fafbff;
+}
+
+.pm-pole-member-avatar img {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid #ececf0;
+}
+
+.pm-pole-member-main {
+  max-width: 80%;
+}
+
+.pm-pole-member-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.pm-pole-member-job {
+  font-size: 0.75rem;
+  color: var(--cabinet-text-muted);
+}
+
+.pm-cabinet-empty {
+  font-size: 0.9rem;
+  color: var(--cabinet-text-muted);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .pm-cabinet-card { padding: 10px; }
+  .pm-pole-box { padding: 12px; }
+  .pm-poles-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* AMÉLIORATIONS POUR L'AFFICHAGE EN GRILLE DES COLLABORATEURS */
+
+/* Cabinet principal - grille améliorée */
+.pm-cabinet-top-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.pm-cabinet-card {
+  min-height: 90px;
+  align-items: center;
+  background: linear-gradient(135deg, var(--color-perle) 0%, #ffffff 100%);
+  border: 1px solid rgba(134, 136, 149, 0.2);
+  box-shadow: 0 4px 12px rgba(39, 8, 59, 0.08);
+}
+
+.pm-cabinet-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(39, 8, 59, 0.15);
+  border-color: var(--accent-primary);
+}
+
+.pm-cabinet-card-avatar img {
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--accent-primary);
+  opacity: 0.9;
+}
+
+.pm-cabinet-card:hover .pm-cabinet-card-avatar img {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.pm-cabinet-card-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-encre);
+}
+
+.pm-cabinet-card-role {
+  font-size: 0.9rem;
+  color: var(--color-poivre);
+  font-weight: 400;
+}
+
+/* Pôles - grille plus spacieuse */
+.pm-poles-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.pm-pole-box {
+  background: linear-gradient(135deg, #ffffff 0%, var(--color-perle) 100%);
+  border: 1px solid rgba(134, 136, 149, 0.15);
+  box-shadow: 0 6px 20px rgba(39, 8, 59, 0.08);
+}
+
+.pm-pole-box:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(39, 8, 59, 0.12);
+}
+
+/* Membres en grille pour les grands pôles */
+.pm-pole-members-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.pm-pole-member {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(134, 136, 149, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.2s ease;
+}
+
+.pm-pole-member:hover {
+  background: rgba(105, 135, 255, 0.05);
+  border-color: var(--accent-secondary);
+  transform: translateY(-1px);
+}
+
+.pm-pole-member-avatar img {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--accent-secondary);
+}
+
+.pm-pole-member-name {
+  font-weight: 600;
+  color: var(--color-encre);
+}
+
+.pm-pole-member-job {
+  color: var(--color-poivre);
+  font-size: 0.8rem;
+}
+
+/* Responsivité améliorée */
+@media (max-width: 768px) {
+  .pm-cabinet-top-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+  }
+  
+  .pm-poles-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .pm-pole-members-list {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pm-cabinet-top-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* Styles optimisés pour les pôles et collaborateurs du PM */
+
+/* PÔLES - Version optimisée pour multiple pôles sur une ligne */
+.pm-poles-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.pm-pole-box {
+  border: 1px solid var(--color-sesame);
+  border-radius: var(--radius-base);
+  padding: 16px;
+  background: var(--color-perle);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: 0.2s ease;
+  height: fit-content;
+  min-height: 200px;
+}
+
+.pm-pole-box:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(39, 8, 59, 0.12);
+}
+
+/* Membres en grille pour afficher plusieurs collaborateurs sur la même ligne */
+.pm-pole-members-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--color-sesame);
+}
+
+.pm-pole-member {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(134, 136, 149, 0.15);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(2px);
+  min-height: 65px;
+}
+
+.pm-pole-member:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(100, 215, 205, 0.25);
+}
+
+.pm-pole-member-avatar img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(100, 215, 205, 0.2);
+  flex-shrink: 0;
+}
+
+.pm-pole-member-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.pm-pole-member-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-encre);
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+
+.pm-pole-member-job {
+  font-size: 0.8rem;
+  color: var(--color-sesame);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Cabinet principal - optimisé pour afficher plusieurs membres sur une ligne */
+.pm-cabinet-top-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.pm-cabinet-card {
+  min-height: 90px;
+  align-items: center;
+  background: linear-gradient(135deg, var(--color-perle) 0%, #ffffff 100%);
+  border: 1px solid rgba(134, 136, 149, 0.2);
+  border-radius: var(--radius-base);
+  padding: 14px;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-soft);
+}
+
+.pm-cabinet-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(39, 8, 59, 0.15);
+}
+
+/* Responsive pour petit écran */
+@media (max-width: 768px) {
+  .pm-poles-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .pm-pole-members-list {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .pm-cabinet-top-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .pm-cabinet-top-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .pm-pole-member {
+    min-height: 60px;
+    padding: 8px 10px;
+  }
+}
+/* =====================================
+   STYLES OPTIMISÉS POUR AFFICHAGE HORIZONTAL DES COLLABORATEURS PM
+   ===================================== */
+
+/* CONTENEURS PARENTS - La clé pour l'affichage horizontal */
+.pm-cabinet-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.pm-cabinet-section {
+    margin-bottom: 24px;
+}
+
+/* Cabinet principal - FLEX pour afficher les cartes sur une même ligne */
+.pm-cabinet-top-grid {
+    display: flex !important;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.pm-cabinet-card {
+    flex: 1;
+    min-width: 280px;
+    max-width: calc(33.333% - 11px); /* 3 cartes par ligne sur grand écran */
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    border-radius: var(--radius-base);
+    border: 1px solid var(--color-sesame);
+    background: linear-gradient(135deg, var(--color-perle) 0%, #ffffff 100%);
+    box-shadow: var(--shadow-soft);
+    transition: all 0.2s ease;
+    min-height: 80px;
+    align-items: center;
+}
+
+.pm-cabinet-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(39, 8, 59, 0.15);
+}
+
+/* Pôles - FLEX pour afficher les pôles sur une même ligne */
+.pm-poles-container {
+    display: flex !important;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: flex-start;
+}
+
+.pm-pole-box {
+    flex: 1;
+    min-width: 320px;
+    max-width: calc(50% - 9px); /* 2 pôles par ligne sur grand écran */
+    border: 1px solid var(--color-sesame);
+    border-radius: var(--radius-base);
+    padding: 16px;
+    background: var(--color-perle);
+    box-shadow: var(--shadow-soft);
+    transition: 0.2s ease;
+    height: fit-content;
+}
+
+.pm-pole-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(39, 8, 59, 0.12);
+}
+
+/* Membres des pôles - GRILLE pour collaborateurs dans chaque pôle */
+.pm-pole-members-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--color-sesame);
+}
+
+.pm-pole-member {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(134, 136, 149, 0.15);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s ease;
+    min-height: 60px;
+}
+
+.pm-pole-member:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(100, 215, 205, 0.25);
+}
+
+.pm-pole-member-avatar img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(100, 215, 205, 0.2);
+    flex-shrink: 0;
+}
+
+.pm-pole-member-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.pm-pole-member-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-encre);
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+
+.pm-pole-member-job {
+    font-size: 0.75rem;
+    color: var(--color-sesame);
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* Headers et titres */
+.pm-cabinet-section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 14px;
+    position: relative;
+    padding-left: 14px;
+    color: var(--color-encre);
+}
+
+.pm-cabinet-section-title::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 16px;
+    border-radius: 4px;
+    background: var(--accent-primary);
+    opacity: 0.6;
+}
+
+.pm-pole-header {
+    padding: 12px;
+    border-radius: 6px;
+    background: var(--color-guimauve);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pm-pole-leader-avatar img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--color-sesame);
+}
+
+.pm-pole-leader-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-encre);
+}
+
+.pm-pole-leader-job {
+    font-size: 0.8rem;
+    color: var(--cabinet-text-muted);
+}
+
+/* Le nom du pôle*/
+.pm-cabinet-empty {
+    font-size: 0.9rem;
+    color: var(--cabinet-text-muted);
+    text-align: center;
+    padding: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .pm-cabinet-card {
+        max-width: calc(50% - 8px); /* 2 cartes par ligne sur téléphone */
+    }
+}
+
+@media (max-width: 768px) {
+    .pm-cabinet-top-grid,
+    .pm-poles-container {
+        flex-direction: column;
+    }
+    
+    .pm-cabinet-card,
+    .pm-pole-box {
+        max-width: 100%;
+        min-width: 100%;
+    }
+    
+    .pm-pole-members-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .pm-cabinet-card {
+        min-height: 70px;
+        padding: 12px;
+    }
+    
+    .pm-pole-member {
+        min-height: 55px;
+        padding: 8px;
+    }
+    
+    .pm-pole-member-avatar img {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+/* =====================================
+   HARMONISATION DES PÔLES - LARGEUR FIXE POUR ALIGNEMENT PROPRE
+   ===================================== */
+
+/* Override pour largeur fixe des pôles */
+.pm-pole-box {
+    width: 350px !important; /* Largeur fixe pour alignement propre */
+    max-width: 350px !important;
+    min-width: 350px !important;
+    height: auto; /* Hauteur automatique selon le contenu */
+    flex: 0 0 350px; /* Flex basis fixe */
+}
+
+/* Ajustement du conteneur pour bien centrer */
+.pm-poles-container {
+    display: flex !important;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 18px;
+    justify-content: flex-start; /* Alignement à gauche */
+    align-items: flex-start; /* Alignement en haut */
+}
+
+/* Cabinet cards - largeur fixe aussi pour cohérence */
+.pm-cabinet-card {
+    width: 280px !important;
+    max-width: 280px !important;
+    min-width: 280px !important;
+    flex: 0 0 280px; /* Flex basis fixe */
+}
+
+/* Conteneur cabinet ajusté */
+.pm-cabinet-top-grid {
+    display: flex !important;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+/* Responsive - sur petits écrans, revenir à 100% */
+@media (max-width: 768px) {
+    .pm-pole-box {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+        flex: 1 1 100%;
+    }
+    
+    .pm-cabinet-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+        flex: 1 1 100%;
+    }
+    
+    .pm-poles-container,
+    .pm-cabinet-top-grid {
+        flex-direction: column;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .pm-pole-box,
+    .pm-cabinet-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+    }
+}
+
+/* Amélioration visuelle - bordures et espacement uniforme */
+.pm-pole-box {
+    border: 1px solid rgba(134, 136, 149, 0.2);
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffffff 0%, var(--color-perle) 100%);
+    box-shadow: 0 4px 16px rgba(39, 8, 59, 0.08);
+    transition: all 0.2s ease;
+}
+
+.pm-pole-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(39, 8, 59, 0.12);
+    border-color: var(--accent-primary);
+}
+
+/* Header de pôle - hauteur fixe pour uniformité */
+.pm-pole-header {
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 14px;
+    background: rgba(100, 215, 205, 0.05);
+    border-radius: 8px;
+    border-bottom: 2px solid var(--accent-primary);
+    margin-bottom: 16px;
+}
+
+.pm-pole-leader-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-encre);
+    line-height: 1.2;
+}
+
+.pm-pole-leader-job {
+    font-size: 0.85rem;
+    color: var(--color-poivre);
+    margin-top: 2px;
+}
+
+
+/* =====================================
+   SOLUTION 2 - HAUTEUR AUTOMATIQUE UNIFORME POUR LES PÔLES
+   ===================================== */
+
+/* Conteneur principal en CSS GRID pour hauteur uniforme */
+.pm-poles-container {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    align-items: stretch; /* CLÉ : toutes les boxes prennent la hauteur de la plus grande */
+}
+
+.pm-pole-box {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-sesame);
+    border-radius: var(--radius-base);
+    padding: 16px;
+    background: var(--color-perle);
+    box-shadow: var(--shadow-soft);
+    transition: 0.2s ease;
+    /* Suppression de height: fit-content pour laisser stretch faire son effet */
+}
+
+.pm-pole-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(39, 8, 59, 0.12);
+}
+
+/* Assurer que le contenu se répartit bien dans la hauteur disponible */
+.pm-pole-header {
+    flex-shrink: 0; /* Header garde sa taille */
+    padding: 12px;
+    border-radius: 6px;
+    background: var(--color-guimauve);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pm-pole-members-list {
+    flex: 1; /* Prend tout l'espace restant */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--color-sesame);
+    align-content: start; /* Contenu aligné en haut */
+}
+
+/* Si pas de membres, centrer le message vide */
+.pm-cabinet-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--cabinet-text-muted);
+    text-align: center;
+    font-style: italic;
+    min-height: 80px;
+}
+
+/* Responsive pour maintenir l'effet sur toutes les tailles */
+@media (max-width: 1200px) {
+    .pm-poles-container {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 18px;
+    }
+}
+
+@media (max-width: 768px) {
+    .pm-poles-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pm-poles-container {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    
+    .pm-pole-box {
+        padding: 14px;
+    }
+}
+
+/* Simplified: using the single, sober `.pm-pole-title` defined earlier
+   (keeps titles minimal and consistent). Removed variant/duplicated
+   styles to avoid confusion. */

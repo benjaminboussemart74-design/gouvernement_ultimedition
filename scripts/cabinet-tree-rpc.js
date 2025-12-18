@@ -19,6 +19,40 @@
     return null;
   }
 
+  async function callRpc(client, name, params) {
+    // Prefer native Supabase rpc if available
+    if (client && typeof client.rpc === 'function') {
+      return client.rpc(name, params);
+    }
+
+    // Fallback for the lightweight client (no rpc method)
+    try {
+      const baseUrl = client && client.baseUrl ? String(client.baseUrl).replace(/\/$/, '') : (global.SUPABASE_URL || '').replace(/\/$/, '');
+      const anonKey = client && client.anonKey ? client.anonKey : (global.SUPABASE_ANON_KEY || '');
+      if (!baseUrl || !anonKey || typeof fetch !== 'function') {
+        return { data: null, error: { message: 'RPC unsupported: missing baseUrl, anonKey or fetch' } };
+      }
+      const url = `${baseUrl}/rest/v1/rpc/${encodeURIComponent(name)}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          apikey: anonKey,
+          Authorization: `Bearer ${anonKey}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params || {}),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        return { data: null, error: json || { message: res.statusText || 'RPC request failed' } };
+      }
+      return { data: json ?? null, error: null };
+    } catch (err) {
+      return { data: null, error: { message: err && err.message ? err.message : 'RPC error' } };
+    }
+  }
+
   const toSafeOrder = (value) => (typeof value === 'number' ? value : Number.POSITIVE_INFINITY);
 
   function normalisePoles(rows) {
@@ -60,7 +94,7 @@
       return [];
     }
 
-    const { data, error } = await client.rpc(RPC_NAME, { minister_id: ministerId });
+    const { data, error } = await callRpc(client, RPC_NAME, { minister_id: ministerId });
     if (error) {
       console.error('[cabinet-tree] Erreur Supabase RPC', error);
       renderCabinetTree([], {
@@ -97,9 +131,10 @@
       return;
     }
 
-    poles.forEach((pole) => {
+    poles.forEach((pole, idx) => {
       const section = document.createElement('section');
       section.className = 'cabinet-tree-level';
+      section.dataset.depth = '0';
 
       const leaderCard = createNode({
         grade: 'chefpole',

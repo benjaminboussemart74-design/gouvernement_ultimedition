@@ -1,5 +1,6 @@
 const ROLE_LABELS = {
     leader: "Premier ministre",
+    president: "Président de la République",
     "minister-state": "Ministre d'État",
     minister: "Ministre",
     "minister-delegate": "Ministre délégué",
@@ -46,6 +47,7 @@ const MINISTRY_ORDER_MAP = new Map(
 // Priorité d'importance par rôle
 // j'ai supprimé l'affichage par grandeur selon le rôle car c'était turbo moche
 const ROLE_PRIORITY = {
+    president: -1,
     leader: 0,
     "minister-state": 1, 
     minister: 2,
@@ -57,6 +59,7 @@ const ROLE_PRIORITY = {
 
 const MINISTER_ROLES = new Set([
     "leader",
+    "president",
     "minister-state",
     "minister",
     "minister-delegate",
@@ -66,7 +69,8 @@ const MINISTER_ROLES = new Set([
 
 // ca c'est codex qui a fait je comprends pas tout mais ça fonctionne et c'est l'important il faut que je regarde plus en profondeur comment ça foncitonne
 const DELEGATE_ROLES = new Set(["minister-delegate", "ministre-delegue", "secretary"]);
-const CORE_ROLES = new Set(["leader", "minister", "minister-state"]);
+const CORE_ROLES = new Set(["leader", "president", "minister", "minister-state"]);
+const HEAD_ROLES = new Set(["leader", "president"]);
 const FALLBACK_DATA_URL = "data/ministers.json";
 const SUPABASE_BIOGRAPHY_VIEW = (typeof globalThis !== 'undefined' && globalThis.SUPABASE_BIOGRAPHY_VIEW)
     ? globalThis.SUPABASE_BIOGRAPHY_VIEW
@@ -119,7 +123,9 @@ function escapeHTML(value) {
 }
 
 // Mapping des valeurs `party` (valeurs possibles depuis Supabase) vers
-// les étiquettes utilisées par les sélecteurs CSS `[data-party="$LABEL"]`.
+// les étiquettes utilisées par les sélecteurs CSS `[data-party="$LABEL"]
+// Si un jour on utilise le site sans moi ça permettra de d'éviter que les gens ce demande pourquoi ça affiche des données pas top
+// J'ai postulé l'idée qu'il pouvait avoir un ministre LO c'est dire si je suis optimiste pour l'avenir.
 const PARTY_MAP = new Map([
     ["renaissance", "Renaissance"],
     ["horizons", "Horizons"],
@@ -127,9 +133,9 @@ const PARTY_MAP = new Map([
     ["prv", "PRV"],
     ["centristes", "Centristes"],
     ["udi", "UDI"],
-    ["lr", "LR"],
-    ["les republicains", "LR"],
-    ["republicains", "LR"],
+    ["lr", "Les Républicains"],
+    ["les republicains", "Les Républicains"],
+    ["republicains", "Les Républicains"],
     ["dlf", "DLF"],
     ["rn", "RN"],
     ["rassemblement national", "RN"],
@@ -169,8 +175,9 @@ const PARTY_COLORS = {
     "Centristes": "#8A2BE2",
     "UDI": "#0A4D8C",
     "LR": "#0055A4",
+    "Les Républicains": "#0055A4",
     "RN": "#2E3348",
-    "Reconquête": "#E10600",
+    "Reconquête": "#160201ff",
     "Patriotes": "#7A0019",
     "PS": "#E61F5A",
     "Génération.s": "#6CC02B",
@@ -190,7 +197,7 @@ const mapPartyLabel = (raw) => {
 
 
 const createPartyBadge = (partyName) => {
-    // If no party provided, create an explicit "Sans étiquette" badge
+    // Dans le guide que je vais réaliser il faut que dise que si un ministre est sans étiquette il ne faut pas l'indiquer cela se fait automatiquement 
     if (!partyName) {
         const empty = document.createElement("span");
         empty.className = "party-badge no-party";
@@ -544,6 +551,118 @@ function normalise(value) {
     );
 }
 
+// Global image fallback: if an <img> fails to load (or is broken), hide it and
+// show a fallback SVG logo in its place. This covers static <img> tags that
+// may already be in the DOM (templates) and dynamically created ones.
+const GLOBAL_FALLBACK_SVG = "assets/LogoRP_Tete_logo_RP_bleu.svg";
+
+const applyFallbackToImg = (img) => {
+    if (!img || img.dataset.__fallbackHandled) return;
+    // Do not apply the global fallback to leader/president avatars or hero avatars
+    const isProtected = (el) => {
+        if (!el) return false;
+        // cards for leaders get class `is-leader`; hero areas use `.cabinet-tree-hero`
+        return Boolean(el.closest && (el.closest('.is-leader') || el.closest('.cabinet-tree-hero')));
+    };
+    if (isProtected(img)) return;
+    img.dataset.__fallbackHandled = "1";
+    // If image loaded successfully, nothing to do
+    if (img.complete && img.naturalWidth > 0) return;
+
+    // Mark parent (if any) so existing CSS rules like .no-img can take effect
+    const parent = img.parentElement;
+    if (parent) parent.classList.add('no-img');
+
+    // Hide the broken image so it doesn't show alt text over the fallback
+    img.style.display = 'none';
+
+    // Insert a fallback element only if one isn't already present
+    if (!parent) return;
+    if (!parent.querySelector('.avatar-fallback')) {
+        const fallback = document.createElement('div');
+        fallback.className = 'avatar-fallback';
+        fallback.setAttribute('aria-hidden', 'true');
+        fallback.style.backgroundImage = `url(${GLOBAL_FALLBACK_SVG})`;
+        parent.appendChild(fallback);
+    }
+};
+
+const initGlobalImageFallbacks = () => {
+    // Attach listeners to existing images
+    document.querySelectorAll('img').forEach((img) => {
+        // If already handled by inline onerror logic, still ensure fallback
+        const check = () => {
+            if (img.complete && img.naturalWidth === 0) {
+                applyFallbackToImg(img);
+            }
+        };
+        img.addEventListener('error', () => applyFallbackToImg(img), { once: true });
+        img.addEventListener('load', () => {
+            // remove any previous fallback state if it was applied earlier
+            const parent = img.parentElement;
+            if (parent) {
+                parent.classList.remove('no-img');
+                const fb = parent.querySelector('.avatar-fallback');
+                if (fb) fb.remove();
+            }
+            img.style.display = '';
+        }, { once: true });
+        // If already complete but broken, apply fallback
+        if (img.complete) setTimeout(check, 0);
+    });
+
+    // Observe future images added to the DOM
+    const mo = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+            for (const node of Array.from(m.addedNodes || [])) {
+                if (node.nodeType !== 1) continue;
+                if (node.tagName === 'IMG') {
+                    const img = node;
+                    img.addEventListener('error', () => applyFallbackToImg(img), { once: true });
+                    img.addEventListener('load', () => {
+                        const parent = img.parentElement;
+                        if (parent) {
+                            parent.classList.remove('no-img');
+                            const fb = parent.querySelector('.avatar-fallback');
+                            if (fb) fb.remove();
+                        }
+                        img.style.display = '';
+                    }, { once: true });
+                    if (img.complete && img.naturalWidth === 0) applyFallbackToImg(img);
+                } else {
+                    // if node contains imgs
+                    const imgs = node.querySelectorAll && node.querySelectorAll('img');
+                    if (imgs && imgs.length) {
+                        imgs.forEach((img) => {
+                            img.addEventListener('error', () => applyFallbackToImg(img), { once: true });
+                            img.addEventListener('load', () => {
+                                const parent = img.parentElement;
+                                if (parent) {
+                                    parent.classList.remove('no-img');
+                                    const fb = parent.querySelector('.avatar-fallback');
+                                    if (fb) fb.remove();
+                                }
+                                img.style.display = '';
+                            }, { once: true });
+                            if (img.complete && img.naturalWidth === 0) applyFallbackToImg(img);
+                        });
+                    }
+                }
+            }
+        }
+    });
+    mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+};
+
+// Initialize fallbacks after DOM is ready
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        setTimeout(initGlobalImageFallbacks, 0);
+    } else {
+        document.addEventListener('DOMContentLoaded', initGlobalImageFallbacks);
+    }
+}
+
 
 const BIOGRAPHY_CATEGORY_ORDER = [
     // Ordre logique d'une biographie; titres affichés tels quels
@@ -563,10 +682,8 @@ const BIOGRAPHY_CATEGORY_ORDER_MAP = new Map(
     BIOGRAPHY_CATEGORY_ORDER.map((label, idx) => [normalise(label), idx])
 );
 
-// Formatters for biography periods
+// Formatters for biography periods (year-only display per requirement)
 const biographyYearFormatter = new Intl.DateTimeFormat('fr-FR', { year: 'numeric' });
-const biographyMonthYearFormatter = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' });
-const biographyFullDateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 const capitalizeFirst = (s) => {
     if (!s) return s;
     return s.charAt(0).toUpperCase() + s.slice(1);
@@ -731,28 +848,14 @@ const normalizeBiographyEntries = (rows) => {
 const formatBiographyPeriod = (entry) => {
     if (!entry) return '';
     const isValidDate = (d) => d instanceof Date && !Number.isNaN(d.getTime());
-    const fmtMonthYear = (d) => capitalizeFirst(biographyMonthYearFormatter.format(d));
     const fmtYear = (d) => biographyYearFormatter.format(d);
-    const isYearOnly = (d, text) => {
+    const formatOne = (d, text) => {
         const t = (text || '').trim();
-        if (/^\d{4}$/.test(t)) return true;
-        if (isValidDate(d) && d.getMonth() === 0 && d.getDate() === 1) return true;
-        return false;
-    };
-    const formatOne = (d, text, { forceYear = false } = {}) => {
-        const t = (text || '').trim();
-        if (forceYear) {
-            if (isValidDate(d)) return fmtYear(d);
-            const ym = t.match(/\b(19|20)\d{2}\b/);
-            if (ym) return ym[0];
-            if (/^\d{4}$/.test(t)) return t;
-            return t ? capitalizeFirst(t) : '';
-        }
-        if (t) return capitalizeFirst(t);
-        if (!isValidDate(d)) return '';
-        // Heuristic: if day=1 and month=January, likely year-only → show year only
-        if (d.getMonth() === 0 && d.getDate() === 1) return fmtYear(d);
-        return fmtMonthYear(d);
+        if (isValidDate(d)) return fmtYear(d);
+        const ym = t.match(/\b(19|20)\d{2}\b/);
+        if (ym) return ym[0];
+        if (/^\d{4}$/.test(t)) return t;
+        return t ? capitalizeFirst(t) : '';
     };
 
     // Événements ponctuels: afficher l'année + libellé si possible
@@ -761,9 +864,8 @@ const formatBiographyPeriod = (entry) => {
         return eventStr;
     }
 
-    const startYearOnly = isYearOnly(entry.startDate, entry.startText);
-    const startStr = formatOne(entry.startDate, entry.startText, { forceYear: false });
-    const endStr = formatOne(entry.endDate, entry.endText, { forceYear: startYearOnly });
+    const startStr = formatOne(entry.startDate, entry.startText);
+    const endStr = formatOne(entry.endDate, entry.endText);
 
     if (startStr && endStr) return startStr === endStr ? startStr : `${startStr} – ${endStr}`;
     if (entry.isCurrent && startStr) return `Depuis ${startStr}`;
@@ -968,45 +1070,48 @@ const createCardContainer = (minister) => {
     if (minister.id != null) card.dataset.personId = String(minister.id);
 
     const roleKey = minister.role || "";
-    if (roleKey === "leader") {
+    const isHead = HEAD_ROLES.has(roleKey);
+    if (isHead) {
         card.classList.add("is-leader");
-        card.setAttribute("aria-label", "Premier ministre");
+        const aria = roleKey === 'president' ? 'Président de la République' : 'Premier ministre';
+        card.setAttribute("aria-label", aria);
     }
 
-    if (minister.accentColor) {
-        // prefer party color when available, fallback to ministry accentColor
-        const partyLabel = mapPartyLabel(rawParty) || "";
-        const PARTY_COLORS = {
-            "Renaissance": "#b89c05",
-            "Horizons": "#1E90FF",
-            "MoDem": "#F2A900",
-            "PRV": "#00A86B",
-            "Centristes": "#8A2BE2",
-            "UDI": "#0A4D8C",
-            "LR": "#0055A4",
-            "RN": "#2E3348",
-            "Reconquête": "#E10600",
-            "Patriotes": "#7A0019",
-            "PS": "#E61F5A",
-            "Génération.s": "#6CC02B",
-            "EELV": "#2FA34A",
-        };
-        const accent = partyLabel && PARTY_COLORS[partyLabel] ? PARTY_COLORS[partyLabel] : minister.accentColor;
-        card.style.setProperty("--accent-color", accent);
+    // Resolve accent color:
+    // - Prefer party color when a known party is present
+    // - Fallback to ministry-provided accentColor
+    // - Otherwise leave default theme accent
+    const partyLabel = mapPartyLabel(rawParty) || "";
+    const hasKnownPartyColor = Boolean(partyLabel && PARTY_COLORS[partyLabel]);
+    // Only set inline accent when:
+    // - party has a known color mapping, OR
+    // - there is NO party at all and a ministry accentColor exists
+    // Do NOT override for "Sans étiquette" so CSS mapping stays grey.
+    const resolvedAccent = hasKnownPartyColor
+        ? PARTY_COLORS[partyLabel]
+        : (!partyLabel ? (minister.accentColor || null) : null);
+    if (partyLabel || !rawParty) {
+        // Ensure accent styling is activated whenever a party is known
+        // or explicitly marked as "Sans étiquette"
+        card.classList.add("has-accent");
+    }
+    if (resolvedAccent) {
+        card.style.setProperty("--accent-color", resolvedAccent);
+        card.dataset.accentColor = resolvedAccent;
     }
 
     return { card, roleKey };
 };
 
-const buildLeftSection = ({ minister, roleKey, ministriesEntries, ministriesBadges, partyBadge }) => {
+const buildLeftSection = ({ minister, roleKey, ministriesEntries, ministriesBadges, partyBadge, isHead }) => {
     const left = document.createElement("div");
     left.className = "mc-left";
 
     const header = document.createElement("div");
     header.className = "minister-header";
 
-    // Do not show ministry label for the leader card
-    if (roleKey !== "leader") {
+    // Do not show ministry label for the head cards (leader/president)
+    if (!isHead) {
         const portfolio = document.createElement("div");
         portfolio.className = "mc-ministry";
         portfolio.textContent = minister.portfolio ?? "Portefeuille à préciser";
@@ -1027,6 +1132,11 @@ const buildLeftSection = ({ minister, roleKey, ministriesEntries, ministriesBadg
         roleEl.className = "minister-role";
         roleEl.textContent = roleLabelText;
         header.appendChild(roleEl);
+    }
+
+    // Place party badge directly under the role, inside the header
+    if (partyBadge) {
+        header.appendChild(partyBadge);
     }
 
     left.appendChild(header);
@@ -1051,17 +1161,12 @@ const buildLeftSection = ({ minister, roleKey, ministriesEntries, ministriesBadg
             ministriesContainer.appendChild(badge);
         });
 
-        header.appendChild(ministriesContainer);
+        left.appendChild(ministriesContainer);
     }
 
-    const meta = document.createElement("div");
-    meta.className = "mc-meta minister-meta";
-    if (partyBadge) {
-        meta.appendChild(partyBadge);
-    }
-    left.appendChild(meta);
+    // Meta block kept only if needed in future; no extra meta for now
 
-    if (roleKey === "leader") {
+    if (roleKey === "leader" || roleKey === "president") {
         const bio = document.createElement("p");
         bio.className = "mc-bio";
         bio.textContent = (minister.description || "").trim() || "Biographie prochainement disponible.";
@@ -1086,12 +1191,14 @@ const buildRightSection = (minister) => {
     right.appendChild(photo);
 
     const actions = document.createElement("div");
-    actions.className = "minister-actions";
+    // Use an inline/compact actions container when placed inside the right column
+    // so it doesn't inherit the footer-styles used elsewhere for `.minister-actions`.
+    actions.className = "minister-actions minister-actions--inline";
 
     const cta = document.createElement("button");
     cta.type = "button";
     cta.className = "btn btn-primary minister-cta";
-    cta.textContent = "Voir la fiche";
+    cta.textContent = "Voir le cabinet";
     cta.addEventListener("click", (ev) => {
         ev.stopPropagation();
         openModal(minister);
@@ -1152,6 +1259,7 @@ const buildDelegatesSection = (roleKey, delegates) => {
 
 const buildCard = (minister) => {
     const { card, roleKey } = createCardContainer(minister);
+    const isHead = HEAD_ROLES.has(roleKey);
 
     const ministriesEntries = Array.isArray(minister.ministries) ? minister.ministries : [];
     const normalizedPortfolio = normalise(minister.portfolio || "");
@@ -1189,7 +1297,7 @@ const buildCard = (minister) => {
     const content = document.createElement("div");
     content.className = "minister-content";
     content.appendChild(buildRightSection(minister));
-    content.appendChild(buildLeftSection({ minister, roleKey, ministriesEntries, ministriesBadges, partyBadge }));
+    content.appendChild(buildLeftSection({ minister, roleKey, ministriesEntries, ministriesBadges, partyBadge, isHead }));
 
     card.appendChild(content);
 
@@ -1212,9 +1320,35 @@ const renderGrid = (items) => {
     }
 
     emptyState.hidden = true;
-    const fragment = document.createDocumentFragment();
-
+    
+    // Séparer les leaders des autres ministres
+    const leaders = [];
+    const others = [];
+    
     items.forEach((minister) => {
+        const roleKey = minister.role || "";
+        if (HEAD_ROLES.has(roleKey)) {
+            leaders.push(minister);
+        } else {
+            others.push(minister);
+        }
+    });
+    
+    // Créer un conteneur spécial pour les leaders s'ils existent
+    if (leaders.length > 0) {
+        const leadersContainer = document.createElement("div");
+        leadersContainer.className = "leaders-row";
+        
+        leaders.forEach((leader) => {
+            leadersContainer.appendChild(buildCard(leader));
+        });
+        
+        grid.appendChild(leadersContainer);
+    }
+    
+    // Ajouter les autres ministres normalement
+    const fragment = document.createDocumentFragment();
+    others.forEach((minister) => {
         fragment.appendChild(buildCard(minister));
     });
 
@@ -1348,7 +1482,7 @@ const fetchCollaboratorsForMinister = async (ministerId) => {
             const { data, error } = await client
                 .from("persons")
                 .select(
-                    "id, superior_id, full_name, photo_url, cabinet_role, job_title, collab_grade, email, cabinet_order"
+                    "id, superior_id, full_name, photo_url, cabinet_role, job_title, collab_grade, email, cabinet_order, pole_name"
                 )
                 .eq("role", "collaborator")
                 .eq("superior_id", parentId)
@@ -1566,7 +1700,7 @@ const printMinisterSheet = async (minister) => {
         const text = createElement(
             "p",
             "print-footer-text",
-            "Vous souhaitez rentrer en contact avec un ministre et ses équipes ? Contactez nos équipes pour définir le plan d'influence qui s'adaptera à votre entreprise."
+            "Pionnière de la communication d’influence, Rumeur Publique s’est imposée comme la première agence conseil indépendante en France. Nous concevons et mettons en œuvre des stratégies de marque et d’influence à 360° pour toutes les organisations qui veulent transformer la société."
         );
         printFooter.appendChild(logo);
         printFooter.appendChild(text);
@@ -1866,6 +2000,7 @@ const toCabinetNode = (person, gradeLookup) => {
         name: person?.full_name?.trim() || "Collaborateur·rice",
         cabinetRole: person?.cabinet_role?.trim() || null,
         jobTitle: person?.job_title?.trim() || null,
+        poleName: person?.pole_name?.trim() || null,
         gradeLabel: gradeMeta?.label || person?.collab_grade?.trim() || null,
         gradeKey: gradeMeta?.key || null,
         gradeRank: typeof gradeMeta?.rank === "number" ? gradeMeta.rank : Number.POSITIVE_INFINITY,
@@ -1896,6 +2031,13 @@ const normaliseCabinetMembers = (collaborators, gradeLookup) => {
 const createCabinetNodeCard = (member) => {
     const card = document.createElement("article");
     card.className = "cabinet-node";
+    if (member?.id != null) {
+        // expose person id on the DOM node so other UI pieces can link to it
+        card.dataset.personId = String(member.id);
+    }
+    if (member?.superiorId != null) {
+        card.dataset.superiorId = String(member.superiorId);
+    }
     if (member?.gradeKey) {
         card.dataset.grade = member.gradeKey;
     }
@@ -1903,12 +2045,28 @@ const createCabinetNodeCard = (member) => {
     const avatar = document.createElement("div");
     avatar.className = "cabinet-node-avatar";
     const avatarImg = document.createElement("img");
-    avatarImg.src = ensureImageSource(member?.photo);
-    avatarImg.onerror = () => {
-        avatarImg.onerror = null;
-        avatarImg.src = "assets/placeholder-minister.svg";
-    };
+    const originalPhoto = member?.photo;
     avatarImg.alt = member?.name ? `Portrait de ${member.name}` : "Portrait";
+
+    // Attach listeners BEFORE assigning src to avoid missing quick load/error events (cache)
+    avatarImg.addEventListener('error', () => {
+        avatar.classList.add('no-img');
+        avatarImg.style.display = 'none';
+    }, { once: true });
+    avatarImg.addEventListener('load', () => {
+        avatar.classList.remove('no-img');
+        avatarImg.style.display = '';
+    }, { once: true });
+
+    // If there is no photo provided, mark parent with .no-img so the CSS
+    // background logo is visible and the <img> can be hidden. Still set src
+    // to the resolved fallback so accessibility/semantics remain for non-JS users.
+    if (!originalPhoto) {
+        avatar.classList.add('no-img');
+    }
+
+    avatarImg.src = ensureImageSource(originalPhoto);
+
     avatar.appendChild(avatarImg);
     card.appendChild(avatar);
 
@@ -2082,12 +2240,11 @@ const renderCabinetSection = (minister, collaborators, gradeLookup) => {
 
     const title = document.createElement("h2");
     title.className = "cabinet-panel-title";
-    title.textContent = "Collaborateurs";
+    title.textContent = "Le cabinet";
     header.appendChild(title);
 
     const context = document.createElement("p");
     context.className = "cabinet-panel-context";
-    context.textContent = minister?.name ? `Cabinet de ${minister.name}` : "Organisation du cabinet";
     header.appendChild(context);
 
     panel.appendChild(header);
@@ -2156,6 +2313,16 @@ const isExecutiveLeader = (minister) => {
     return portfolio.includes("premier ministre") || portfolio.includes("matignon");
 };
 
+// Détection du Président de la République
+const isPresident = (minister) => {
+    if (!minister) return false;
+    return (
+        minister.id === PRESIDENT_ID ||
+        (minister.role || "").toLowerCase() === "president" ||
+        normalise(minister.full_name || minister.name || "").includes("president de la republique")
+    );
+};
+
 const createExecutiveCard = (member, options = {}) => {
     const card = document.createElement("article");
     card.className = "cabinet-node";  // Use same base class as cabinet nodes for consistency
@@ -2176,12 +2343,24 @@ const createExecutiveCard = (member, options = {}) => {
     const avatar = document.createElement("div");
     avatar.className = "cabinet-node-avatar";  // Use same avatar class as cabinet nodes
     const img = document.createElement("img");
-    img.src = ensureImageSource(member?.photo);
-    img.onerror = () => {
-        img.onerror = null;
-        img.src = "assets/placeholder-minister.svg";
-    };
+    const originalPhoto2 = member?.photo;
     img.alt = member?.name ? `Portrait de ${member.name}` : "Portrait";
+
+    img.addEventListener('error', () => {
+        avatar.classList.add('no-img');
+        img.style.display = 'none';
+    }, { once: true });
+    img.addEventListener('load', () => {
+        avatar.classList.remove('no-img');
+        img.style.display = '';
+    }, { once: true });
+
+    if (!originalPhoto2) {
+        avatar.classList.add('no-img');
+    }
+
+    img.src = ensureImageSource(originalPhoto2);
+
     avatar.appendChild(img);
     card.appendChild(avatar);
 
@@ -2230,6 +2409,475 @@ const createExecutiveCard = (member, options = {}) => {
 
     card.appendChild(info);
     return card;
+};
+
+// =====================================
+// FONCTIONS POUR PÔLES ET COLLABORATEURS DU PREMIER MINISTRE
+// =====================================
+
+// ID du Premier ministre (racine de l'arbre)
+const LEADER_ID = "1c71e08c-eabe-490c-82b2-262ae5df270a";
+
+// ID du Président de la République (racine de l'arbre pour le cabinet présidentiel)
+const PRESIDENT_ID = "48f9e0ff-ae25-4cf8-8d61-f2c10497a5a9";
+
+// Priorité d'affichage des grades pour le PM
+const PM_GRADE_ORDER = {
+  direcab: 1,
+  "direcab-adj": 2,
+  chefcab: 3,
+  chefadj: 4,
+  diradj: 4,
+  chefpole: 5,
+  conseiller: 6
+};
+
+function getPMGradeLabel(grade, role, cabinetRole) {
+  if (cabinetRole) return cabinetRole;
+  if (!grade) return role || "";
+
+  const map = {
+    direcab: "Directeur de cabinet",
+    "direcab-adj": "Directeur adjoint de cabinet",
+    chefcab: "Chef de cabinet",
+    chefadj: "Chef adjoint de cabinet",
+    diradj: "Directeur adjoint",
+    chefpole: "Chef de pôle",
+    conseiller: "Conseiller"
+  };
+
+  return map[grade] || grade;
+}
+
+function generatePoleTitle(leader) {
+  if (!leader) return "Pôle";
+  
+  const jobTitle = leader.job_title || "";
+  const name = leader.full_name || "";
+  
+  // Mapping des titres de pôles courants je pense que c'est une mauvaise idée de le faire comme ça
+  const poleTitles = {
+    "communication": "Communication & Relations publiques",
+    "presse": "Presse & Médias",
+    "affaires": "Affaires générales",
+    "juridique": "Juridique & Conseil",
+    "economie": "Économie & Finances",
+    "social": "Social & Solidarités",
+    "securite": "Sécurité & Défense",
+    "international": "International & Europe",
+    "territorial": "Territorial & Collectivités",
+    "environnement": "Environnement & Transition",
+    "numerique": "Numérique & Innovation",
+    "culture": "Culture & Éducation",
+    "sante": "Santé & Bien-être",
+    "transport": "Transport & Infrastructures",
+    "energie": "Énergie & Industrie"
+  };
+  
+  // Recherche par mots-clés dans le job_title
+  const lowerJobTitle = jobTitle.toLowerCase();
+  for (const [keyword, title] of Object.entries(poleTitles)) {
+    if (lowerJobTitle.includes(keyword)) {
+      return title;
+    }
+  }
+  
+  // Si pas de correspondance, utiliser le job_title ou un titre générique
+  if (jobTitle) {
+    return jobTitle;
+  }
+  
+  return `Pôle dirigé par ${name.split(' ')[0]}`;
+}
+
+function buildPMStructures(rows) {
+  const topCabinet = [];
+  const polesById = new Map();
+
+  // 1) Cabinet haut + chefs de pôle
+  rows.forEach(person => {
+    const grade = person.collab_grade;
+
+    if (["direcab", "direcab-adj", "chefcab", "chefadj", "diradj"].includes(grade)) {
+      topCabinet.push(person);
+    }
+
+    if (grade === "chefpole") {
+      polesById.set(person.id, {
+        leader: person,
+        members: []
+      });
+    }
+  });
+
+  // 2) Membres des pôles
+  rows.forEach(person => {
+    if (!person.superior_id) return;
+    const pole = polesById.get(person.superior_id);
+    if (pole && person.collab_grade !== "chefpole") {
+      pole.members.push(person);
+    }
+  });
+
+  // 3) Conseillers rattachés directement au ministre (ou hors pôles)
+  const directAdvisors = rows.filter(person => {
+    if (person.collab_grade !== "conseiller") return false;
+    // Directement rattaché au PM OU rattaché à quelqu'un qui n'est pas un chefpole
+    if (!person.superior_id) return true;
+    return !polesById.has(person.superior_id);
+  });
+
+  // 4) Tri du cabinet
+  topCabinet.sort((a, b) => {
+    const ga = PM_GRADE_ORDER[a.collab_grade] || 99;
+    const gb = PM_GRADE_ORDER[b.collab_grade] || 99;
+    if (ga !== gb) return ga - gb;
+    return (a.cabinet_order || 999) - (b.cabinet_order || 999);
+  });
+
+  // 5) Tri des pôles (par cabinet_order du chef de pôle)
+  const poles = Array.from(polesById.values()).sort((a, b) => {
+    const ao = a.leader?.cabinet_order || 999;
+    const bo = b.leader?.cabinet_order || 999;
+    return ao - bo;
+  });
+
+  return { topCabinet, poles, directAdvisors };
+}
+
+function Fonctionderendudesleaders(minister, collaborators) {
+  // Filtrer uniquement le sous-arbre hiérarchique du Premier ministre
+  const allowed = new Set([LEADER_ID]);
+  
+  function collectChildren(id) {
+    for (const person of collaborators) {
+      if (person.superior_id === id) {
+        if (!allowed.has(person.id)) {
+          allowed.add(person.id);
+          collectChildren(person.id);
+        }
+      }
+    }
+  }
+
+  collectChildren(LEADER_ID);
+  const filteredRows = collaborators.filter(person => allowed.has(person.id));
+  
+  const { topCabinet, poles, directAdvisors } = buildPMStructures(filteredRows);
+
+  const section = document.createElement("section");
+  section.className = "modal-collaborators pm-cabinet-wrapper";
+  section.setAttribute("role", "region");
+  section.setAttribute("aria-label", "Cabinet du Premier ministre");
+  section.setAttribute("aria-live", "polite");
+
+  if (minister && minister.accentColor) {
+    section.style.setProperty('--minister-accent', String(minister.accentColor));
+  }
+
+  // Section Cabinet
+  const cabinetSection = document.createElement("section");
+  cabinetSection.className = "pm-cabinet-section";
+  
+  const cabinetTitle = document.createElement("h2");
+  cabinetTitle.className = "pm-cabinet-section-title";
+  cabinetTitle.textContent = "Cabinet";
+  cabinetSection.appendChild(cabinetTitle);
+
+  const cabinetGrid = document.createElement("div");
+  cabinetGrid.className = "pm-cabinet-top-grid";
+  
+  // Intégrer les conseillers rattachés directement au ministre dans le cabinet
+  const combined = [...topCabinet, ...directAdvisors];
+  
+  if (!combined.length) {
+    cabinetGrid.innerHTML = '<p class="pm-cabinet-empty">Aucun membre de cabinet de premier niveau.</p>';
+  } else {
+    cabinetGrid.innerHTML = combined
+      .map(person => {
+        const photo = person.photo_url || "assets/placeholder-minister.svg";
+        const gradeLabel = getPMGradeLabel(person.collab_grade, person.role, person.cabinet_role);
+
+        return `
+          <article class="pm-cabinet-card">
+            <div class="pm-cabinet-card-avatar">
+              <img src="${photo}" alt="Portrait de ${person.full_name}">
+            </div>
+            <div class="pm-cabinet-card-main">
+              <div class="pm-cabinet-card-name">${person.full_name}</div>
+              <div class="pm-cabinet-card-role">${gradeLabel}</div>
+            </div>
+          </article>
+        `;
+      })
+      .join("");
+  }
+  
+  cabinetSection.appendChild(cabinetGrid);
+  section.appendChild(cabinetSection);
+
+  // Section Pôles et collaborateurs
+  const polesSection = document.createElement("section");
+  polesSection.className = "pm-cabinet-section";
+  
+  const polesTitle = document.createElement("h2");
+  polesTitle.className = "pm-cabinet-section-title";
+  polesTitle.textContent = "Pôles";
+  polesSection.appendChild(polesTitle);
+
+  const polesContainer = document.createElement("div");
+  polesContainer.className = "pm-poles-container";
+  
+  if (!poles.length) {
+    polesContainer.innerHTML = '<p class="pm-cabinet-empty">Aucun pôle identifié pour l\'instant.</p>';
+  } else {
+    polesContainer.innerHTML = poles
+      .map(pole => {
+        const leader = pole.leader;
+        const photo = leader?.photo_url || "assets/placeholder-minister.svg";
+        const topic = leader?.job_title || "Pôle";
+
+        const membersHtml = pole.members
+          .sort((a, b) => (a.cabinet_order || 999) - (b.cabinet_order || 999))
+          .map(member => {
+            const gradeLabel = getPMGradeLabel(member.collab_grade, member.role, member.cabinet_role);
+            return `
+              <div class="pm-pole-member">
+                <div class="pm-pole-member-avatar">
+                  <img src="${member.photo_url || 'assets/placeholder-minister.svg'}" alt="Portrait de ${member.full_name}">
+                </div>
+                <div class="pm-pole-member-main">
+                  <div class="pm-pole-member-name">${member.full_name}</div>
+                  <div class="pm-pole-member-job">${gradeLabel}${member.job_title ? ' — ' + member.job_title : ''}</div>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+
+        return `
+          <article class="pm-pole-box">
+            <div class="pm-pole-title">
+              <h3 class="pm-pole-title-text">${generatePoleTitle(leader)}</h3>
+            </div>
+            <header class="pm-pole-header">
+              <div class="pm-pole-leader-avatar">
+                <img src="${photo}" alt="Portrait de ${leader?.full_name || "Chef de pôle"}">
+              </div>
+              <div class="pm-pole-leader-info">
+                <div class="pm-pole-leader-name">${leader?.full_name || "Chef de pôle"}</div>
+                <div class="pm-pole-leader-job">${getPMGradeLabel(leader?.collab_grade, leader?.role, leader?.cabinet_role)}</div>
+                ${leader?.job_title ? `<div class="pm-pole-leader-specialty">${leader.job_title}</div>` : ''}
+              </div>
+            </header>
+            <div class="pm-pole-members-list">
+              ${membersHtml || '<span class="pm-cabinet-empty">Aucun collaborateur rattaché pour l\'instant.</span>'}
+            </div>
+          </article>
+        `;
+      })
+      .join("");
+  }
+  
+  polesSection.appendChild(polesContainer);
+  section.appendChild(polesSection);
+
+  return section;
+}
+
+// Wrapper used where older code expected `renderPMCabinetSection`.
+// The project historically referenced `renderPMCabinetSection` but the
+// mais j'ai souhaité l'appeler par ce queje ne comprends plus grand chose the French-named `Fonctionderendudesleaders`.
+// Provide a friendly alias that uses the existing implementation and
+// falls back to the executive cabinet renderer on unexpected errors.
+const renderPMCabinetSection = (minister, collaborators) => {
+    try {
+        return Fonctionderendudesleaders(minister, collaborators);
+    } catch (err) {
+        console.warn('[onepage] renderPMCabinetSection fallback to executive renderer:', err);
+        try {
+            const gradeLookup = collaboratorGradesLookup || createGradeLookup(null);
+            return buildExecutiveCabinetSection(minister, Array.isArray(collaborators) ? collaborators : [], gradeLookup, { error: true });
+        } catch (e) {
+            console.warn('[onepage] renderPMCabinetSection final fallback failed:', e);
+            // Return a minimal section to avoid breaking callers
+            const sec = document.createElement('section');
+            sec.className = 'pm-cabinet-section';
+            const p = document.createElement('p');
+            p.className = 'pm-cabinet-empty';
+            p.textContent = 'Impossible d\'afficher le cabinet pour le moment.';
+            sec.appendChild(p);
+            return sec;
+        }
+    }
+};
+
+// =====================================
+// CABINET DU PRÉSIDENT DE LA RÉPUBLIQUE
+// =====================================
+// Affichage par pôles (pole_name) avec job_title pour chaque conseiller
+// Utilise le même style graphique que le cabinet du Premier ministre
+// Version corrigée : les collaborateurs sans pole_name apparaissent dans "Équipe centrale"
+const renderPresidentCabinetSection = (minister, collaborators) => {
+    const ministerId = minister?.id != null ? String(minister.id) : null;
+
+    // Collaborateurs rattachés au Président
+    const filtered = (collaborators || []).filter(
+        c => ministerId && String(c.superior_id) === ministerId
+    );
+
+    // Séparation :
+    // 1) "Équipe centrale" (sans pole_name)
+    // 2) Pôles thématiques
+    const centralTeam = [];
+    const polesMap = new Map();
+
+    for (const person of filtered) {
+        const rawPole = (person.pole_name || "").trim();
+
+        if (!rawPole) {
+            // Pas de pole_name → équipe centrale
+            centralTeam.push(person);
+            continue;
+        }
+
+        // Sinon → pôle thématique
+        const key = normalise(rawPole);
+        if (!polesMap.has(key)) {
+            polesMap.set(key, { display: rawPole, members: [] });
+        }
+        polesMap.get(key).members.push(person);
+    }
+
+    // Création section principale
+    const section = document.createElement("section");
+    section.className = "modal-collaborators pm-cabinet-wrapper";
+    section.setAttribute("role", "region");
+    section.setAttribute("aria-label", "Cabinet du Président de la République");
+    section.setAttribute("aria-live", "polite");
+
+    if (minister && minister.accentColor) {
+        section.style.setProperty('--minister-accent', String(minister.accentColor));
+    }
+
+    // Si aucun collaborateur
+    if (!filtered.length) {
+        const emptySection = document.createElement("section");
+        emptySection.className = "pm-cabinet-section";
+        const emptyTitle = document.createElement("h2");
+        emptyTitle.className = "pm-cabinet-section-title";
+        emptyTitle.textContent = "Cabinet du Président de la République";
+        emptySection.appendChild(emptyTitle);
+        const emptyMsg = document.createElement("p");
+        emptyMsg.className = "pm-cabinet-empty";
+        emptyMsg.textContent = "Les collaborateurs du Président seront bientôt disponibles.";
+        emptySection.appendChild(emptyMsg);
+        section.appendChild(emptySection);
+        return section;
+    }
+
+    // ---- 1) ÉQUIPE CENTRALE (collaborateurs sans pole_name)
+    if (centralTeam.length) {
+        const centralSection = document.createElement("section");
+        centralSection.className = "pm-cabinet-section";
+
+        const centralTitle = document.createElement("h2");
+        centralTitle.className = "pm-cabinet-section-title";
+        centralTitle.textContent = "Cabinet";
+        centralSection.appendChild(centralTitle);
+
+        const centralGrid = document.createElement("div");
+        centralGrid.className = "pm-cabinet-top-grid";
+
+        centralGrid.innerHTML = centralTeam
+            .sort((a, b) => (a.cabinet_order || 999) - (b.cabinet_order || 999))
+            .map(person => {
+                const photo = person.photo_url || "assets/placeholder-minister.svg";
+                const cabinetRole = person.cabinet_role || "";
+                const jobTitle = person.job_title || "";
+                const roleDisplay = cabinetRole || jobTitle;
+                const secondaryRole = (cabinetRole && jobTitle && cabinetRole !== jobTitle) ? jobTitle : "";
+                
+                return `
+                    <article class="pm-cabinet-card">
+                        <div class="pm-cabinet-card-avatar">
+                            <img src="${photo}" alt="Portrait de ${person.full_name || 'Collaborateur'}" onerror="this.onerror=null;this.src='assets/placeholder-minister.svg';">
+                        </div>
+                        <div class="pm-cabinet-card-main">
+                            <div class="pm-cabinet-card-name">${person.full_name || "Collaborateur"}</div>
+                            ${roleDisplay ? `<div class="pm-cabinet-card-role">${roleDisplay}</div>` : ''}
+                            ${secondaryRole ? `<div class="pm-cabinet-card-role pm-cabinet-card-role--secondary">${secondaryRole}</div>` : ''}
+                        </div>
+                    </article>
+                `;
+            })
+            .join("");
+
+        centralSection.appendChild(centralGrid);
+        section.appendChild(centralSection);
+    }
+
+    // ---- 2) PÔLES THÉMATIQUES
+    if (polesMap.size > 0) {
+        const polesSection = document.createElement("section");
+        polesSection.className = "pm-cabinet-section";
+
+        const polesTitle = document.createElement("h2");
+        polesTitle.className = "pm-cabinet-section-title";
+        polesTitle.textContent = "Pôles";
+        polesSection.appendChild(polesTitle);
+
+        const polesContainer = document.createElement("div");
+        polesContainer.className = "pm-poles-container";
+
+        polesContainer.innerHTML = [...polesMap.values()]
+            .map(pole => {
+                const membersHtml = pole.members
+                    .sort((a, b) => (a.cabinet_order || 999) - (b.cabinet_order || 999))
+                    .map(member => {
+                        const photo = member.photo_url || "assets/placeholder-minister.svg";
+                        const cabinetRole = member.cabinet_role || "";
+                        const jobTitle = member.job_title || "";
+                        const roleDisplay = cabinetRole || jobTitle;
+                        const secondaryRole = (cabinetRole && jobTitle && cabinetRole !== jobTitle) ? jobTitle : "";
+                        const emailHtml = member.email 
+                            ? `<a class="pm-pole-member-email" href="mailto:${member.email}" rel="noopener">${member.email}</a>` 
+                            : '';
+                        
+                        return `
+                            <div class="pm-pole-member">
+                                <div class="pm-pole-member-avatar">
+                                    <img src="${photo}" alt="Portrait de ${member.full_name || 'Collaborateur'}" onerror="this.onerror=null;this.src='assets/placeholder-minister.svg';">
+                                </div>
+                                <div class="pm-pole-member-main">
+                                    <div class="pm-pole-member-name">${member.full_name || "Collaborateur"}</div>
+                                    ${roleDisplay ? `<div class="pm-pole-member-job">${roleDisplay}</div>` : ''}
+                                    ${secondaryRole ? `<div class="pm-pole-member-job pm-pole-member-job--secondary">${secondaryRole}</div>` : ''}
+                                    ${emailHtml}
+                                </div>
+                            </div>
+                        `;
+                    })
+                    .join("");
+
+                return `
+                    <article class="pm-pole-box">
+                        <div class="pm-pole-title">
+                            <h3 class="pm-pole-title-text">${pole.display}</h3>
+                        </div>
+                        <div class="pm-pole-members-list">
+                            ${membersHtml || '<span class="pm-cabinet-empty">Aucun collaborateur dans ce pôle.</span>'}
+                        </div>
+                    </article>
+                `;
+            })
+            .join("");
+
+        polesSection.appendChild(polesContainer);
+        section.appendChild(polesSection);
+    }
+
+    return section;
 };
 
 const buildExecutiveCabinetSection = (minister, collaborators, gradeLookup, options = {}) => {
@@ -2497,14 +3145,37 @@ const showCabinetInlineForMinister = async (minister) => {
         existingSection.remove();
     }
 
-    const placeholder = renderCabinetSection(minister, [], createGradeLookup(null));
-    placeholder.classList.remove("is-hidden");
+    // 1) CAS DU PRÉSIDENT DE LA RÉPUBLIQUE
+    const isPresidentCase = isPresident(minister);
 
-    const placeholderMessage = placeholder.querySelector(".cabinet-empty");
-    if (placeholderMessage) {
-        placeholderMessage.textContent = minister.id
-            ? "Chargement des collaborateurs…"
-            : "Cabinet non disponible pour le moment.";
+    // 2) Vérifier si c'est le Premier ministre pour utiliser la nouvelle structure
+    // NB: ne PAS afficher la structure spéciale PM pour les ministres délégués
+    // (certains ministres délégués peuvent être rattachés à Matignon mais ne
+    // doivent pas déclencher la vue 'cabinet du Premier ministre').
+    const isPrimeMinister = !isPresidentCase && isExecutiveLeader(minister) && !DELEGATE_ROLES.has(minister.role);
+    
+    let placeholder;
+    if (isPresidentCase) {
+        // Structure spéciale pour le Président avec pôles thématiques
+        placeholder = document.createElement("section");
+        placeholder.className = "modal-collaborators president-cabinet-wrapper";
+        placeholder.innerHTML = '<p class="president-cabinet-empty">Chargement des collaborateurs…</p>';
+    } else if (isPrimeMinister) {
+        // Structure spéciale pour le PM avec pôles
+        placeholder = document.createElement("section");
+        placeholder.className = "modal-collaborators pm-cabinet-wrapper";
+        placeholder.innerHTML = '<p class="pm-cabinet-empty">Chargement des collaborateurs…</p>';
+    } else {
+        // Structure normale pour les autres ministres
+        placeholder = renderCabinetSection(minister, [], createGradeLookup(null));
+        placeholder.classList.remove("is-hidden");
+
+        const placeholderMessage = placeholder.querySelector(".cabinet-empty");
+        if (placeholderMessage) {
+            placeholderMessage.textContent = minister.id
+                ? "Chargement des collaborateurs…"
+                : "Cabinet non disponible pour le moment.";
+        }
     }
 
     const modalLayout = modalBody.querySelector(".modal-layout");
@@ -2538,25 +3209,55 @@ const showCabinetInlineForMinister = async (minister) => {
         collaboratorsCache.set(minister.id, Array.isArray(collabs) ? collabs : []);
     }
 
-    const gradeLookup = await getCollaboratorGradeLookup();
-    const finalSection = renderCabinetSection(
-        minister,
-        Array.isArray(collabs) ? collabs : [],
-        gradeLookup
-    );
-    finalSection.classList.remove("is-hidden");
+    let finalSection;
+    if (isPresidentCase) {
+        // Utiliser la structure spéciale pour le Président (pôles thématiques)
+        finalSection = renderPresidentCabinetSection(
+            minister,
+            Array.isArray(collabs) ? collabs : []
+        );
+        
+        if (fetchError) {
+            const errorMessage = document.createElement("p");
+            errorMessage.className = "president-cabinet-empty";
+            errorMessage.textContent = "Impossible de charger les collaborateurs pour le moment.";
+            finalSection.appendChild(errorMessage);
+        }
+    } else if (isPrimeMinister) {
+        // Utiliser la nouvelle structure pour le Premier ministre
+        finalSection = renderPMCabinetSection(
+            minister,
+            Array.isArray(collabs) ? collabs : []
+        );
+        
+        if (fetchError) {
+            const errorMessage = document.createElement("p");
+            errorMessage.className = "pm-cabinet-empty";
+            errorMessage.textContent = "Impossible de charger les collaborateurs pour le moment.";
+            finalSection.appendChild(errorMessage);
+        }
+    } else {
+        // Utiliser la structure normale pour les autres ministres
+        const gradeLookup = await getCollaboratorGradeLookup();
+        finalSection = renderCabinetSection(
+            minister,
+            Array.isArray(collabs) ? collabs : [],
+            gradeLookup
+        );
+        finalSection.classList.remove("is-hidden");
 
-    const finalMessage = finalSection.querySelector(".cabinet-empty");
-    if (fetchError) {
-        if (finalMessage) {
-            finalMessage.textContent = "Impossible de charger les collaborateurs pour le moment.";
-        } else {
-            const panel = finalSection.querySelector(".cabinet-panel");
-            if (panel) {
-                const errorMessage = document.createElement("p");
-                errorMessage.className = "cabinet-empty";
-                errorMessage.textContent = "Impossible de charger les collaborateurs pour le moment.";
-                panel.appendChild(errorMessage);
+        const finalMessage = finalSection.querySelector(".cabinet-empty");
+        if (fetchError) {
+            if (finalMessage) {
+                finalMessage.textContent = "Impossible de charger les collaborateurs pour le moment.";
+            } else {
+                const panel = finalSection.querySelector(".cabinet-panel");
+                if (panel) {
+                    const errorMessage = document.createElement("p");
+                    errorMessage.className = "cabinet-empty";
+                    errorMessage.textContent = "Impossible de charger les collaborateurs pour le moment.";
+                    panel.appendChild(errorMessage);
+                }
             }
         }
     }
@@ -2575,7 +3276,7 @@ const showCabinetInlineForMinister = async (minister) => {
 const openModal = async (minister) => {
     if (!modal) return;
     setModalBusy(true);
-    // Ensure any cabinet overlay is hidden/cleared when opening detail view
+    // C'est ici que le miracle se produit, la fiche s'ouvre le tigre tourne et je suis heureux
     const modalContent = modal.querySelector('.modal-content');
     const overlay = modalContent?.querySelector('.cabinet-overlay');
     if (overlay) {
@@ -3140,7 +3841,7 @@ const fetchMinistersFromView = async () => {
         }
     }
 
-    return rows.map((row) => ({
+    const normalized = rows.map((row) => ({
         id: row.person_id,
         name: row.full_name,
         role: row.is_leader ? "leader" : "minister",
@@ -3154,6 +3855,38 @@ const fetchMinistersFromView = async () => {
         ministries: row.ministry_name ? [{ label: row.ministry_name, isPrimary: true }] : [],
         biography: [],
     }));
+
+    // Inject explicit president records if the view doesn't provide them
+    try {
+        const { data: presidents, error: presidentsError } = await client
+            .from("persons")
+            .select("id, full_name, photo_url, party, description")
+            .eq("role", "president");
+        if (!presidentsError && Array.isArray(presidents)) {
+            presidents.forEach((p) => {
+                if (!p || p.id == null) return;
+                if (normalized.some((m) => String(m.id) === String(p.id))) return;
+                normalized.unshift({
+                    id: p.id,
+                    name: p.full_name || "",
+                    role: "president",
+                    portfolio: "Président de la République",
+                    photo: p.photo_url || "",
+                    photoAlt: p.full_name ? `Portrait de ${p.full_name}` : undefined,
+                    accentColor: undefined,
+                    party: p.party || "",
+                    description: p.description || "",
+                    primaryMinistryId: null,
+                    ministries: [],
+                    biography: [],
+                });
+            });
+        }
+    } catch (_) {
+        // best-effort only
+    }
+
+    return normalized;
 };
 
 const fetchMinistersFromFallback = async () => {
@@ -3615,6 +4348,50 @@ const navigateToQuery = (q) => {
         }
     }
 
+    return false;
+};
+
+// Expose a small global helper so external UI (floating search, other scripts)
+// can open a minister's fiche by id or name. This is intentionally
+// lightweight: it prefers exact id match, then normalized name match.
+window.openMinisterById = async (identifier, { openModalIfFound = true } = {}) => {
+    if (!identifier) return false;
+    const idOrName = String(identifier).trim();
+    const all = (coreMinisters || []).concat(delegateMinisters || []);
+
+    // Try id match first
+    let match = all.find((m) => String(m.id) === idOrName);
+    // Then exact normalized name
+    if (!match) match = all.find((m) => normalise(m.name || "") === normalise(idOrName));
+    // Then contains
+    if (!match) match = all.find((m) => normalise(m.name || "").includes(normalise(idOrName)));
+
+    if (match) {
+        // If openModal function is available and requested, open fiche
+        try {
+            if (openModalIfFound && typeof openModal === 'function') {
+                await openModal(match);
+                return true;
+            }
+        } catch (e) {
+            console.warn('[onepage] openMinisterById: unable to open modal', e);
+        }
+
+        // Fallback: scroll to element
+        const selector = `[data-person-id="${match.id}"]`;
+        const el = document.querySelector(selector) || Array.from(document.querySelectorAll('.minister-card')).find(c => {
+            const nameEl = c.querySelector('h3');
+            return nameEl && normalise(nameEl.textContent || '') === normalise(match.name || '');
+        });
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            highlightElement(el, 2200);
+            const cta = el.querySelector('.minister-cta');
+            if (cta) cta.focus({ preventScroll: true });
+            return true;
+        }
+        return true;
+    }
     return false;
 };
 
