@@ -1,0 +1,222 @@
+{
+  "id": "bc25b753-7b86-4616-ab35-326fc2a5ccce",
+  "name": "Marie-Pierre VEDRENNE",
+  "role": "minister-delegate",
+  "email": "",
+  "party": "MoDem",
+  "photo": "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcRP6K56_STG-K2fsuInaYxebLy9qn_dB80MENytNk4T3bSIFjQdczB_Yv6ihARBXfdVijt4mfqrNNspnzCFEddqyLMRM2IEU_v3-z_TG_Dd",
+  "portfolio": "Ministre déléguée auprès du ministre de l'Intérieur",
+  "description": "Députée européenne Renew depuis 2019, cette proche de François Bayrou venait de se voir retirer ses responsabilités au sein de la délégation française à Bruxelles après avoir critiqué sa présidente Valérie Hayer.",
+  "ministries": [
+    {
+      "id": "2f4ad15c-3ad7-4079-a710-c181b3097e1b",
+      "name": "Ministre déléguée auprès du ministre de l'Intérieur",
+      "shortName": "Intérieur",
+      "color": "#F59E0B",
+      "isPrimary": true,
+      "roleLabel": "Ministre déléguée auprès du ministre de l'Intérieur"
+    },
+    {
+      "id": "f46f4a1a-437a-451b-84e4-c08011e10bb0",
+      "name": "Intérieur",
+      "shortName": "Intérieur",
+      "color": "#1F2937",
+      "isPrimary": false,
+      "roleLabel": null
+    }
+  ],
+  "superiorId": "c23846bc-7b27-4272-9840-63b536a6a46a",
+  "delegates": [],
+  "biography": [
+    {
+      "title": "Master Droit public",
+      "organization": "Université de Limoges",
+      "bioSection": "Formation académique",
+      "startDate": "2006-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 11
+    },
+    {
+      "title": "Master Droit européen",
+      "organization": "Université de Rennes",
+      "bioSection": "Formation académique",
+      "startDate": "2005-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 12
+    },
+    {
+      "title": "Pas de fonction gouvernementale jusqu’à présent",
+      "organization": null,
+      "bioSection": "Gouvernement",
+      "startDate": null,
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 1
+    },
+    {
+      "title": "Conseillère régionale (MoDem) de Bretagne – Ille-et-Vilaine",
+      "organization": "Région Bretagne",
+      "bioSection": "Mandats locaux",
+      "startDate": "2021-06-29",
+      "endDate": "2024-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 7
+    },
+    {
+      "title": "Députée européenne (liste Besoin d’Europe – Renaissance, MoDem, Horizons, Parti radical, UDI)",
+      "organization": "Parlement européen",
+      "bioSection": "Parlement européen",
+      "startDate": "2019-06-30",
+      "endDate": "2024-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 2
+    },
+    {
+      "title": "Présidente de la délégation française du groupe Renew Europe",
+      "organization": "Parlement européen",
+      "bioSection": "Parlement européen",
+      "startDate": "2023-12-30",
+      "endDate": "2024-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 3
+    },
+    {
+      "title": "Vice-présidente de la commission du commerce international",
+      "organization": "Parlement européen",
+      "bioSection": "Parlement européen",
+      "startDate": "2019-06-30",
+      "endDate": "2024-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 4
+    },
+    {
+      "title": "Porte-parole de la campagne Renaissance pour les élections européennes (avec Clément Beaune et Nathalie Loiseau)",
+      "organization": "Renaissance",
+      "bioSection": "Parti politique",
+      "startDate": "2023-12-30",
+      "endDate": "2024-06-07",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 5
+    },
+    {
+      "title": "Membre du Mouvement Démocrate (MoDem)",
+      "organization": "MoDem",
+      "bioSection": "Parti politique",
+      "startDate": "2009-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 6
+    },
+    {
+      "title": "Coordinatrice puis Directrice",
+      "organization": "Maison de l’Europe de Rennes",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2010-12-30",
+      "endDate": "2018-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 8
+    },
+    {
+      "title": "Chargée d’enseignement",
+      "organization": "ESUP",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2007-12-30",
+      "endDate": "2014-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 9
+    },
+    {
+      "title": "Assistante de projets",
+      "organization": "Iberdrola Renovables",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2008-12-30",
+      "endDate": "2010-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 10
+    }
+  ],
+  "collaborators": [
+    {
+      "id": "1ce15679-9fe3-4f8e-8866-f941d8e9d0f3",
+      "name": "Xavier PELLETIER",
+      "full_name": "Xavier PELLETIER",
+      "superior_id": "bc25b753-7b86-4616-ab35-326fc2a5ccce",
+      "job_title": null,
+      "cabinet_role": "Directeur de cabinet",
+      "cabinet_order": 1,
+      "cabinet_badge": null,
+      "collab_grade": "dircab",
+      "pole_name": null,
+      "photo_url": "https://www.lesbiographies.com/Home/GetImage/135064",
+      "description": null
+    },
+    {
+      "id": "733e6ac1-607d-484f-922f-968a5f03d782",
+      "name": "Clervie MONSHOUWER",
+      "full_name": "Clervie MONSHOUWER",
+      "superior_id": "bc25b753-7b86-4616-ab35-326fc2a5ccce",
+      "job_title": null,
+      "cabinet_role": "Cheffe de cabinet",
+      "cabinet_order": 3,
+      "cabinet_badge": null,
+      "collab_grade": "chefcab",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "4ddf7536-d016-4841-9462-b6284fd8edba",
+      "name": "Amelle GHAYOU",
+      "full_name": "Amelle GHAYOU",
+      "superior_id": "bc25b753-7b86-4616-ab35-326fc2a5ccce",
+      "job_title": null,
+      "cabinet_role": "Conseillère chargée des sécurités",
+      "cabinet_order": 6,
+      "cabinet_badge": null,
+      "collab_grade": "conseiller",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "de6a92e6-7ead-4ee5-9c34-f23bec9f9cf1",
+      "name": "Chloé NGUYEN",
+      "full_name": "Chloé NGUYEN",
+      "superior_id": "bc25b753-7b86-4616-ab35-326fc2a5ccce",
+      "job_title": null,
+      "cabinet_role": "Conseillère chargée des questions juridiques et prospective",
+      "cabinet_order": 6,
+      "cabinet_badge": null,
+      "collab_grade": "conseiller",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    }
+  ]
+}

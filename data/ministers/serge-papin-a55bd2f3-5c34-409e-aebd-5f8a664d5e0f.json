@@ -1,0 +1,203 @@
+{
+  "id": "a55bd2f3-5c34-409e-aebd-5f8a664d5e0f",
+  "name": "Serge PAPIN",
+  "role": "minister",
+  "email": "",
+  "party": "Sans étiquette",
+  "photo": "https://www.info.gouv.fr/upload/media/personality/0001/15/fedefc3521e7eab47a70d299545f2e1cf8e38304.jpg",
+  "portfolio": "PME, Commerce, Artisanat, Tourisme et Pouvoir d'achat",
+  "description": "Ancien dirigeant de Système U, Serge Papin est l'une des figures de la société civile qui rejoignent le gouvernement.",
+  "ministries": [
+    {
+      "id": "9e35b193-e343-4fa2-8af0-fe227bb504f5",
+      "name": "PME, Commerce, Artisanat, Tourisme et Pouvoir d'achat",
+      "shortName": "Commerce et artisanat",
+      "color": "#DB2777",
+      "isPrimary": true,
+      "roleLabel": "Ministre des PME, du Commerce, de l'Artisanat, du Tourisme et du Pouvoir d'achat"
+    }
+  ],
+  "superiorId": "1c71e08c-eabe-490c-82b2-262ae5df270a",
+  "delegates": [],
+  "biography": [
+    {
+      "title": "BEP Commerce",
+      "organization": null,
+      "bioSection": "Formation académique",
+      "startDate": null,
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 11
+    },
+    {
+      "title": "Pas de fonction gouvernementale jusqu’à présent",
+      "organization": null,
+      "bioSection": "Gouvernement",
+      "startDate": null,
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 1
+    },
+    {
+      "title": "Consultant pour les entreprises",
+      "organization": null,
+      "bioSection": "Vie professionnelle",
+      "startDate": "2017-12-30",
+      "endDate": "2024-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 2
+    },
+    {
+      "title": "Membre du conseil de surveillance",
+      "organization": "Nous anti-gaspi",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2024-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 3
+    },
+    {
+      "title": "Membre du conseil d’administration",
+      "organization": "Auchan Retail International",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2021-12-30",
+      "endDate": "2023-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 4
+    },
+    {
+      "title": "Auteur d’un rapport sur les relations commerciales entre la grande distribution et l’industrie agroalimentaire",
+      "organization": "Ministère de l’Agriculture",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2019-12-30",
+      "endDate": "2020-12-29",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 5
+    },
+    {
+      "title": "Président-directeur général",
+      "organization": "Coopérative U (anciennement Système U)",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2004-12-30",
+      "endDate": "2017-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 6
+    },
+    {
+      "title": "Initiateur du manifeste « Osons Demain » pour la transition écologique",
+      "organization": null,
+      "bioSection": "Vie professionnelle",
+      "startDate": "2016-12-30",
+      "endDate": "2017-12-29",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 7
+    },
+    {
+      "title": "Co-fondateur de la maison d’édition Mosée éditions (avec Louis-Marie Barberit)",
+      "organization": "Mosée éditions",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2008-12-30",
+      "endDate": "2009-12-29",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 8
+    },
+    {
+      "title": "Création du service communication",
+      "organization": "Système U Ouest",
+      "bioSection": "Vie professionnelle",
+      "startDate": "1978-12-30",
+      "endDate": "1979-12-29",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 9
+    },
+    {
+      "title": "Diverses fonctions : promoteur des ventes, exploitant puis cadre dirigeant",
+      "organization": "Système U",
+      "bioSection": "Vie professionnelle",
+      "startDate": "1975-12-30",
+      "endDate": "2004-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 10
+    }
+  ],
+  "collaborators": [
+    {
+      "id": "991ce74e-2be0-451f-a44e-7b47dfdc412c",
+      "name": "François BOLARD",
+      "full_name": "François BOLARD",
+      "superior_id": "a55bd2f3-5c34-409e-aebd-5f8a664d5e0f",
+      "job_title": null,
+      "cabinet_role": "Directeur de cabinet",
+      "cabinet_order": 1,
+      "cabinet_badge": null,
+      "collab_grade": "dircab",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "7ee1463b-286a-4cdb-b94c-d505966baf64",
+      "name": "Jean-Baptiste BERNARD",
+      "full_name": "Jean-Baptiste BERNARD",
+      "superior_id": "a55bd2f3-5c34-409e-aebd-5f8a664d5e0f",
+      "job_title": null,
+      "cabinet_role": "Directeur adjoint de cabinet",
+      "cabinet_order": 2,
+      "cabinet_badge": null,
+      "collab_grade": "diradj",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "0f83680a-861e-4f3a-a779-e9570f674dbc",
+      "name": "Ismail AISSOUB",
+      "full_name": "Ismail AISSOUB",
+      "superior_id": "a55bd2f3-5c34-409e-aebd-5f8a664d5e0f",
+      "job_title": null,
+      "cabinet_role": "Conseiller communication numérique",
+      "cabinet_order": 5,
+      "cabinet_badge": null,
+      "collab_grade": "chefpole",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "e7aafb13-8178-409d-bd92-3f9512157519",
+      "name": "Noémie NUSBAUMER",
+      "full_name": "Noémie NUSBAUMER",
+      "superior_id": "a55bd2f3-5c34-409e-aebd-5f8a664d5e0f",
+      "job_title": null,
+      "cabinet_role": "Conseillère tourisme",
+      "cabinet_order": 6,
+      "cabinet_badge": null,
+      "collab_grade": "conseiller",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    }
+  ]
+}

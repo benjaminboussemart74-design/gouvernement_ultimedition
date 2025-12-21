@@ -1,0 +1,241 @@
+{
+  "id": "d4ad5ec2-cdfc-4a80-b452-2742d4daa038",
+  "name": "David AMIEL",
+  "role": "minister-delegate",
+  "email": "",
+  "party": "Renaissance",
+  "photo": "https://www.info.gouv.fr/upload/media/personality/0001/15/a313aff6161ca562f81d6cc85deed92cb47478ea.png",
+  "portfolio": "Fonction publique & Réforme de l'État",
+  "description": "Ce macroniste historique, ancien conseiller du Président, émerge publiquement depuis son élection comme député LREM en 2022.",
+  "ministries": [
+    {
+      "id": "a25c52fe-66fd-4960-bc03-b5664c0b95bc",
+      "name": "Fonction publique & Réforme de l'État",
+      "shortName": "Fonction publique",
+      "color": "#D4AF37",
+      "isPrimary": true,
+      "roleLabel": "Ministre délégué de la Fonction publique & Réforme de l'État"
+    },
+    {
+      "id": "f5b4eb5a-0951-4113-9611-70d55bbf412b",
+      "name": "Action et Comptes publics",
+      "shortName": "Comptes publics",
+      "color": "#8B4513",
+      "isPrimary": false,
+      "roleLabel": null
+    }
+  ],
+  "superiorId": "3f2dd4ce-483e-4b0e-9c11-d58cf45caa1c",
+  "delegates": [],
+  "biography": [
+    {
+      "title": "Député Renaissance de la 13ᵉ circonscription de Paris",
+      "organization": "Assemblée nationale",
+      "bioSection": "Assemblée nationale",
+      "startDate": "2022-05-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 2
+    },
+    {
+      "title": "Coordinateur du groupe Ensemble pour la République à la commission des Finances",
+      "organization": "Assemblée nationale",
+      "bioSection": "Assemblée nationale",
+      "startDate": "2022-05-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 3
+    },
+    {
+      "title": "Co-rapporteur de la mission-flash sur les entreprises pétrolières et gazières",
+      "organization": "Assemblée nationale",
+      "bioSection": "Assemblée nationale",
+      "startDate": "2022-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 4
+    },
+    {
+      "title": "Rapporteur spécial du PLF 2025 (énergie et écologie)",
+      "organization": "Assemblée nationale",
+      "bioSection": "Assemblée nationale",
+      "startDate": "2024-09-29",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 5
+    },
+    {
+      "title": "Conseiller du 15ᵉ arrondissement de Paris",
+      "organization": "Mairie de Paris",
+      "bioSection": "Mandat local",
+      "startDate": "2019-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 9
+    },
+    {
+      "title": "Publication de l’ouvrage « Le progrès ne tombe pas du ciel » co-écrit avec Ismaël Emelien",
+      "organization": "Éditions Fayard",
+      "bioSection": "Œuvre",
+      "startDate": "2018-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 12
+    },
+    {
+      "title": "Master en histoire",
+      "organization": "Université Paris-Sorbonne",
+      "bioSection": "Parcours académique",
+      "startDate": "2012-12-30",
+      "endDate": "2014-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 13
+    },
+    {
+      "title": "Master « Analyse et politique économiques »",
+      "organization": "Université Paris-Sorbonne",
+      "bioSection": "Parcours académique",
+      "startDate": "2011-12-30",
+      "endDate": "2014-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 14
+    },
+    {
+      "title": "Élève de l’École normale supérieure",
+      "organization": "ENS Paris",
+      "bioSection": "Parcours académique",
+      "startDate": "2010-12-30",
+      "endDate": "2014-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 15
+    },
+    {
+      "title": "Secrétaire général délégué aux idées",
+      "organization": "Renaissance",
+      "bioSection": "Parti politique",
+      "startDate": "2024-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 6
+    },
+    {
+      "title": "Délégué fonctionnel à la maison d’édition de Renaissance (anciennement LREM)",
+      "organization": "Renaissance",
+      "bioSection": "Parti politique",
+      "startDate": "2021-12-30",
+      "endDate": "2024-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 7
+    },
+    {
+      "title": "Conseiller économique d’Emmanuel Macron, chargé de coordonner le programme présidentiel",
+      "organization": "En Marche !",
+      "bioSection": "Parti politique",
+      "startDate": "2015-12-30",
+      "endDate": "2016-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 8
+    },
+    {
+      "title": "Conseiller du président de la République Emmanuel Macron, en charge de la coordination entre les conseillers techniques",
+      "organization": "Présidence de la République",
+      "bioSection": "Présidence de la République",
+      "startDate": "2016-12-30",
+      "endDate": "2018-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 1
+    },
+    {
+      "title": "Directeur de la stratégie",
+      "organization": "La Poste Groupe",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2020-12-30",
+      "endDate": "2021-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 10
+    },
+    {
+      "title": "Stagiaire d’Emmanuel Macron au ministère de l’Économie",
+      "organization": "Ministère de l’Économie",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2014-12-30",
+      "endDate": "2015-12-29",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 11
+    }
+  ],
+  "collaborators": [
+    {
+      "id": "0d7b8edc-d20f-488b-bc07-7fe43184c89e",
+      "name": "Emmanuel CONSTANTIN",
+      "full_name": "Emmanuel CONSTANTIN",
+      "superior_id": "d4ad5ec2-cdfc-4a80-b452-2742d4daa038",
+      "job_title": null,
+      "cabinet_role": "Directeur de cabinet",
+      "cabinet_order": 1,
+      "cabinet_badge": null,
+      "collab_grade": "dircab",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "1543679f-788d-4d22-8f8e-f80cfac67319",
+      "name": "Richard HUANG",
+      "full_name": "Richard HUANG",
+      "superior_id": "d4ad5ec2-cdfc-4a80-b452-2742d4daa038",
+      "job_title": null,
+      "cabinet_role": "Chef de cabinet",
+      "cabinet_order": 3,
+      "cabinet_badge": null,
+      "collab_grade": "chefcab",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "9b3d51dd-cf68-4de4-a265-e77dbbd7f43b",
+      "name": "Jacques MEURIN",
+      "full_name": "Jacques MEURIN",
+      "superior_id": "d4ad5ec2-cdfc-4a80-b452-2742d4daa038",
+      "job_title": null,
+      "cabinet_role": "Conseiller parlementaire et relations élus",
+      "cabinet_order": 6,
+      "cabinet_badge": null,
+      "collab_grade": "conseiller",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    }
+  ]
+}

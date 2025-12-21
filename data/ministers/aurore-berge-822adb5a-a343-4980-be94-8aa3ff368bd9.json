@@ -1,0 +1,280 @@
+{
+  "id": "822adb5a-a343-4980-be94-8aa3ff368bd9",
+  "name": "Aurore BERGÉ",
+  "role": "minister-delegate",
+  "email": "",
+  "party": "Renaissance",
+  "photo": "https://www.info.gouv.fr/upload/media/personality/0001/06/1a902ac3e7d91fdec95ca014a7549e14b97dd737.png",
+  "portfolio": "Égalité femmes-hommes & Lutte contre les discriminations",
+  "description": "Macroniste historique, Aurore Bergé a occupé plusieurs portefeuilles ministériels depuis 2023, dont celui à l'Egalité entre les femmes et les hommes depuis janvier 2024. Elle a brièvement vu son portefeuille élargi au porte-parolat du Gouvernement sous Lecornu I mais se voit déjà retirer ces nouvelles responsabilités.",
+  "ministries": [
+    {
+      "id": "29cc6f35-219a-4fd9-b5b7-4d06939e0682",
+      "name": "Égalité femmes-hommes & Lutte contre les discriminations",
+      "shortName": "Égalité Femmes-Hommes",
+      "color": "#16A34A",
+      "isPrimary": true,
+      "roleLabel": "Ministre déléguée de l'Égalité femmes-hommes & Lutte contre les discriminations"
+    },
+    {
+      "id": "7096353f-c8ac-4df1-8634-c45035c34825",
+      "name": "Premier Ministre",
+      "shortName": "Premier Ministre",
+      "color": null,
+      "isPrimary": false,
+      "roleLabel": "rattaché à Sébastien Lecornu"
+    }
+  ],
+  "superiorId": "1c71e08c-eabe-490c-82b2-262ae5df270a",
+  "delegates": [],
+  "biography": [
+    {
+      "title": "Députée de la 10ᵉ circonscription des Yvelines (Renaissance)",
+      "organization": "Assemblée nationale",
+      "bioSection": "Assemblée nationale",
+      "startDate": "2017-05-30",
+      "endDate": "2024-11-29",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 5
+    },
+    {
+      "title": "Présidente du groupe Renaissance",
+      "organization": "Assemblée nationale",
+      "bioSection": "Assemblée nationale",
+      "startDate": "2021-12-30",
+      "endDate": "2022-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 6
+    },
+    {
+      "title": "Présidente déléguée du groupe La République en Marche (LREM)",
+      "organization": "Assemblée nationale",
+      "bioSection": "Assemblée nationale",
+      "startDate": "2019-12-30",
+      "endDate": "2021-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 7
+    },
+    {
+      "title": "Diplômée de Sciences Po Paris",
+      "organization": "Sciences Po Paris",
+      "bioSection": "Formation académique",
+      "startDate": "2008-12-30",
+      "endDate": "2009-12-29",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 16
+    },
+    {
+      "title": "Ministre déléguée chargée de l’Égalité entre les femmes et les hommes et de la Lutte contre les discriminations",
+      "organization": "Gouvernements Bayrou I et Lecornu I",
+      "bioSection": "Gouvernement",
+      "startDate": "2024-11-29",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 1
+    },
+    {
+      "title": "Également en charge du porte-parolat",
+      "organization": "Gouvernement Lecornu I",
+      "bioSection": "Gouvernement",
+      "startDate": "2025-10-03",
+      "endDate": "2025-10-10",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 2
+    },
+    {
+      "title": "Ministre déléguée chargée de l’Égalité entre les femmes et les hommes et de la Lutte contre les discriminations",
+      "organization": "Gouvernement Attal",
+      "bioSection": "Gouvernement",
+      "startDate": "2023-12-30",
+      "endDate": "2024-09-28",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 3
+    },
+    {
+      "title": "Ministre des Solidarités et des Familles",
+      "organization": "Gouvernement Borne III",
+      "bioSection": "Gouvernement",
+      "startDate": "2022-12-30",
+      "endDate": "2023-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 4
+    },
+    {
+      "title": "Conseillère municipale",
+      "organization": "Rambouillet",
+      "bioSection": "Mandats locaux",
+      "startDate": "2023-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 10
+    },
+    {
+      "title": "Conseillère régionale",
+      "organization": "Région Île-de-France",
+      "bioSection": "Mandats locaux",
+      "startDate": "2023-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 11
+    },
+    {
+      "title": "Conseillère municipale et communautaire",
+      "organization": "Magny-les-Hameaux / Saint-Quentin-en-Yvelines",
+      "bioSection": "Mandats locaux",
+      "startDate": "2013-12-30",
+      "endDate": "2019-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 12
+    },
+    {
+      "title": "Conseillère politique auprès du président Jean-François Copé",
+      "organization": "Union pour un Mouvement Populaire (UMP)",
+      "bioSection": "Parti politique",
+      "startDate": "2012-12-30",
+      "endDate": "2013-12-29",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 8
+    },
+    {
+      "title": "Responsable des Jeunes Populaires des Yvelines",
+      "organization": "Union pour un Mouvement Populaire (UMP)",
+      "bioSection": "Parti politique",
+      "startDate": "2004-12-30",
+      "endDate": "2008-12-29",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 9
+    },
+    {
+      "title": "Directrice clientèle",
+      "organization": "Hopscotch",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2014-12-30",
+      "endDate": "2016-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 13
+    },
+    {
+      "title": "Directrice de clientèle",
+      "organization": "Spintank",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2012-12-30",
+      "endDate": "2014-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 14
+    },
+    {
+      "title": "Directrice de projet",
+      "organization": "Agence Publics",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2009-12-30",
+      "endDate": "2012-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 15
+    }
+  ],
+  "collaborators": [
+    {
+      "id": "9231d8f6-9bca-4b21-95f2-30ba42b5bd1a",
+      "name": "Laurent DORAÏ",
+      "full_name": "Laurent DORAÏ",
+      "superior_id": "822adb5a-a343-4980-be94-8aa3ff368bd9",
+      "job_title": null,
+      "cabinet_role": "Directeur de cabinet",
+      "cabinet_order": 1,
+      "cabinet_badge": null,
+      "collab_grade": "dircab",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "184ed9cd-2090-4127-b3c6-6820c93912f0",
+      "name": "Emilie CHANDLER",
+      "full_name": "Emilie CHANDLER",
+      "superior_id": "822adb5a-a343-4980-be94-8aa3ff368bd9",
+      "job_title": null,
+      "cabinet_role": "Directrice adjointe du cabinet en charge du plan Toutes et Tous Égaux",
+      "cabinet_order": 2,
+      "cabinet_badge": null,
+      "collab_grade": "diradj",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "975bacfd-457e-46ba-aad2-dd2ea9bc62a9",
+      "name": "Enguerrand CERVELLERA",
+      "full_name": "Enguerrand CERVELLERA",
+      "superior_id": "822adb5a-a343-4980-be94-8aa3ff368bd9",
+      "job_title": null,
+      "cabinet_role": "Chef de cabinet chargé des relations avec les élus locaux et les collectivités",
+      "cabinet_order": 3,
+      "cabinet_badge": null,
+      "collab_grade": "chefcab",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "f720c24d-13b5-4c07-90b3-e200e50edde3",
+      "name": "Margot ANTONIAZZI",
+      "full_name": "Margot ANTONIAZZI",
+      "superior_id": "822adb5a-a343-4980-be94-8aa3ff368bd9",
+      "job_title": null,
+      "cabinet_role": "Conseillère politique et communication",
+      "cabinet_order": 5,
+      "cabinet_badge": null,
+      "collab_grade": "chefpole",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "a7ff6400-d6cd-4939-bfe1-c5844ce9a92c",
+      "name": "Robin FOULON",
+      "full_name": "Robin FOULON",
+      "superior_id": "822adb5a-a343-4980-be94-8aa3ff368bd9",
+      "job_title": null,
+      "cabinet_role": "Conseiller presse et réseaux sociaux",
+      "cabinet_order": 6,
+      "cabinet_badge": null,
+      "collab_grade": "conseiller",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    }
+  ]
+}

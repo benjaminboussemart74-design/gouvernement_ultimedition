@@ -2,8 +2,9 @@
 /**
  * Script de conversion CSV → JSON pour migration Supabase → GitHub Pages
  * 
- * Lit les 4 fichiers CSV exportés de Supabase et génère data/ministers.json
- * avec toutes les jointures nécessaires.
+ * Lit les 4 fichiers CSV exportés de Supabase et génère
+ * - data/ministers/index.json
+ * - un fichier JSON par ministre dans data/ministers/
  * 
  * Usage: node scripts/csv-to-json.js
  */
@@ -13,7 +14,8 @@ const path = require('path');
 
 // ========== CONFIGURATION ==========
 const CSV_DIR = path.join(__dirname, '..');
-const OUTPUT_FILE = path.join(__dirname, '..', 'data', 'ministers.json');
+const OUTPUT_DIR = path.join(__dirname, '..', 'data', 'ministers');
+const INDEX_FILE = path.join(OUTPUT_DIR, 'index.json');
 
 const CSV_FILES = {
   persons: path.join(CSV_DIR, 'Serveur gouvernement - persons.csv'),
@@ -36,22 +38,58 @@ const MINISTER_ROLES = new Set([
 // ========== HELPERS ==========
 
 /**
- * Parse simple CSV (sans gestion des guillemets complexes)
- * Pour un CSV plus complexe, utilisez une librairie comme papaparse
+ * Parse CSV avec gestion correcte des guillemets
+ * Les champs entre guillemets peuvent contenir des virgules
  */
 function parseCSV(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.trim().split('\n');
-  const headers = lines[0].split(',');
+  const headers = parseCSVLine(lines[0]);
   
   return lines.slice(1).map(line => {
-    const values = line.split(',');
+    const values = parseCSVLine(line);
     const obj = {};
     headers.forEach((header, i) => {
       obj[header.trim()] = values[i]?.trim() || '';
     });
     return obj;
   });
+}
+
+/**
+ * Parse une ligne CSV en gérant les guillemets
+ */
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const nextChar = line[i + 1];
+    
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        // Double quote = escaped quote
+        current += '"';
+        i++; // Skip next quote
+      } else {
+        // Toggle quote mode
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      // End of field
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  
+  // Push last field
+  result.push(current);
+  
+  return result;
 }
 
 /**
@@ -82,6 +120,23 @@ function clean(value) {
   if (value == null || value === '') return null;
   const trimmed = String(value).trim();
   return trimmed === '' ? null : trimmed;
+}
+
+/**
+ * Slugify pour noms de fichiers
+ */
+function slugify(input, fallback) {
+  if (!input || typeof input !== 'string') {
+    return fallback;
+  }
+
+  const ascii = input
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  const slug = ascii.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  return (slug || fallback).slice(0, 80);
 }
 
 // ========== CHARGEMENT DES CSV ==========
@@ -158,7 +213,14 @@ careersRaw.forEach(c => {
 
 // Trier les biographies par sort_index
 careersByPerson.forEach(careers => {
-  careers.sort((a, b) => a.sortIndex - b.sortIndex);
+  careers.sort((a, b) => {
+    const sectionA = (a.bioSection || '').toLowerCase();
+    const sectionB = (b.bioSection || '').toLowerCase();
+    if (sectionA !== sectionB) {
+      return sectionA.localeCompare(sectionB, 'fr');
+    }
+    return a.sortIndex - b.sortIndex;
+  });
 });
 
 // Index des collaborateurs par superior_id
@@ -173,8 +235,55 @@ personsRaw
       collaboratorsBySuperior.set(superiorId, []);
     }
     
-    collaboratorsBySuperior.get(superiorId).push(clean(collab.full_name));
+    collaboratorsBySuperior.get(superiorId).push({
+      id: clean(collab.id),
+      name: clean(collab.full_name),
+      full_name: clean(collab.full_name),
+      superior_id: clean(collab.superior_id),
+      job_title: clean(collab.job_title),
+      cabinet_role: clean(collab.cabinet_role) || clean(collab.job_title),
+      cabinet_order: parseInt(collab.cabinet_order, 10) || 999,
+      cabinet_badge: clean(collab.cabinet_badge),
+      collab_grade: clean(collab.collab_grade),
+      pole_name: clean(collab.pole_name),
+      photo_url: clean(collab.photo_url),
+      description: clean(collab.description)
+    });
   });
+
+// Trier les collaborateurs de chaque supérieur (ordre cabinet puis nom)
+collaboratorsBySuperior.forEach(list => {
+  list.sort((a, b) => {
+    if ((a.cabinet_order || 999) !== (b.cabinet_order || 999)) {
+      return (a.cabinet_order || 999) - (b.cabinet_order || 999);
+    }
+    return (a.name || '').localeCompare(b.name || '');
+  });
+});
+
+// Collecte récursive des collaborateurs pour un supérieur (inclut les sous-niveaux)
+function collectCollaborators(rootId) {
+  const result = [];
+  const queue = [];
+  if (rootId) queue.push(rootId);
+  const visited = new Set();
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (visited.has(current)) continue;
+    visited.add(current);
+
+    const children = collaboratorsBySuperior.get(current) || [];
+    for (const child of children) {
+      result.push(child);
+      if (child.id) {
+        queue.push(child.id);
+      }
+    }
+  }
+
+  return result;
+}
 
 // ========== CONSTRUCTION DES MINISTRES ==========
 
@@ -219,7 +328,7 @@ const ministers = personsRaw
     const biography = careersByPerson.get(personId) || [];
     
     // Collaborateurs
-    const collaborators = collaboratorsBySuperior.get(personId) || [];
+    const collaborators = collectCollaborators(personId);
     
     return {
       id: personId,
@@ -250,13 +359,38 @@ console.log(`  ✓ ${ministers.length} ministres générés`);
 
 // ========== SAUVEGARDE JSON ==========
 
-console.log(`\n💾 Sauvegarde dans ${path.relative(process.cwd(), OUTPUT_FILE)}...`);
+console.log(`\n💾 Sauvegarde par ministre dans ${path.relative(process.cwd(), OUTPUT_DIR)}...`);
+fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-fs.writeFileSync(
-  OUTPUT_FILE,
-  JSON.stringify(ministers, null, 2),
-  'utf-8'
-);
+// Nettoyer les anciens fichiers JSON générés
+fs.readdirSync(OUTPUT_DIR)
+  .filter((file) => file.endsWith('.json'))
+  .forEach((file) => fs.unlinkSync(path.join(OUTPUT_DIR, file)));
+
+const manifest = ministers.map((minister, index) => {
+  const safeId = minister.id || `minister-${index + 1}`;
+  const slug = slugify(minister.name, safeId);
+  const fileName = `${slug}-${safeId}.json`;
+  const filePath = path.join(OUTPUT_DIR, fileName);
+
+  const payload = {
+    ...minister,
+    biography: Array.isArray(minister.biography) ? minister.biography : [],
+    collaborators: Array.isArray(minister.collaborators) ? minister.collaborators : [],
+  };
+
+  fs.writeFileSync(filePath, JSON.stringify(payload, null, 2), 'utf-8');
+
+  return {
+    id: minister.id,
+    name: minister.name,
+    role: minister.role,
+    portfolio: minister.portfolio,
+    file: path.join('data', 'ministers', fileName),
+  };
+});
+
+fs.writeFileSync(INDEX_FILE, JSON.stringify(manifest, null, 2), 'utf-8');
 
 console.log('✅ Conversion terminée avec succès !');
 console.log(`\n📊 Statistiques :`);

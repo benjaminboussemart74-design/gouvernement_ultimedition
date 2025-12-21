@@ -325,14 +325,7 @@ img {
 
 /* Local display font for ministry short names */
 
-/* Les titres de ministres sont affichés en Havelock Inline mais il faut modifier ça  */
- .mc-ministry,
- .mc-ministry-badge,
- .ministry-label,
- .modal-portfolio,
- .print-sheet-portfolio {
-    font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
-}
+
 
 /* === STYLES POUR LES PÔLES DU PREMIER MINISTRE === */
 .pm-cabinet-wrapper {
@@ -1204,46 +1197,9 @@ main > * { position: relative; z-index: 2; }
 
 /* ===== Modal / Print footer CTA (discreet) ===== */
 .modal-footer-cta {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    margin-top: 1rem;
-    padding: 0.75rem 1rem 0.25rem;
-    color: rgba(17,23,39,0.72);
-    margin-inline: auto;
-    width: min(680px, 92vw);
-}
-.modal-footer-cta .modal-footer-logo {
-    display: block;
-    width: 120px;
-    max-width: 40vw;
-    height: auto;
-    opacity: 0.20;
-    filter: grayscale(0.05) saturate(0.9);
-    margin: 0 auto 0.25rem;
-}
-.modal-footer-text {
-    font-size: 0.85rem;
-    color: rgba(62,62,61,0.86);
-    max-width: 60ch;
-    line-height: 1.2;
+    display: none; /* Print functionality removed */
 }
 
-/* Print-sheet footer */
-.print-sheet-footer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 1.25rem;
-    padding-top: 0.75rem;
-    border-top: 1px dashed rgba(0,0,0,0.08);
-}
-.print-footer-logo { width: 140px; max-width: 36vw; height: auto; opacity: 0.95; }
-.print-footer-text { font-size: 0.82rem; color: rgba(0,0,0,0.7); max-width: 58ch; text-align: center; }
 
 /* Inline ministres délégués inside minister fiche modal */
 .modal-module--delegates {
@@ -1273,12 +1229,8 @@ main > * { position: relative; z-index: 2; }
         max-width: 100%;
     }
 }
-/* Impremerie ajuster le style graphique et comprendre comme ça marche rajouter logo de la boite et les nouveaux élements */
+/* Print functionality removed */
 
-@media print {
-    .modal-footer-cta { display: none; }
-    .print-sheet-footer { page-break-inside: avoid; }
-}
 .header-suggestion[aria-selected="true"], .header-suggestion:hover { background: rgba(100,215,205,0.06); }
 
 /* Avatar de suggestion qui n'est pas très beau, et ne respecte pas la charte grapihque, à l'avenir le changer par un truc plus beau ? */
@@ -1640,7 +1592,7 @@ main {
 }
 
 body.print-all {
-    background: #ffffff;
+    display: none; /* Print functionality removed */
 }
 
 body.print-all .toolbar {
@@ -2391,14 +2343,6 @@ body.print-all .toolbar {
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-bottom: 0.75rem;
-}
-
-.mc-left .mc-ministry-badge {
-    font-size: 0.7rem;
-    padding: 0.25rem 0.5rem;
-    background: var(--color-guimauve);
-    border-radius: 6px;
-    border: 1px solid rgba(17, 23, 39, 0.1);
 }
 
 /* Styles pour meta et party dans mc-left */
@@ -4932,6 +4876,7 @@ body.print-all .toolbar {
     .mc-right { justify-items: start; }
 }
 
+/* Print functionality removed - CSS rules kept for compatibility */
 @media print {
     body {
         background: #ffffff;
@@ -5260,17 +5205,6 @@ body.print-all .toolbar {
         gap: 0.25cm;
     }
 
-    body.print-all .mc-ministry-badge {
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        padding: 0.12cm 0.35cm;
-        background: rgba(105, 135, 255, 0.08);
-        border-radius: 999px;
-        border: 1px solid rgba(17, 23, 39, 0.1);
-        box-shadow: none;
-    }
 
     body.print-all .minister-card h3 {
         font-size: 1.4rem;

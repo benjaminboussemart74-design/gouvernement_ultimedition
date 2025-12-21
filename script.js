@@ -67,46 +67,22 @@ const MINISTER_ROLES = new Set([
     "secretary"
 ]);
 
-// ca c'est codex qui a fait je comprends pas tout mais ça fonctionne et c'est l'important il faut que je regarde plus en profondeur comment ça foncitonne
 const DELEGATE_ROLES = new Set(["minister-delegate", "ministre-delegue", "secretary"]);
 const CORE_ROLES = new Set(["leader", "president", "minister", "minister-state"]);
 const HEAD_ROLES = new Set(["leader", "president"]);
-const FALLBACK_DATA_URL = "data/ministers.json";
-const SUPABASE_BIOGRAPHY_VIEW = (typeof globalThis !== 'undefined' && globalThis.SUPABASE_BIOGRAPHY_VIEW)
-    ? globalThis.SUPABASE_BIOGRAPHY_VIEW
-    : 'person_careers';
-const SUPABASE_CAREERS_TABLE = (typeof globalThis !== 'undefined' && globalThis.SUPABASE_CAREERS_TABLE)
-    ? globalThis.SUPABASE_CAREERS_TABLE
-    : 'person_careers';
 
 const ensureImageSource = (value, fallback = "assets/placeholder-minister.svg") => {
-    if (!value) return fallback;
-    if (typeof value !== "string") return value || fallback;
-
+    if (!value || typeof value !== "string") return fallback;
+    
     const trimmed = value.trim();
     if (!trimmed) return fallback;
-
-    // If already absolute URL or data URI, return as-is
-    if (/^(https?:)?\/\//i.test(trimmed) || /^data:/i.test(trimmed)) return trimmed;
-
-    // If root-relative path, keep as-is (served by site)
-    if (trimmed.startsWith("/")) return trimmed;
-
-    // Handle common Supabase storage keys like "bucket/path/to/file.jpg"
-    // or paths starting with "storage/v1/object/public/..."
-    const base = (typeof window !== 'undefined' && window.SUPABASE_URL) ? window.SUPABASE_URL.replace(/\/$/, '') : '';
-    if (base) {
-        // If path already includes storage route but is relative, prefix project URL
-        if (trimmed.startsWith("storage/v1/object/public/")) {
-            return `${base}/${trimmed}`;
-        }
-        // If looks like "bucket/dir/file.ext", build a public storage URL
-        if (/^[A-Za-z0-9_-]+\/.+/.test(trimmed)) {
-            return `${base}/storage/v1/object/public/${trimmed.replace(/^\/+/, '')}`;
-        }
+    
+    // URL absolue ou data URI → retourner tel quel
+    if (/^(https?:)?\/\//i.test(trimmed) || /^data:/i.test(trimmed)) {
+        return trimmed;
     }
-
-    // Otherwise, treat as site-relative asset path
+    
+    // Chemin relatif → retourner tel quel
     return trimmed || fallback;
 };
 
@@ -229,11 +205,13 @@ const exportPageButton = document.getElementById("export-page-pdf");
 const modal = document.getElementById("minister-modal");
 const modalBackdrop = modal?.querySelector("[data-dismiss]");
 const modalClose = modal?.querySelector(".modal-close");
-const exportButton = document.getElementById("export-minister-pdf");
-if (exportButton) {
-    exportButton.disabled = true;
-    exportButton.setAttribute("aria-disabled", "true");
-}
+// Export functionality removed - button deleted from HTML
+// const exportButton = document.getElementById("export-minister-pdf");
+// if (exportButton) {
+//     exportButton.disabled = true;
+//     exportButton.setAttribute("aria-disabled", "true");
+// }
+const exportButton = null; // Disabled
 const sortSelect = document.getElementById("sort-order");
 const delegatesToggle = document.getElementById("filter-delegates");
 const bioToggle = document.getElementById("filter-bio");
@@ -413,26 +391,6 @@ let currentSort = "role";
 let onlyWithDelegates = false;
 let onlyWithBio = false;
 let activeMinister = null;
-let printSheetContainer = null;
-
-const ensurePrintSheetContainer = () => {
-    if (typeof document === "undefined") return null;
-    if (!printSheetContainer) {
-        printSheetContainer = document.createElement("div");
-        printSheetContainer.id = "print-sheet";
-    }
-    return printSheetContainer;
-};
-
-const cleanupPrintSheet = () => {
-    if (typeof document === "undefined" || !document.body) return;
-    document.body.classList.remove("print-single");
-    if (!printSheetContainer) return;
-    if (printSheetContainer.parentElement) {
-        printSheetContainer.parentElement.removeChild(printSheetContainer);
-    }
-    printSheetContainer.innerHTML = "";
-};
 
 updatePartyFilterOptions();
 
@@ -813,11 +771,12 @@ const normalizeBiographyEntries = (rows) => {
             const endRaw = row.end_date || row.endDate || row.end_text || row.end || row.endYear || row.end_year;
             const startDate = toDate(startRaw);
             const endDate = toDate(endRaw);
-            const eventDate = toDate(row.event_date || row.eventDate || row.event_text);
-            const eventText = toText(row.event_text || row.eventText);
-            const category = toText(row.bio_section || row.category);
-            const title = toText(row.title);
-            const org = toText(row.organisation || row.organization || row.org);
+        const eventDate = toDate(row.event_date || row.eventDate || row.event_text);
+        const eventText = toText(row.event_text || row.eventText);
+        // Support both camelCase (bioSection) and snake_case (bio_section) sources
+        const category = toText(row.bioSection || row.bio_section || row.category);
+        const title = toText(row.title);
+        const org = toText(row.organisation || row.organization || row.org);
             const createdAt = row.created_at ? toDate(row.created_at) : (row.createdAt ? toDate(row.createdAt) : null);
             const sortIndex = Number.isFinite(row.sort_index) ? row.sort_index : (Number.isFinite(row.sortIndex) ? row.sortIndex : null);
             // Determine current status with explicit flags first.
@@ -953,26 +912,33 @@ const populateBiographyModule = (entries, accentColor = null) => {
     const groups = new Map();
     normalized.forEach((entry) => {
         const category = entry.category || 'Autres';
-        if (!groups.has(category)) {
-            groups.set(category, []);
+        const key = normalise(category);
+        if (!groups.has(key)) {
+            groups.set(key, {
+                label: category,
+                items: [],
+                order: BIOGRAPHY_CATEGORY_ORDER_MAP.get(key) ?? Number.POSITIVE_INFINITY
+            });
         }
-        groups.get(category).push(entry);
+        groups.get(key).items.push(entry);
     });
 
-    // Helper to compute section order index: prefer explicit sort_index from rows
-    // Conserver l'ordre d'apparition des sections
-    const sortedGroups = Array.from(groups.entries());
+    // Trie des sections : ordre prédéfini puis label alpha
+    const sortedGroups = Array.from(groups.values()).sort((a, b) => {
+        if (a.order !== b.order) return a.order - b.order;
+        return a.label.localeCompare(b.label, 'fr');
+    });
 
     const frag = document.createDocumentFragment();
 
-    sortedGroups.forEach(([category, items]) => {
+    sortedGroups.forEach(({ label, items }) => {
         const group = document.createElement('article');
         group.className = 'biography-group';
         group.setAttribute('role', 'listitem');
 
         const heading = document.createElement('h5');
         heading.className = 'biography-group__title';
-        heading.textContent = category ? `${category} :` : '';
+        heading.textContent = label ? `${label} :` : '';
         group.appendChild(heading);
 
         const list = document.createElement('ul');
@@ -1003,66 +969,8 @@ const populateBiographyModule = (entries, accentColor = null) => {
     return true;
 };
 
-
-// Fallback loader: fetch biography rows for a person from careers table when not
-// already present on the minister object. It maps common columns to the
-// normalizeBiographyEntries schema and sorts them consistently.
-const fetchBiographyForPersonFallback = async (personId) => {
-    if (!personId) return [];
-    const client = ensureSupabaseClient();
-    if (!client) return [];
-    try {
-        // Prefer configured biography view first; fallback to careers table if missing
-        const tryQuery = async (source) => {
-            const { data, error } = await client
-                .from(source)
-                .select('*')
-                .eq('person_id', personId)
-                .order('sort_index', { ascending: true })
-                .order('start_date', { ascending: false })
-                .order('created_at', { ascending: false });
-            return { data, error };
-        };
-
-        let source = SUPABASE_BIOGRAPHY_VIEW;
-        let { data, error } = await tryQuery(source);
-        if (error && (error.code === 'PGRST205' || (error.message && error.message.includes('Could not find the table')))) {
-            // If a distinct table name is configured, try it as a fallback
-            if (SUPABASE_CAREERS_TABLE && SUPABASE_CAREERS_TABLE !== SUPABASE_BIOGRAPHY_VIEW) {
-                source = SUPABASE_CAREERS_TABLE;
-                ({ data, error } = await tryQuery(source));
-            }
-        }
-        if (error) {
-            console.warn('[onepage] Erreur chargement biographie depuis', source + ':', error);
-            return [];
-        }
-        const rows = Array.isArray(data) ? data : [];
-        if (!rows.length) {
-            console.log('[onepage] Aucune entrée biographie trouvée pour', personId, 'depuis', source);
-        } else {
-            console.log('[onepage] Entrées biographie chargées pour', personId, 'depuis', source, '→', rows.length, 'ligne(s)');
-        }
-        return normalizeBiographyEntries(rows);
-    } catch (e) {
-        console.warn('[onepage] Exception careers:', e);
-        return [];
-    }
-};
-
-
-const ensureSupabaseClient = () => {
-    try {
-        if (window.supabaseClient) return window.supabaseClient;
-        if (typeof window.supabase !== "undefined" && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
-            window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-            return window.supabaseClient;
-        }
-    } catch (error) {
-        console.warn("[onepage] Impossible d'initialiser Supabase", error);
-    }
-    return null;
-};
+// ========== SUPPRIMÉ: fetchBiographyForPersonFallback() et ensureSupabaseClient() ==========
+// Les biographies sont incluses dans les fichiers statiques data/ministers/
 
 const createCardContainer = (minister) => {
     const card = document.createElement("article");
@@ -1277,6 +1185,27 @@ const buildCard = (minister) => {
             const displayLabel = label || roleLabel;
             if (!displayLabel) return null;
 
+            // Skip specific badges
+            const badgesToSkip = [
+                "Ministre de l'Action et des Comptes publics",
+                "Ministre des Armées et des Anciens combattants",
+                "Ministre de l'Agriculture et de la Souveraineté alimentaire"
+            ];
+
+            // Calculate the final text that will be displayed
+            let finalText = "";
+            if (label && roleLabel) {
+                finalText = `${label} • ${roleLabel}`;
+            } else if (roleLabel) {
+                finalText = roleLabel;
+            } else {
+                finalText = displayLabel;
+            }
+
+            if (badgesToSkip.includes(finalText)) {
+                return null;
+            }
+
             const normalizedLabel = normalise(label || roleLabel);
             if (normalizedLabel && normalizedLabel === normalizedPortfolio) {
                 return null;
@@ -1367,20 +1296,38 @@ const attachDelegatesToCore = () => {
     if (!Array.isArray(coreMinisters) || !Array.isArray(delegateMinisters)) return;
 
     const coreById = new Map();
+    const delegateById = new Map();
+
+    delegateMinisters.forEach((delegate) => {
+        if (delegate && delegate.id != null) {
+            delegateById.set(String(delegate.id), delegate);
+        }
+    });
+
     coreMinisters.forEach((minister) => {
         if (minister && minister.id != null) {
             coreById.set(String(minister.id), minister);
         }
-        if (Array.isArray(minister?.delegates)) {
-            minister.delegates = minister.delegates.slice();
-        } else {
-            minister.delegates = [];
-        }
+        const existing = Array.isArray(minister?.delegates) ? minister.delegates : [];
+        minister.delegates = existing
+            .map((entry) => {
+                if (entry && typeof entry === "object") return entry;
+                const id = entry != null ? String(entry) : null;
+                return id && delegateById.get(id);
+            })
+            .filter(Boolean);
     });
 
     const tryAssign = (delegate, target) => {
         if (!target) return false;
         target.delegates = Array.isArray(target.delegates) ? target.delegates : [];
+        const delegateId = delegate?.id != null ? String(delegate.id) : null;
+        if (
+            delegateId &&
+            target.delegates.some((entry) => String(entry?.id ?? "") === delegateId)
+        ) {
+            return true;
+        }
         target.delegates.push(delegate);
         return true;
     };
@@ -1472,314 +1419,16 @@ const applyFilters = () => {
 
 // ===============================
 // Récupération des collaborateurs pour un ministre donné
+// (Migration Static : désactivé - les collaborateurs ne sont plus chargés dynamiquement)
 // ===============================
 const fetchCollaboratorsForMinister = async (ministerId) => {
-    const client = ensureSupabaseClient();
-    if (!client || !ministerId) return [];
-
-    const collected = [];
-    const seen = new Set();
-    const queue = [ministerId];
-    let encounteredError = false;
-
-    while (queue.length) {
-        const parentId = queue.shift();
-        try {
-            const { data, error } = await client
-                .from("persons")
-                .select(
-                    "id, superior_id, full_name, photo_url, cabinet_role, job_title, collab_grade, email, cabinet_order, pole_name"
-                )
-                .eq("role", "collaborator")
-                .eq("superior_id", parentId)
-                .order("cabinet_order", { ascending: true });
-
-            if (error) {
-                console.warn("[onepage] Impossible de récupérer les collaborateurs :", error);
-                encounteredError = true;
-                break;
-            }
-
-            for (const person of data || []) {
-                if (!person || person.id == null || seen.has(person.id)) continue;
-                collected.push(person);
-                seen.add(person.id);
-                queue.push(person.id);
-            }
-        } catch (e) {
-            console.warn("[onepage] Erreur lors de la récupération des collaborateurs :", e);
-            encounteredError = true;
-            break;
-        }
-    }
-
-    return encounteredError ? null : collected;
+    // Les collaborateurs sont maintenant dans minister.collaborators (array de noms)
+    // Pour l'affichage détaillé, on retourne un tableau vide
+    console.warn('[onepage] fetchCollaboratorsForMinister est obsolète - les collaborateurs sont dans data/ministers/');
+    return [];
 };
-
-const collaboratorsCache = new Map();
 
 // Legacy template removed - now using harmonized cabinet-node system for all collaborators display
-
-const ensureCollaboratorsForPrint = async (minister) => {
-    if (!minister?.id) return [];
-
-    if (!collaboratorsCache.has(minister.id)) {
-        const collabs = await fetchCollaboratorsForMinister(minister.id);
-        collaboratorsCache.set(minister.id, Array.isArray(collabs) ? collabs : []);
-    }
-
-    return collaboratorsCache.get(minister.id) || [];
-};
-
-const printMinisterSheet = async (minister) => {
-    if (!minister || typeof document === "undefined" || !document.body) return;
-
-    const printSheet = ensurePrintSheetContainer();
-    if (!printSheet) return;
-
-    printSheet.innerHTML = "";
-
-    const ensureText = (value, fallback = "") => {
-        if (typeof value !== "string") {
-            return value != null ? String(value) : fallback;
-        }
-        const trimmed = value.trim();
-        return trimmed || fallback;
-    };
-
-    const createElement = (tag, className, text) => {
-        const element = document.createElement(tag);
-        if (className) element.className = className;
-        if (text != null) element.textContent = text;
-        return element;
-    };
-
-    const ministriesLabel = minister.ministries?.length
-        ? minister.ministries
-              .map((entry) => entry?.label)
-              .filter(Boolean)
-              .join(" • ")
-        : null;
-
-    const roleLabel = ensureText(formatRole(minister.role));
-    const nameLabel = ensureText(minister.name, "Nom du ministre");
-    const portfolioLabel = ensureText(ministriesLabel || minister.portfolio);
-    const descriptionText = ensureText(
-        minister.description,
-        "Ajoutez ici une biographie synthétique."
-    );
-    const missionText = ensureText(minister.mission);
-    const contactText = ensureText(minister.contact, "Contact prochainement disponible.");
-    const partyLabel = typeof minister.party === "string" ? minister.party.trim() : minister.party;
-    const printDate = new Date().toLocaleDateString("fr-FR", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric"
-    });
-
-    const header = createElement("header", "print-sheet-header");
-    const brand = createElement("div", "print-sheet-brand");
-    brand.appendChild(createElement("p", "print-sheet-eyebrow", "RumeurLAB • Gouvernement Lecornu II"));
-    brand.appendChild(createElement("h1", "print-sheet-name", nameLabel));
-    if (roleLabel) brand.appendChild(createElement("p", "print-sheet-role", roleLabel));
-    if (portfolioLabel) brand.appendChild(createElement("p", "print-sheet-portfolio", portfolioLabel));
-    brand.appendChild(createElement("p", "print-sheet-date", `Édité le ${printDate}`));
-
-    const partyBadge = createPartyBadge(partyLabel == null ? "" : String(partyLabel).trim());
-    if (partyBadge) {
-        partyBadge.classList.add("print-sheet-party");
-        brand.appendChild(partyBadge);
-    }
-
-    const photoWrapper = createElement("div", "print-sheet-photo");
-    const photo = document.createElement("img");
-    photo.src = ensureImageSource(minister.photo);
-    photo.onerror = () => {
-        photo.onerror = null;
-        photo.src = "assets/placeholder-minister.svg";
-    };
-    photo.alt = minister.photoAlt || (minister.name ? `Portrait de ${minister.name}` : "Portrait du ministre");
-    photoWrapper.appendChild(photo);
-
-    header.appendChild(brand);
-    header.appendChild(photoWrapper);
-    printSheet.appendChild(header);
-
-    const ministerSection = createElement("section", "print-sheet-section print-sheet-minister");
-    ministerSection.appendChild(createElement("h2", "print-section-title", "Ministre"));
-    const ministerBody = createElement("div", "print-section-body");
-    ministerBody.appendChild(createElement("p", "print-section-text", descriptionText));
-
-    if (contactText) {
-        const contactList = createElement("dl", "print-sheet-meta");
-        const contactWrapper = createElement("div", "print-meta-item");
-        contactWrapper.appendChild(createElement("dt", "print-meta-label", "Contact"));
-        contactWrapper.appendChild(createElement("dd", "print-meta-value", contactText));
-        contactList.appendChild(contactWrapper);
-        ministerBody.appendChild(contactList);
-    }
-
-    ministerSection.appendChild(ministerBody);
-    printSheet.appendChild(ministerSection);
-
-    const missionItems = [];
-    if (missionText) {
-        missionItems.push({ label: "Mission principale", value: missionText });
-    }
-    if (portfolioLabel) {
-        missionItems.push({ label: "Portefeuille", value: portfolioLabel });
-    }
-
-    if (missionItems.length) {
-        const missionsSection = createElement("section", "print-sheet-section print-sheet-missions");
-        missionsSection.appendChild(createElement("h2", "print-section-title", "Missions"));
-        const missionsBody = createElement("div", "print-section-body");
-        const metaList = createElement("dl", "print-sheet-meta");
-        missionItems.forEach((entry) => {
-            const wrapper = createElement("div", "print-meta-item");
-            wrapper.appendChild(createElement("dt", "print-meta-label", entry.label));
-            wrapper.appendChild(createElement("dd", "print-meta-value", entry.value));
-            metaList.appendChild(wrapper);
-        });
-        missionsBody.appendChild(metaList);
-        missionsSection.appendChild(missionsBody);
-        printSheet.appendChild(missionsSection);
-    }
-
-    let collaborators = [];
-    try {
-        collaborators = await ensureCollaboratorsForPrint(minister);
-    } catch (error) {
-        console.warn("[onepage] Impossible de préparer les collaborateurs pour l'impression", error);
-    }
-    const hasCollaborators = Array.isArray(collaborators) && collaborators.length;
-    if (hasCollaborators) {
-        const collabSection = createElement(
-            "section",
-            "print-sheet-section print-sheet-cabinet print-collaborators-section"
-        );
-        collabSection.appendChild(createElement("h2", "print-section-title", "Cabinet"));
-        const collabBody = createElement("div", "print-section-body");
-        const collabGrid = createElement("div", "print-collaborators-grid");
-        collaborators.forEach((collab) => {
-            const card = createElement("div", "print-collaborator-card");
-            const collabPhotoWrapper = createElement("div", "print-collaborator-photo");
-            const collabImg = document.createElement("img");
-            collabImg.src = ensureImageSource(collab.photo_url);
-            collabImg.onerror = () => {
-                collabImg.onerror = null;
-                collabImg.src = "assets/placeholder-minister.svg";
-            };
-            collabImg.alt = collab.full_name
-                ? `Portrait de ${collab.full_name}`
-                : "Portrait collaborateur";
-            collabPhotoWrapper.appendChild(collabImg);
-            card.appendChild(collabPhotoWrapper);
-
-            const details = createElement("div", "print-collaborator-details");
-            details.appendChild(
-                createElement("p", "print-collaborator-name", ensureText(collab.full_name, "Collaborateur·rice"))
-            );
-            details.appendChild(
-                createElement("p", "print-collaborator-role", ensureText(collab.cabinet_role, "Collaborateur"))
-            );
-            card.appendChild(details);
-            collabGrid.appendChild(card);
-        });
-        collabBody.appendChild(collabGrid);
-        collabSection.appendChild(collabBody);
-        printSheet.appendChild(collabSection);
-    }
-
-    // --- print footer / contact CTA (discret) ---
-    try {
-        const printFooter = createElement("footer", "print-sheet-footer");
-        const logo = document.createElement("img");
-        // prefer provided SVG and fallback to previously bundled SVG
-        logo.src = "assets/LogoRP_Bloc logo RP bleu.svg";
-        logo.alt = "Logo RumeurPublique";
-        logo.onerror = function () {
-            this.onerror = null;
-            this.src = "assets/LogoRP_Bloc_logo_RP_bleu.svg";
-        };
-        logo.className = "print-footer-logo";
-        const text = createElement(
-            "p",
-            "print-footer-text",
-            "Pionnière de la communication d’influence, Rumeur Publique s’est imposée comme la première agence conseil indépendante en France. Nous concevons et mettons en œuvre des stratégies de marque et d’influence à 360° pour toutes les organisations qui veulent transformer la société."
-        );
-        printFooter.appendChild(logo);
-        printFooter.appendChild(text);
-        printSheet.appendChild(printFooter);
-    } catch (e) {
-        console.warn("[onepage] impossible d'ajouter le footer d'impression :", e);
-    }
-
-    document.body.appendChild(printSheet);
-    document.body.classList.add("print-single");
-
-    const handleAfterPrint = () => {
-        cleanupPrintSheet();
-        window.removeEventListener("afterprint", handleAfterPrint);
-    };
-
-    window.addEventListener("afterprint", handleAfterPrint);
-
-    window.print();
-
-    window.setTimeout(() => {
-        if (document.body.classList.contains("print-single")) {
-            cleanupPrintSheet();
-            window.removeEventListener("afterprint", handleAfterPrint);
-        }
-    }, 1000);
-};
-
-const handleExportMinisterClick = async (minister = activeMinister) => {
-    if (!exportButton || !minister) return;
-
-    exportButton.disabled = true;
-    exportButton.setAttribute("aria-busy", "true");
-    exportButton.setAttribute("aria-disabled", "true");
-
-    try {
-        await printMinisterSheet(minister);
-    } finally {
-        exportButton.removeAttribute("aria-busy");
-        if (modal && !modal.hidden) {
-            exportButton.disabled = false;
-            exportButton.removeAttribute("aria-disabled");
-        } else {
-            exportButton.disabled = true;
-            exportButton.setAttribute("aria-disabled", "true");
-        }
-    }
-
-    const assignedIds = new Set();
-    const lanesWrapper = document.createElement("div");
-    lanesWrapper.className = "cabinet-lanes";
-
-    CABINET_LANES.forEach((laneDefinition) => {
-        const laneMembers = members.filter((member) => laneDefinition.grades.includes(member.gradeKey));
-        laneMembers.forEach((member) => assignedIds.add(member.id));
-
-        const lane = renderCabinetLane(laneDefinition, laneMembers);
-        if (lane) {
-            lanesWrapper.appendChild(lane);
-        }
-    });
-
-    const remainingMembers = members.filter((member) => !assignedIds.has(member.id));
-    if (remainingMembers.length) {
-        const fallbackLane = renderCabinetLane(CABINET_FALLBACK_LANE, remainingMembers);
-        if (fallbackLane) {
-            lanesWrapper.appendChild(fallbackLane);
-        }
-    }
-
-    panel.appendChild(lanesWrapper);
-    return section;
-};
 
 // Cabinet grade helpers and caches
 let collaboratorGradesLookup = null;
@@ -1928,48 +1577,26 @@ const createGradeLookup = (grades) => {
     return { byKey, alias, ordered };
 };
 
+/**
+ * Retourne un lookup de grades de collaborateurs statique
+ * (migration Supabase → Static : plus de requête dynamique)
+ */
 const getCollaboratorGradeLookup = async () => {
     if (collaboratorGradesLookup) {
         return collaboratorGradesLookup;
     }
 
-    if (!collaboratorGradesPromise) {
-        collaboratorGradesPromise = (async () => {
-            const client = ensureSupabaseClient();
-            if (!client) {
-                collaboratorGradesLookup = createGradeLookup(null);
-                return collaboratorGradesLookup;
-            }
+    // Grades statiques basés sur la structure habituelle des cabinets ministériels
+    const staticGrades = [
+        { code: "dircab", label: "Directeur de cabinet", rank: 1 },
+        { code: "diradj", label: "Directeur adjoint de cabinet", rank: 2 },
+        { code: "chefcab", label: "Chef de cabinet", rank: 3 },
+        { code: "chefadj", label: "Chef de cabinet adjoint", rank: 4 },
+        { code: "chefpole", label: "Chef de pôle", rank: 5 },
+        { code: "conseiller", label: "Conseiller", rank: 6 }
+    ];
 
-            try {
-                const { data, error } = await client
-                    .from("collab_grades")
-                    .select("code, label, rank")
-                    .order("rank", { ascending: true });
-
-                if (error) {
-                    console.warn("[onepage] Impossible de récupérer collab_grades :", error);
-                    collaboratorGradesLookup = createGradeLookup(null);
-                    return collaboratorGradesLookup;
-                }
-
-                collaboratorGradesLookup = createGradeLookup(Array.isArray(data) ? data : null);
-                return collaboratorGradesLookup;
-            } catch (err) {
-                console.warn("[onepage] Erreur collab_grades :", err);
-                collaboratorGradesLookup = createGradeLookup(null);
-                return collaboratorGradesLookup;
-            }
-        })().finally(() => {
-            collaboratorGradesPromise = null;
-        });
-    }
-
-    if (collaboratorGradesPromise) {
-        return collaboratorGradesPromise;
-    }
-
-    collaboratorGradesLookup = createGradeLookup(null);
+    collaboratorGradesLookup = createGradeLookup(staticGrades);
     return collaboratorGradesLookup;
 };
 
@@ -2498,28 +2125,23 @@ function generatePoleTitle(leader) {
 
 function buildPMStructures(rows) {
   const topCabinet = [];
-  const polesById = new Map();
+  const polesByLeader = new Map(); // key = id du chef de pôle
 
-  // 1) Cabinet haut + chefs de pôle
+  // 1) Cabinet haut + chefs de pôle (basé sur collab_grade)
   rows.forEach(person => {
     const grade = person.collab_grade;
-
     if (["direcab", "direcab-adj", "chefcab", "chefadj", "diradj"].includes(grade)) {
       topCabinet.push(person);
     }
-
     if (grade === "chefpole") {
-      polesById.set(person.id, {
-        leader: person,
-        members: []
-      });
+      polesByLeader.set(person.id, { leader: person, members: [] });
     }
   });
 
-  // 2) Membres des pôles
+  // 2) Membres rattachés aux chefs de pôle via superior_id
   rows.forEach(person => {
     if (!person.superior_id) return;
-    const pole = polesById.get(person.superior_id);
+    const pole = polesByLeader.get(person.superior_id);
     if (pole && person.collab_grade !== "chefpole") {
       pole.members.push(person);
     }
@@ -2528,9 +2150,8 @@ function buildPMStructures(rows) {
   // 3) Conseillers rattachés directement au ministre (ou hors pôles)
   const directAdvisors = rows.filter(person => {
     if (person.collab_grade !== "conseiller") return false;
-    // Directement rattaché au PM OU rattaché à quelqu'un qui n'est pas un chefpole
     if (!person.superior_id) return true;
-    return !polesById.has(person.superior_id);
+    return !polesByLeader.has(person.superior_id);
   });
 
   // 4) Tri du cabinet
@@ -2542,11 +2163,17 @@ function buildPMStructures(rows) {
   });
 
   // 5) Tri des pôles (par cabinet_order du chef de pôle)
-  const poles = Array.from(polesById.values()).sort((a, b) => {
+  const poles = Array.from(polesByLeader.values()).sort((a, b) => {
     const ao = a.leader?.cabinet_order || 999;
     const bo = b.leader?.cabinet_order || 999;
     return ao - bo;
   });
+
+  console.log('[DEBUG][PM] buildPMStructures',
+    'rows:', rows.length,
+    'topCabinet:', topCabinet.length,
+    'poles:', poles.length,
+    'directAdvisors:', directAdvisors.length);
 
   return { topCabinet, poles, directAdvisors };
 }
@@ -2607,11 +2234,13 @@ function Fonctionderendudesleaders(minister, collaborators) {
         return `
           <article class="pm-cabinet-card">
             <div class="pm-cabinet-card-avatar">
-              <img src="${photo}" alt="Portrait de ${person.full_name}">
+              <img src="${photo}" alt="Portrait de ${person.full_name}" onerror="this.onerror=null;this.src='assets/placeholder-minister.svg';">
             </div>
             <div class="pm-cabinet-card-main">
               <div class="pm-cabinet-card-name">${person.full_name}</div>
               <div class="pm-cabinet-card-role">${gradeLabel}</div>
+              ${person.job_title ? `<div class="pm-cabinet-card-role pm-cabinet-card-role--secondary">${person.job_title}</div>` : ''}
+              ${person.description ? `<div class="pm-cabinet-card-desc">${person.description}</div>` : ''}
             </div>
           </article>
         `;
@@ -2650,11 +2279,12 @@ function Fonctionderendudesleaders(minister, collaborators) {
             return `
               <div class="pm-pole-member">
                 <div class="pm-pole-member-avatar">
-                  <img src="${member.photo_url || 'assets/placeholder-minister.svg'}" alt="Portrait de ${member.full_name}">
+                  <img src="${member.photo_url || 'assets/placeholder-minister.svg'}" alt="Portrait de ${member.full_name}" onerror="this.onerror=null;this.src='assets/placeholder-minister.svg';">
                 </div>
                 <div class="pm-pole-member-main">
                   <div class="pm-pole-member-name">${member.full_name}</div>
-                  <div class="pm-pole-member-job">${gradeLabel}${member.job_title ? ' — ' + member.job_title : ''}</div>
+                  <div class="pm-pole-member-job">${gradeLabel || ''}${member.job_title ? ' — ' + member.job_title : ''}</div>
+                  ${member.description ? `<div class="pm-pole-member-desc">${member.description}</div>` : ''}
                 </div>
               </div>
             `;
@@ -2813,6 +2443,7 @@ const renderPresidentCabinetSection = (minister, collaborators) => {
                             <div class="pm-cabinet-card-name">${person.full_name || "Collaborateur"}</div>
                             ${roleDisplay ? `<div class="pm-cabinet-card-role">${roleDisplay}</div>` : ''}
                             ${secondaryRole ? `<div class="pm-cabinet-card-role pm-cabinet-card-role--secondary">${secondaryRole}</div>` : ''}
+                            ${person.description ? `<div class="pm-cabinet-card-desc">${person.description}</div>` : ''}
                         </div>
                     </article>
                 `;
@@ -2859,6 +2490,7 @@ const renderPresidentCabinetSection = (minister, collaborators) => {
                                     <div class="pm-pole-member-name">${member.full_name || "Collaborateur"}</div>
                                     ${roleDisplay ? `<div class="pm-pole-member-job">${roleDisplay}</div>` : ''}
                                     ${secondaryRole ? `<div class="pm-pole-member-job pm-pole-member-job--secondary">${secondaryRole}</div>` : ''}
+                                    ${member.description ? `<div class="pm-pole-member-desc">${member.description}</div>` : ''}
                                     ${emailHtml}
                                 </div>
                             </div>
@@ -3142,9 +2774,17 @@ const toggleExecutiveCabinet = async (minister, toggleButton) => {
 
 
 const showCabinetInlineForMinister = async (minister) => {
-    if (!modal || !minister) return;
+    console.log('[DEBUG] showCabinetInlineForMinister appelé pour:', minister?.name, minister?.id);
+
+    if (!modal || !minister) {
+        console.log('[DEBUG] Modal ou minister manquant');
+        return;
+    }
     const modalBody = modal.querySelector(".modal-body");
-    if (!modalBody) return;
+    if (!modalBody) {
+        console.log('[DEBUG] modalBody non trouvé');
+        return;
+    }
 
     const existingSection = modalBody.querySelector(".modal-collaborators");
     if (existingSection) {
@@ -3159,7 +2799,7 @@ const showCabinetInlineForMinister = async (minister) => {
     // (certains ministres délégués peuvent être rattachés à Matignon mais ne
     // doivent pas déclencher la vue 'cabinet du Premier ministre').
     const isPrimeMinister = !isPresidentCase && isExecutiveLeader(minister) && !DELEGATE_ROLES.has(minister.role);
-    
+
     let placeholder;
     if (isPresidentCase) {
         // Structure spéciale pour le Président avec pôles thématiques
@@ -3200,29 +2840,31 @@ const showCabinetInlineForMinister = async (minister) => {
     }
 
     if (!minister.id) {
+        console.log('[DEBUG] Pas d\'ID ministre');
         return;
     }
 
-    let collabs = collaboratorsCache.get(minister.id);
-    let fetchError = false;
-    if (!collabs) {
-        try {
-            collabs = await fetchCollaboratorsForMinister(minister.id);
-        } catch (error) {
-            collabs = null;
-        }
-        fetchError = !Array.isArray(collabs);
-        collaboratorsCache.set(minister.id, Array.isArray(collabs) ? collabs : []);
+    // ========== MIGRATION: Utiliser minister.collaborators du JSON au lieu de Supabase ==========
+    // Les collaborateurs sont maintenant des objets complets avec toutes leurs informations
+    const collabs = Array.isArray(minister.collaborators) ? minister.collaborators : [];
+    console.log('[DEBUG] Collaborateurs complets trouvés:', collabs.length, collabs.slice(0, 2));
+    if (collabs.length) {
+        console.log('[DEBUG] Premier collaborateur (dump):', collabs[0]);
     }
+
+    console.log('[DEBUG] Objets collaborateurs créés:', collabs.length);
+
+    const fetchError = false; // Pas d'erreur puisque les données sont déjà dans le JSON
 
     let finalSection;
     if (isPresidentCase) {
+        console.log('[DEBUG] Cas Président - appel renderPresidentCabinetSection avec', collabs.length, 'collaborateurs');
         // Utiliser la structure spéciale pour le Président (pôles thématiques)
         finalSection = renderPresidentCabinetSection(
             minister,
             Array.isArray(collabs) ? collabs : []
         );
-        
+
         if (fetchError) {
             const errorMessage = document.createElement("p");
             errorMessage.className = "president-cabinet-empty";
@@ -3230,12 +2872,13 @@ const showCabinetInlineForMinister = async (minister) => {
             finalSection.appendChild(errorMessage);
         }
     } else if (isPrimeMinister) {
+        console.log('[DEBUG] Cas Premier Ministre - appel renderPMCabinetSection avec', collabs.length, 'collaborateurs');
         // Utiliser la nouvelle structure pour le Premier ministre
         finalSection = renderPMCabinetSection(
             minister,
             Array.isArray(collabs) ? collabs : []
         );
-        
+
         if (fetchError) {
             const errorMessage = document.createElement("p");
             errorMessage.className = "pm-cabinet-empty";
@@ -3243,8 +2886,10 @@ const showCabinetInlineForMinister = async (minister) => {
             finalSection.appendChild(errorMessage);
         }
     } else {
+        console.log('[DEBUG] Cas Ministre normal - appel renderCabinetSection avec', collabs.length, 'collaborateurs');
         // Utiliser la structure normale pour les autres ministres
         const gradeLookup = await getCollaboratorGradeLookup();
+        console.log('[DEBUG] Grade lookup obtenu:', gradeLookup ? 'OK' : 'NULL');
         finalSection = renderCabinetSection(
             minister,
             Array.isArray(collabs) ? collabs : [],
@@ -3273,6 +2918,8 @@ const showCabinetInlineForMinister = async (minister) => {
     }
 
     placeholder.replaceWith(finalSection);
+    console.log('[DEBUG] Section finale insérée dans le DOM pour', minister.name);
+
     // ensure the has-collaborators marker remains while the section is present
     if (modal && !modal.classList.contains('modal--has-collaborators')) {
         modal.classList.add('modal--has-collaborators');
@@ -3298,18 +2945,19 @@ const openModal = async (minister) => {
             executiveSection.remove();
         }
     }
-    if (exportButton) {
-        if (minister) {
-            exportButton.disabled = false;
-            exportButton.removeAttribute("aria-disabled");
-            exportButton.removeAttribute("aria-busy");
-            exportButton.onclick = () => handleExportMinisterClick(minister);
-        } else {
-            exportButton.disabled = true;
-            exportButton.setAttribute("aria-disabled", "true");
-            exportButton.onclick = null;
-        }
-    }
+    // Export functionality removed - button deleted from HTML
+    // if (exportButton) {
+    //     if (minister) {
+    //         exportButton.disabled = false;
+    //         exportButton.removeAttribute("aria-disabled");
+    //         exportButton.removeAttribute("aria-busy");
+    //         exportButton.onclick = () => handleExportMinisterClick(minister);
+    //     } else {
+    //         exportButton.disabled = true;
+    //         exportButton.setAttribute("aria-disabled", "true");
+    //         exportButton.onclick = null;
+    //     }
+    // }
     modalElements.photo.src = ensureImageSource(minister.photo);
     if (modalElements.photo) {
         modalElements.photo.onerror = () => {
@@ -3410,65 +3058,65 @@ const openModal = async (minister) => {
                         delegatesSection.parentNode.removeChild(delegatesSection);
                     }
                 } else {
-                // Ensure delegates section exists; create it if needed
-                if (!delegatesSection) {
-                    delegatesSection = document.createElement('div');
-                    delegatesSection.className = 'modal-module modal-module--delegates';
-                    const h4 = document.createElement('h4');
-                    h4.className = 'modal-module-title';
-                    h4.textContent = 'Ministres délégués';
-                    delegatesSection.appendChild(h4);
-                    delegatesList = document.createElement('div');
-                    delegatesList.id = 'modal-delegates';
-                    delegatesList.className = 'modal-delegates-list';
-                    delegatesList.setAttribute('role', 'list');
-                    delegatesSection.appendChild(delegatesList);
+                    // Ensure delegates section exists; create it if needed
+                    if (!delegatesSection) {
+                        delegatesSection = document.createElement('div');
+                        delegatesSection.className = 'modal-module modal-module--delegates';
+                        const h4 = document.createElement('h4');
+                        h4.className = 'modal-module-title';
+                        h4.textContent = 'Ministres délégués';
+                        delegatesSection.appendChild(h4);
+                        delegatesList = document.createElement('div');
+                        delegatesList.id = 'modal-delegates';
+                        delegatesList.className = 'modal-delegates-list';
+                        delegatesList.setAttribute('role', 'list');
+                        delegatesSection.appendChild(delegatesList);
 
-                    // Insert delegates section before biography section if present, otherwise append to modal layout
-                    const biographySec = modal.querySelector('.modal-module--biography');
-                    const layout = modal.querySelector('.modal-layout') || modal.querySelector('.modal-body') || modal;
-                    if (biographySec && biographySec.parentNode) {
-                        biographySec.parentNode.insertBefore(delegatesSection, biographySec);
-                    } else if (layout) {
-                        layout.appendChild(delegatesSection);
+                        // Insert delegates section before biography section if present, otherwise append to modal layout
+                        const biographySec = modal.querySelector('.modal-module--biography');
+                        const layout = modal.querySelector('.modal-layout') || modal.querySelector('.modal-body') || modal;
+                        if (biographySec && biographySec.parentNode) {
+                            biographySec.parentNode.insertBefore(delegatesSection, biographySec);
+                        } else if (layout) {
+                            layout.appendChild(delegatesSection);
+                        }
                     }
-                }
-                }
 
-                // Populate delegates list
-                delegatesList = delegatesList || delegatesSection.querySelector('#modal-delegates');
-                if (delegatesList) {
-                    delegatesList.innerHTML = '';
-                    linkedDelegates.forEach((delegate) => {
-                        const btn = document.createElement('button');
-                        btn.type = 'button';
-                        btn.className = 'delegate-card delegate-card--inline';
-                        btn.setAttribute('role', 'listitem');
+                    // Populate delegates list (only if we have linkedDelegates)
+                    delegatesList = delegatesList || delegatesSection.querySelector('#modal-delegates');
+                    if (delegatesList) {
+                        delegatesList.innerHTML = '';
+                        linkedDelegates.forEach((delegate) => {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'delegate-card delegate-card--inline';
+                            btn.setAttribute('role', 'listitem');
 
-                        const info = document.createElement('div');
-                        info.className = 'delegate-info';
-                        const dn = document.createElement('p');
-                        dn.className = 'delegate-name';
-                        // keep the minister's name visible
-                        dn.textContent = delegate.name || '';
-                        info.appendChild(dn);
-                        const dr = document.createElement('p');
-                        dr.className = 'delegate-role';
-                        // prefer role_label from person_ministries (mapped to mission) as the displayed role
-                        dr.textContent = delegate.mission || delegate.portfolio || formatRole(delegate.role) || '';
-                        info.appendChild(dr);
-                        btn.appendChild(info);
+                            const info = document.createElement('div');
+                            info.className = 'delegate-info';
+                            const dn = document.createElement('p');
+                            dn.className = 'delegate-name';
+                            // keep the minister's name visible
+                            dn.textContent = delegate.name || '';
+                            info.appendChild(dn);
+                            const dr = document.createElement('p');
+                            dr.className = 'delegate-role';
+                            // prefer role_label from person_ministries (mapped to mission) as the displayed role
+                            dr.textContent = delegate.mission || delegate.portfolio || formatRole(delegate.role) || '';
+                            info.appendChild(dr);
+                            btn.appendChild(info);
 
-                        const delegateBadge = createPartyBadge(delegate.party == null ? '' : String(delegate.party).trim());
-                        if (delegateBadge) btn.appendChild(delegateBadge);
+                            const delegateBadge = createPartyBadge(delegate.party == null ? '' : String(delegate.party).trim());
+                            if (delegateBadge) btn.appendChild(delegateBadge);
 
-                        btn.addEventListener('click', (ev) => {
-                            ev.stopPropagation();
-                            openModal(delegate);
+                            btn.addEventListener('click', (ev) => {
+                                ev.stopPropagation();
+                                openModal(delegate);
+                            });
+
+                            delegatesList.appendChild(btn);
                         });
-
-                        delegatesList.appendChild(btn);
-                    });
+                    }
                 }
             }
         } catch (e) {
@@ -3508,7 +3156,6 @@ const closeModal = () => {
         toggleButton.dataset.cabinetState = 'closed';
     }
     document.body.style.overflow = "";
-    cleanupPrintSheet();
     if (exportButton) {
         exportButton.onclick = null;
         exportButton.disabled = true;
@@ -3626,367 +3273,133 @@ const highlightFilter = (role) => {
     });
 };
 
-const fetchMinistersFromSupabase = async () => {
-    const client = ensureSupabaseClient();
-    if (!client) {
-        throw new Error("Client Supabase non initialisé");
+// ========== SUPPRIMÉ: fetchMinistersFromSupabase() et fetchMinistersFromView() ==========
+// Les données proviennent des fichiers statiques data/ministers/
+
+const fetchMinistersFromSplitFiles = async () => {
+    const manifestUrl = 'data/ministers/index.json';
+    const manifestResponse = await fetch(manifestUrl, { cache: 'no-store' });
+    if (!manifestResponse.ok) {
+        throw new Error(`Erreur HTTP ${manifestResponse.status} lors du chargement de ${manifestUrl}`);
     }
 
-    const { data: persons, error: personsError } = await client
-        .from("persons")
-        .select(
-            `id, full_name, role, description, photo_url, email, party, superior_id,
-             person_ministries(
-                role_label,
-                is_primary,
-                ministries(id, short_name, name, color, parent_ministry_id)
-             )`
-        )
-        .order("role", { ascending: true })
-        .order("full_name", { ascending: true });
-
-    if (personsError) {
-        throw personsError;
+    const manifest = await manifestResponse.json();
+    if (!Array.isArray(manifest) || manifest.length === 0) {
+        throw new Error('Le manifest data/ministers/index.json est vide ou invalide');
     }
 
-    const validPersons = (persons || []).filter((person) => MINISTER_ROLES.has(person.role));
-    if (!validPersons.length) {
-        return [];
+    const entries = manifest.filter(item => item && item.file);
+    if (entries.length === 0) {
+        throw new Error('Aucun fichier listé dans data/ministers/index.json');
     }
 
-    const personIds = validPersons.map((person) => person.id).filter((id) => id != null);
-    let biographyByPerson = new Map();
-    let collaboratorsByPerson = new Map();
-    
-    if (personIds.length) {
-        try {
-            const tryQuery = async (source) => client
-                .from(source)
-                .select('*')
-                .in('person_id', personIds)
-                .order('sort_index', { ascending: true })
-                .order('start_date', { ascending: false })
-                .order('created_at', { ascending: false });
-
-            // Prefer view first, then fallback to careers table if missing
-            let source = SUPABASE_BIOGRAPHY_VIEW;
-            let { data: biographyRows, error: biographyError } = await tryQuery(source);
-            if (biographyError && (biographyError.code === 'PGRST205' || (biographyError.message && biographyError.message.includes('Could not find the table')))) {
-                if (SUPABASE_CAREERS_TABLE && SUPABASE_CAREERS_TABLE !== SUPABASE_BIOGRAPHY_VIEW) {
-                    source = SUPABASE_CAREERS_TABLE;
-                    ({ data: biographyRows, error: biographyError } = await tryQuery(source));
-                }
-            }
-
-            if (!biographyError && Array.isArray(biographyRows)) {
-                biographyByPerson = biographyRows.reduce((map, row) => {
-                    if (!row || row.person_id == null) return map;
-                    const list = map.get(row.person_id) || [];
-                    list.push(row);
-                    map.set(row.person_id, list);
-                    return map;
-                }, new Map());
-                console.log('[onepage] Biographies groupées par personne depuis', source, '→', biographyRows.length, 'ligne(s)');
-            } else if (biographyError) {
-                console.warn('[onepage] Erreur lors du chargement des entrées de biographie depuis', source + ':', biographyError);
-            }
-        } catch (error) {
-            console.warn('[onepage] Impossible de charger les entrées de biographie', error);
+    const results = await Promise.all(entries.map(async (entry) => {
+        const url = entry.file;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) {
+            throw new Error(`Erreur HTTP ${res.status} lors du chargement de ${url}`);
         }
+        return res.json();
+    }));
 
-        // Charger les collaborateurs pour l'index de recherche
-        try {
-            const { data: collaboratorsRows, error: collaboratorsError } = await client
-                .from("persons")
-                .select("id, superior_id, full_name")
-                .eq("role", "collaborator")
-                .in("superior_id", personIds);
+    return results;
+};
 
-            if (!collaboratorsError && Array.isArray(collaboratorsRows)) {
-                collaboratorsByPerson = collaboratorsRows.reduce((map, collab) => {
-                    if (!collab || collab.superior_id == null) return map;
-                    const list = map.get(collab.superior_id) || [];
-                    list.push(collab.full_name);
-                    map.set(collab.superior_id, list);
-                    return map;
-                }, new Map());
-                console.log('[onepage] Collaborateurs chargés pour l\'index de recherche →', collaboratorsRows.length, 'collaborateur(s)');
-            } else if (collaboratorsError) {
-                console.warn('[onepage] Erreur lors du chargement des collaborateurs pour l\'index de recherche :', collaboratorsError);
-            }
-        } catch (error) {
-            console.warn('[onepage] Impossible de charger les collaborateurs pour l\'index de recherche', error);
-        }
-    }
-
-    return validPersons.map((person) => {
-        const links = Array.isArray(person.person_ministries) ? person.person_ministries.slice() : [];
-        links.sort((a, b) => {
-            if (!!a.is_primary === !!b.is_primary) {
-                const labelA = a?.ministries?.short_name || a?.ministries?.name || "";
-                const labelB = b?.ministries?.short_name || b?.ministries?.name || "";
-                return labelA.localeCompare(labelB);
-            }
-            return a.is_primary ? -1 : 1;
-        });
-
-        const primaryLink = links.find((link) => link.is_primary) ?? links[0] ?? null;
-        const primaryMinistry = primaryLink?.ministries ?? null;
-
-        const ministriesLabels = links
-            .map((link) => {
-                const ministry = link?.ministries;
-                if (!ministry) return null;
-                const label = ministry.short_name || ministry.name || "";
-                if (!label) return null;
-                return {
-                    label,
-                    roleLabel: link.role_label || null,
-                    isPrimary: !!link.is_primary
-                };
-            })
-            .filter(Boolean);
-
-        // Bon c'est bon la tool bar cherche uniquement dans les noms je trouve ça dommage pourra revoir ça à l'avenir
-        const collaboratorNames = collaboratorsByPerson.get(person.id) || [];
-        const searchIndexParts = [
-            person.full_name,
-            ...ministriesLabels.map((entry) => entry.label),
-            ...collaboratorNames
-        ];
-
-        const biographyEntries = biographyByPerson.get(person.id) || [];
-        const normalizedBiography = normalizeBiographyEntries(biographyEntries);
+const normaliseCollaboratorsForMinister = (collaborators, ministerId) => {
+    if (!Array.isArray(collaborators)) return [];
+    return collaborators.map((collab, index) => {
+        const name = collab?.full_name || collab?.name || '';
+        const role = collab?.cabinet_role || collab?.job_title || '';
+        const order = typeof collab?.cabinet_order === 'number'
+            ? collab.cabinet_order
+            : parseInt(collab?.cabinet_order, 10);
 
         return {
-            id: person.id,
-            name: person.full_name ?? "",
-            role: person.role ?? "",
-            description: person.description ?? "",
-            mission: primaryLink?.role_label || "",
-            portfolio: primaryMinistry?.short_name || primaryMinistry?.name || "",
-            contact: person.email || "",
-            party: person.party || "",
-            photo: person.photo_url || "",
-            photoAlt: person.full_name ? `Portrait de ${person.full_name}` : undefined,
-            accentColor: primaryMinistry?.color || undefined,
-            ministries: ministriesLabels,
-            superiorId: person.superior_id || null,
-            primaryMinistryId: primaryMinistry?.id || null,
-            primaryParentMinistryId: primaryMinistry?.parent_ministry_id || null,
-            searchIndex: searchIndexParts.filter(Boolean).join(" "),
-            biography: normalizedBiography
+            id: collab?.id ?? `collab-${ministerId || 'unknown'}-${index + 1}`,
+            superior_id: collab?.superior_id || ministerId || null,
+            full_name: name || 'Collaborateur·rice',
+            name: name || 'Collaborateur·rice',
+            cabinet_role: role || null,
+            job_title: collab?.job_title || null,
+            cabinet_order: Number.isFinite(order) ? order : 999,
+            collab_grade: collab?.collab_grade || null,
+            pole_name: collab?.pole_name || null,
+            photo_url: collab?.photo_url || null,
+            description: collab?.description || null,
+            email: collab?.email || null,
+            cabinet_badge: collab?.cabinet_badge || null
         };
     });
 };
 
-const fetchMinistersFromView = async () => {
-    const client = ensureSupabaseClient();
-    if (!client) throw new Error("Client Supabase non initialisé");
-
-    const { data, error } = await client
-        .from("vw_ministernode")
-        .select("person_id, full_name, is_leader, ministry_name, color, photo_url, party")
-        .order("is_leader", { ascending: false })
-        .order("full_name", { ascending: true });
-
-    if (error) {
-        // Provide a clearer diagnostic when PostgREST reports missing table/view (PGRST205)
-        // This commonly means the DB view `public.vw_ministernode` has not been created in the project
-        // or is in a different schema. Useful message for debugging in the browser console.
-        if (error.code === "PGRST205" || (error.message && error.message.includes("Could not find the table"))) {
-            console.warn("[onepage] La view 'public.vw_ministernode' est introuvable côté Supabase (404).\n" +
-                "Vérifiez que vous avez exécuté sql/vw_ministernode.sql dans l'éditeur SQL Supabase et que la view appartient au schema 'public'.\n" +
-                "Si la view existe dans un autre schema, adaptez l'endpoint PostgREST ou créez la view dans 'public'.");
-        } else {
-            console.warn("[onepage] Erreur lors de l'appel à vw_ministernode :", error);
-        }
-        throw error;
-    }
-
-    const rows = data ?? [];
-
-    // Compléter la bio du Premier ministre depuis la table persons si possible
-    const leaderIds = rows.filter((r) => r.is_leader).map((r) => r.person_id);
-    let leaderDescriptions = new Map();
-    if (leaderIds.length) {
-        try {
-            const { data: persons } = await client
-                .from("persons")
-                .select("id, description")
-                .in("id", leaderIds);
-            leaderDescriptions = new Map((persons ?? []).map((p) => [p.id, p.description || ""]));
-        } catch (e) {
-            // Silencieux: si la table/colonne n'est pas dispo, on continue sans bio
-        }
-    }
-
-    // Essaye de retrouver l'identifiant du ministère par libellé il faudrait faire en sorte qu'il l'identifie directement avec son id, je vais créer un 
-    const ministryNames = Array.from(new Set(rows.map((r) => r.ministry_name).filter(Boolean)));
-    let ministryIdByName = new Map();
-    if (ministryNames.length) {
-        try {
-            // 1) Match sur short_name
-            const { data: byShort } = await client
-                .from("ministries")
-                .select("id, short_name")
-                .in("short_name", ministryNames);
-            (byShort || []).forEach((m) => ministryIdByName.set(m.short_name, m.id));
-            // 2) Match restant sur name
-            const remaining = ministryNames.filter((n) => !ministryIdByName.has(n));
-            if (remaining.length) {
-                const { data: byName } = await client
-                    .from("ministries")
-                    .select("id, name")
-                    .in("name", remaining);
-                (byName || []).forEach((m) => ministryIdByName.set(m.name, m.id));
-            }
-        } catch (e) {
-            // best-effort; ignorer en cas d'erreur
-        }
-    }
-
-    const normalized = rows.map((row) => ({
-        id: row.person_id,
-        name: row.full_name,
-        role: row.is_leader ? "leader" : "minister",
-        portfolio: row.ministry_name || (row.is_leader ? "Premier ministre" : ""),
-        photo: row.photo_url || "",
-        photoAlt: row.full_name ? `Portrait de ${row.full_name}` : undefined,
-        accentColor: row.color || undefined,
-        party: row.party || "",
-        description: leaderDescriptions.get(row.person_id) || "",
-        primaryMinistryId: row.ministry_name ? (ministryIdByName.get(row.ministry_name) || null) : null,
-        ministries: row.ministry_name ? [{ label: row.ministry_name, isPrimary: true }] : [],
-        biography: [],
-    }));
-
-    // Inject explicit president records if the view doesn't provide them
-    try {
-        const { data: presidents, error: presidentsError } = await client
-            .from("persons")
-            .select("id, full_name, photo_url, party, description")
-            .eq("role", "president");
-        if (!presidentsError && Array.isArray(presidents)) {
-            presidents.forEach((p) => {
-                if (!p || p.id == null) return;
-                if (normalized.some((m) => String(m.id) === String(p.id))) return;
-                normalized.unshift({
-                    id: p.id,
-                    name: p.full_name || "",
-                    role: "president",
-                    portfolio: "Président de la République",
-                    photo: p.photo_url || "",
-                    photoAlt: p.full_name ? `Portrait de ${p.full_name}` : undefined,
-                    accentColor: undefined,
-                    party: p.party || "",
-                    description: p.description || "",
-                    primaryMinistryId: null,
-                    ministries: [],
-                    biography: [],
-                });
-            });
-        }
-    } catch (_) {
-        // best-effort only
-    }
-
-    return normalized;
-};
-
-const fetchMinistersFromFallback = async () => {
-    const response = await fetch(FALLBACK_DATA_URL, { cache: "no-store" });
-    if (!response.ok) {
-        throw new Error(`Impossible de charger les données (${response.status})`);
-    }
-    const payload = await response.json();
-    if (!Array.isArray(payload)) return [];
-    return payload.map((item) => {
-        if (item && typeof item === 'object' && !Array.isArray(item)) {
-            return Object.assign({ biography: [] }, item);
-        }
-        return item;
-    });
-};
-
+/**
+ * Charge les données des ministres depuis le fichier JSON statique
+ * (Migration Supabase → GitHub Pages)
+ */
 const loadMinisters = async () => {
     setGridBusy(true);
     emptyState.hidden = true;
 
-    let dataLoaded = false;
-
     try {
-        let supabaseMinisters = [];
-        try {
-            supabaseMinisters = await fetchMinistersFromSupabase();
-            ministers = supabaseMinisters;
-            coreMinisters = supabaseMinisters.filter((m) => CORE_ROLES.has(m.role));
-            delegateMinisters = supabaseMinisters.filter((m) => DELEGATE_ROLES.has(m.role));
-        } catch (firstErr) {
-            console.warn('[onepage] fetchMinistersFromSupabase failed, attempting vw_ministernode as fallback', firstErr);
-            try {
-                supabaseMinisters = await fetchMinistersFromView();
-                ministers = supabaseMinisters;
-                coreMinisters = supabaseMinisters.filter((m) => CORE_ROLES.has(m.role));
-                delegateMinisters = supabaseMinisters.filter((m) => DELEGATE_ROLES.has(m.role));
-            } catch (viewErr) {
-                throw viewErr;
-            }
-        }
-        if (supabaseMinisters.length) {
-            attachDelegatesToCore();
-            dataLoaded = true;
-            updatePartyFilterOptions(ministers);
-        }
-    } catch (error) {
-        console.error("[onepage] Erreur lors du chargement des ministres depuis Supabase", error);
-    }
+        const data = await fetchMinistersFromSplitFiles();
+        console.log(`[onepage] ✅ ${data.length} ministres chargés depuis les fichiers individuels`);
 
-    if (!dataLoaded) {
-        try {
-            const fallbackMinisters = await fetchMinistersFromFallback();
-            if (fallbackMinisters.length) {
-                ministers = fallbackMinisters;
-                coreMinisters = fallbackMinisters.filter((m) => CORE_ROLES.has(m.role));
-                delegateMinisters = fallbackMinisters.filter((m) => DELEGATE_ROLES.has(m.role));
-                attachDelegatesToCore();
-                dataLoaded = true;
-                updatePartyFilterOptions(ministers);
-            }
-        } catch (error) {
-            console.error("[onepage] Erreur lors du chargement du fichier de secours", error);
-        }
-    }
+        // Normaliser les données (s'assurer que biography existe)
+        ministers = data.map(item => ({
+            ...item,
+            biography: Array.isArray(item.biography) ? item.biography : [],
+            collaborators: normaliseCollaboratorsForMinister(item.collaborators, item.id)
+        }));
 
-    if (dataLoaded) {
+        // Séparer ministres core et délégués
+        coreMinisters = ministers.filter(m => CORE_ROLES.has(m.role));
+        delegateMinisters = ministers.filter(m => DELEGATE_ROLES.has(m.role));
+
+        // Attacher les délégués aux ministres
+        attachDelegatesToCore();
+
+        // Mettre à jour les options de filtre parti
+        updatePartyFilterOptions(ministers);
+
+        // Appliquer les filtres et afficher
         applyFilters();
-        // build header search index for autocomplete
-        // build header search index for autocomplete (may be defined later)
+
+        // Construire l'index de recherche (si fonction disponible)
         if (typeof buildHeaderSearchIndex === 'function') {
             try {
                 buildHeaderSearchIndex();
             } catch (e) {
-                /* ignore */
+                console.warn('[onepage] Erreur construction index recherche:', e);
             }
         } else {
-            // schedule a short retry in case the function is defined after this block
+            // Retry au cas où la fonction serait définie plus tard
             setTimeout(() => {
                 if (typeof buildHeaderSearchIndex === 'function') {
-                    try { buildHeaderSearchIndex(); } catch (e) { /* ignore */ }
+                    try { 
+                        buildHeaderSearchIndex(); 
+                    } catch (e) { 
+                        /* ignore */ 
+                    }
                 }
             }, 60);
         }
-    } else {
+
+        console.log(`[onepage] ✅ ${ministers.length} ministres chargés depuis les fichiers individuels`);
+
+    } catch (error) {
+        console.error('[onepage] ❌ Erreur chargement données:', error);
+        
         ministers = [];
         coreMinisters = [];
         delegateMinisters = [];
-        grid.innerHTML = "";
-        setGridBusy(false);
+        grid.innerHTML = '';
         emptyState.hidden = false;
-        emptyState.textContent =
-            "Aucune donnée disponible. Vérifiez la configuration Supabase ou ajoutez un fichier data/ministers.json.";
+        emptyState.textContent = 
+            'Impossible de charger les données. Vérifiez les fichiers data/ministers/index.json et le dossier data/ministers/.';
         updateResultsSummary(0, 0);
         updateActiveFiltersHint(0, 0);
+    } finally {
+        setGridBusy(false);
     }
 };
 
@@ -4097,7 +3510,7 @@ const initApp = () => {
         try {
             const banner = document.createElement('div');
             banner.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:rgba(209,0,123,0.1);border-top:1px solid rgba(209,0,123,0.35);color:#4B2579;padding:8px 12px;font:600 13px/1.4 \"Space Grotesk\",system-ui;backdrop-filter:saturate(120%) blur(2px)';
-            banner.textContent = 'Diagnostic: échec du chargement des données. Vérifiez Supabase (URL/KEY) ou data/ministers.json.';
+            banner.textContent = 'Diagnostic: échec du chargement des données. Vérifiez data/ministers/index.json et les fichiers individuels.';
             document.body.appendChild(banner);
             setTimeout(() => banner.remove(), 6000);
         } catch { /* no-op */ }
@@ -4146,34 +3559,8 @@ const buildHeaderSearchIndex = () => {
     _headerSearchIndex = items;
 };
 
-// server-side as-you-type search (Supabase) — best-effort: only runs if client available
-const serverSearch = async (query, limit = 6) => {
-    if (!query || query.length < 3) return [];
-    const client = ensureSupabaseClient();
-    if (!client) return [];
-    try {
-        const q = `%${query}%`;
-        const { data: persons } = await client
-            .from('persons')
-            .select('id, full_name, photo_url, job_title, description')
-            .ilike('full_name', q)
-            .limit(limit);
-
-        const { data: ministries } = await client
-            .from('ministries')
-            .select('id, name, short_name')
-            .ilike('name', q)
-            .limit(4);
-
-        const results = [];
-        (persons || []).forEach((p) => results.push({ type: 'person', label: p.full_name, value: p.full_name, id: p.id, photo: p.photo_url || '', portfolio: p.job_title || '', description: p.description || '' }));
-        (ministries || []).forEach((m) => results.push({ type: 'ministry', label: m.short_name || m.name, value: m.short_name || m.name }));
-        return results;
-    } catch (e) {
-        // silent fail — fallback to client-side index
-        return [];
-    }
-};
+// ========== SUPPRIMÉ: serverSearch() Supabase ==========
+// La recherche utilise désormais uniquement l'index client-side
 
 const renderHeaderSuggestions = (query) => {
     if (!headerSuggestionsEl) return;
@@ -4185,10 +3572,7 @@ const renderHeaderSuggestions = (query) => {
     }
     const max = 6;
     let matches = _headerSearchIndex.filter((it) => normalise(it.label || '').includes(qn)).slice(0, max);
-    // if server available, try server-side suggestions (as-you-type) and merge
-    if (typeof ensureSupabaseClient === 'function') {
-        // fire-and-forget; but prefer to await to show server results quickly
-    }
+    
     if (!matches.length) {
         headerSuggestionsEl.hidden = true;
         return;
