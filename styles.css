@@ -21,10 +21,6 @@
     --radius-base: 10px;
     --shadow-soft: 0 20px 45px rgba(39, 8, 59, 0.12);
     --shadow-hover: 0 28px 60px rgba(75, 37, 121, 0.18);
-    --cabinet-cloud-one: radial-gradient(circle at 14% 18%, rgba(100, 215, 205, 0.32), transparent 62%);
-    --cabinet-cloud-two: radial-gradient(circle at 78% 6%, rgba(209, 0, 123, 0.22), transparent 60%);
-    --cabinet-cloud-three: radial-gradient(circle at 80% 96%, rgba(105, 135, 255, 0.22), transparent 68%);
-    --cabinet-cloud-four: radial-gradient(circle at 5% 92%, rgba(240, 160, 140, 0.2), transparent 60%);
 
     /* Les fenêtres sont design ici */
     --modal-backdrop: rgba(17, 23, 39, 0.65);
@@ -339,49 +335,70 @@ img {
 }
 
 /* === STYLES POUR LES PÔLES DU PREMIER MINISTRE === */
-
-/* Wrapper général pour toutes les sections du cabinet */
 .pm-cabinet-wrapper {
     margin: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--color-encre);
 }
 
-/* Section principale du cabinet */
 .pm-cabinet-section {
-    margin: 2rem 0;
+    margin-bottom: 24px;
 }
 
 .pm-cabinet-section-title {
-    margin: 0 0 1.5rem 0;
-    font-size: 1.75rem;
-    font-weight: 700;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 14px 0;
+    position: relative;
+    padding-left: 14px;
     color: var(--color-encre);
-    text-align: center;
 }
 
-/* Grille du cabinet principal (directeur, chefs, etc.) */
+.pm-cabinet-section-title::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 16px;
+    border-radius: 4px;
+    background: var(--accent-primary);
+    opacity: 0.6;
+}
+
+/* Cabinet principal */
 .pm-cabinet-top-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
 }
 
-/* Carte de membre du cabinet */
 .pm-cabinet-card {
+    flex: 1;
+    min-width: 280px;
+    max-width: calc(33.333% - 11px);
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(17, 23, 39, 0.08);
+    gap: 12px;
+    padding: 14px;
     border-radius: var(--radius-base);
-    box-shadow: 0 4px 20px rgba(39, 8, 59, 0.06);
+    border: 1px solid rgba(134, 136, 149, 0.2);
+    background: linear-gradient(135deg, var(--color-perle) 0%, #ffffff 100%);
+    box-shadow: var(--shadow-soft);
     transition: all 0.2s ease;
+    min-height: 80px;
 }
 
 .pm-cabinet-card:hover {
-    box-shadow: 0 8px 30px rgba(39, 8, 59, 0.12);
     transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(39, 8, 59, 0.15);
+    border-color: var(--accent-primary);
 }
 
 .pm-cabinet-card-avatar {
@@ -401,44 +418,52 @@ img {
 }
 
 .pm-cabinet-card-name {
-    font-weight: 600;
-    color: var(--color-encre);
     font-size: 1rem;
+    font-weight: 600;
     margin: 0 0 0.3rem 0;
+    color: var(--color-encre);
 }
 
 .pm-cabinet-card-role {
-    font-size: 0.85rem;
-    color: var(--color-sesame);
-    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--color-poivre);
+    font-weight: 400;
     margin: 0;
     line-height: 1.3;
 }
 
-/* Container des pôles */
+/* Pôles */
 .pm-poles-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 1.25rem;
-    margin-top: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    align-items: normal;
+    align-content: space-around;
+    justify-items: stretch;
+    margin-top: 1rem;
 }
 
-/* Boîte de pôle */
 .pm-pole-box {
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(17, 23, 39, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    border: 1px solid rgba(134, 136, 149, 0.2);
     border-radius: var(--radius-base);
-    padding: 1.25rem;
-    box-shadow: 0 4px 20px rgba(39, 8, 59, 0.06);
+    background: linear-gradient(135deg, #ffffff 0%, var(--color-perle) 100%);
+    box-shadow: 0 4px 16px rgba(39, 8, 59, 0.08);
     transition: all 0.2s ease;
+    min-height: 200px;
+    flex-wrap: wrap;
+    align-content: normal;
 }
 
 .pm-pole-box:hover {
-    box-shadow: 0 8px 30px rgba(39, 8, 59, 0.12);
     transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(39, 8, 59, 0.12);
+    border-color: var(--accent-primary);
 }
 
-/* Titre du pôle */
 .pm-pole-title {
     margin: 0 0 1rem 0;
     border-bottom: 1px solid rgba(134, 136, 149, 0.2);
@@ -455,46 +480,37 @@ img {
     font-family: 'Space Grotesk', system-ui, sans-serif;
 }
 
-/* Header avec le chef de pôle */
 .pm-pole-header {
+    min-height: 60px;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 0.75rem 0 1rem 0;
-    border-bottom: 1px solid rgba(134, 136, 149, 0.15);
-    margin-bottom: 1rem;
-}
-
-.pm-pole-leader-avatar {
-    flex-shrink: 0;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(100, 215, 205, 0.05);
+    border-bottom: 2px solid var(--accent-primary);
+    margin-bottom: 12px;
 }
 
 .pm-pole-leader-avatar img {
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(100, 215, 205, 0.3);
-}
-
-.pm-pole-leader-info {
-    flex: 1;
+    border: 1px solid var(--color-sesame);
 }
 
 .pm-pole-leader-name {
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--color-encre);
-    font-size: 0.95rem;
-    margin: 0 0 0.25rem 0;
+    margin: 0;
 }
 
 .pm-pole-leader-job {
     font-size: 0.8rem;
-    color: var(--color-sesame);
-    font-weight: 500;
-    margin: 0 0 0.25rem 0;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
+    color: var(--cabinet-text-muted);
+    margin: 0;
 }
 
 .pm-pole-leader-specialty {
@@ -504,127 +520,132 @@ img {
     margin: 0;
 }
 
-/* Liste des membres */
 .pm-pole-members-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--color-sesame);
+    align-content: start;
 }
 
-/* Membre individuel */
 .pm-pole-member {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(134, 136, 149, 0.15);
+    border-radius: 8px;
+    padding: 10px 12px;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.6rem;
-    background: rgba(242, 242, 242, 0.3);
-    border-radius: 8px;
-    transition: background-color 0.15s ease;
+    gap: 12px;
+    transition: all 0.2s ease;
+    min-height: 60px;
 }
 
 .pm-pole-member:hover {
-    background: rgba(242, 242, 242, 0.5);
-}
-
-.pm-pole-member-avatar {
-    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.95);
+    border-color: var(--accent-primary);
+    box-shadow: 0 6px 16px rgba(100, 215, 205, 0.25);
+    transform: translateY(-1px);
 }
 
 .pm-pole-member-avatar img {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid rgba(134, 136, 149, 0.2);
+    border: 2px solid rgba(100, 215, 205, 0.2);
+    flex-shrink: 0;
 }
 
 .pm-pole-member-main {
     flex: 1;
+    min-width: 0;
 }
 
 .pm-pole-member-name {
-    font-weight: 500;
-    color: var(--color-encre);
     font-size: 0.9rem;
-    margin: 0 0 0.2rem 0;
+    font-weight: 600;
+    color: var(--color-encre);
+    margin: 0 0 2px 0;
+    line-height: 1.2;
 }
 
 .pm-pole-member-job {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--color-sesame);
-    margin: 0;
     line-height: 1.3;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
-/* État vide */
 .pm-cabinet-empty {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--cabinet-text-muted);
     text-align: center;
-    color: var(--color-sesame);
     font-style: italic;
-    font-size: 0.85rem;
-    padding: 1rem;
-    background: rgba(242, 242, 242, 0.2);
-    border-radius: 8px;
+    min-height: 80px;
+    padding: 20px;
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+    .pm-poles-container {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 18px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .pm-cabinet-card {
+        max-width: calc(50% - 8px);
+    }
+}
+
 @media (max-width: 768px) {
+    .pm-cabinet-top-grid {
+        flex-direction: column;
+    }
+    
     .pm-poles-container {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 16px;
     }
     
-    .pm-cabinet-top-grid {
+    .pm-pole-members-list {
         grid-template-columns: 1fr;
-        gap: 0.8rem;
     }
     
+    .pm-cabinet-card,
     .pm-pole-box {
-        padding: 1rem;
-    }
-    
-    .pm-cabinet-section-title {
-        font-size: 1.5rem;
-    }
-    
-    .pm-pole-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
-    }
-    
-    .pm-pole-leader-avatar img {
-        width: 42px;
-        height: 42px;
-    }
-    
-    .pm-cabinet-card-avatar img {
-        width: 48px;
-        height: 48px;
+        max-width: 100%;
+        min-width: 100%;
     }
 }
 
 @media (max-width: 480px) {
     .pm-cabinet-card {
-        flex-direction: column;
-        text-align: center;
-        gap: 0.75rem;
+        min-height: 70px;
+        padding: 12px;
     }
     
     .pm-pole-member {
-        padding: 0.5rem;
-        gap: 0.6rem;
+        min-height: 55px;
+        padding: 8px;
     }
     
     .pm-pole-member-avatar img {
-        width: 32px;
-        height: 32px;
-    }
-    
-    .pm-cabinet-card-avatar img {
-        width: 44px;
-        height: 44px;
+        width: 28px;
+        height: 28px;
     }
 }
 
@@ -3480,7 +3501,7 @@ body.print-all .toolbar {
     grid-column: 1 / -1;
     justify-self: center;
     width: 100%;
-    justify-items: center;
+    justify-items: stretch;
 }
 
 .modal-collaborators.is-hidden {
@@ -5554,917 +5575,3 @@ body.print-single #print-sheet {
     transform-origin: top left;   /* point d’ancrage en haut à gauche */
     width: 125%;                  /* compense le shrink pour éviter les bandes vides */
 }
-
-
-/* =====================================
-   STYLES POUR PÔLES ET COLLABORATEURS - PREMIER MINISTRE UNIQUEMENT
-   ===================================== */
-
-/* Cabinet wrapper for PM structure */
-.pm-cabinet-wrapper {
-  font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: var(--color-encre);
-}
-
-.pm-cabinet-section {
-  margin-bottom: 28px;
-}
-
-.pm-cabinet-section-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 14px;
-  position: relative;
-  padding-left: 14px;
-}
-
-.pm-cabinet-section-title::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 16px;
-  border-radius: 4px;
-  background: var(--accent-primary);
-  opacity: 0.6;
-}
-
-/* TOP CABINET */
-.pm-cabinet-top-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-}
-
-.pm-cabinet-card {
-  display: flex;
-  gap: 10px;
-  padding: 12px;
-  border-radius: var(--radius-base);
-  border: 1px solid var(--color-sesame);
-  background: var(--color-perle);
-  box-shadow: var(--shadow-soft);
-  transition: 0.2s ease;
-}
-
-.pm-cabinet-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
-}
-
-.pm-cabinet-card-avatar {
-  flex: 0 0 46px;
-}
-
-.pm-cabinet-card-avatar img {
-  width: 46px;
-  height: 46px;
-  border-radius: 999px;
-  object-fit: cover;
-  border: 1px solid var(--color-sesame);
-}
-
-.pm-cabinet-card-main {
-  flex: 1;
-}
-
-.pm-cabinet-card-name {
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-
-.pm-cabinet-card-role {
-  font-size: 0.8rem;
-  color: var(--cabinet-text-muted);
-}
-
-/* POLES */
-.pm-poles-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-}
-
-.pm-pole-box {
-  border: 1px solid var(--color-sesame);
-  border-radius: var(--radius-base);
-  padding: 14px;
-  background: var(--color-perle);
-  box-shadow: var(--shadow-soft);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  transition: 0.2s ease;
-}
-
-.pm-pole-box:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
-}
-
-.pm-pole-header {
-  padding-bottom: 6px;
-  border-bottom: 1px solid #ececf0;
-  margin-bottom: 6px;
-  background: var(--color-guimauve);
-  border-radius: 6px;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.pm-pole-leader-avatar img {
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  object-fit: cover;
-  border: 1px solid var(--color-sesame);
-}
-
-.pm-pole-leader-name {
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.pm-pole-leader-job {
-  font-size: 0.8rem;
-  color: var(--cabinet-text-muted);
-}
-
-.pm-pole-members-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--color-sesame);
-}
-
-.pm-pole-member {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 8px;
-  border-radius: 7px;
-  border: 1px solid #ececf0;
-  justify-content: flex-start;
-  transition: 0.15s ease;
-}
-
-.pm-pole-member:hover {
-  background: #fafbff;
-}
-
-.pm-pole-member-avatar img {
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  object-fit: cover;
-  border: 1px solid #ececf0;
-}
-
-.pm-pole-member-main {
-  max-width: 80%;
-}
-
-.pm-pole-member-name {
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.pm-pole-member-job {
-  font-size: 0.75rem;
-  color: var(--cabinet-text-muted);
-}
-
-.pm-cabinet-empty {
-  font-size: 0.9rem;
-  color: var(--cabinet-text-muted);
-}
-
-/* Responsive */
-@media (max-width: 640px) {
-  .pm-cabinet-card { padding: 10px; }
-  .pm-pole-box { padding: 12px; }
-  .pm-poles-container {
-    grid-template-columns: 1fr;
-  }
-}
-
-
-/* AMÉLIORATIONS POUR L'AFFICHAGE EN GRILLE DES COLLABORATEURS */
-
-/* Cabinet principal - grille améliorée */
-.pm-cabinet-top-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 18px;
-  margin-bottom: 24px;
-}
-
-.pm-cabinet-card {
-  min-height: 90px;
-  align-items: center;
-  background: linear-gradient(135deg, var(--color-perle) 0%, #ffffff 100%);
-  border: 1px solid rgba(134, 136, 149, 0.2);
-  box-shadow: 0 4px 12px rgba(39, 8, 59, 0.08);
-}
-
-.pm-cabinet-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(39, 8, 59, 0.15);
-  border-color: var(--accent-primary);
-}
-
-.pm-cabinet-card-avatar img {
-  width: 56px;
-  height: 56px;
-  border: 2px solid var(--accent-primary);
-  opacity: 0.9;
-}
-
-.pm-cabinet-card:hover .pm-cabinet-card-avatar img {
-  opacity: 1;
-  transform: scale(1.05);
-}
-
-.pm-cabinet-card-name {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--color-encre);
-}
-
-.pm-cabinet-card-role {
-  font-size: 0.9rem;
-  color: var(--color-poivre);
-  font-weight: 400;
-}
-
-/* Pôles - grille plus spacieuse */
-.pm-poles-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.pm-pole-box {
-  background: linear-gradient(135deg, #ffffff 0%, var(--color-perle) 100%);
-  border: 1px solid rgba(134, 136, 149, 0.15);
-  box-shadow: 0 6px 20px rgba(39, 8, 59, 0.08);
-}
-
-.pm-pole-box:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(39, 8, 59, 0.12);
-}
-
-/* Membres en grille pour les grands pôles */
-.pm-pole-members-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  padding-top: 16px;
-}
-
-.pm-pole-member {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(134, 136, 149, 0.1);
-  border-radius: 8px;
-  padding: 10px;
-  transition: all 0.2s ease;
-}
-
-.pm-pole-member:hover {
-  background: rgba(105, 135, 255, 0.05);
-  border-color: var(--accent-secondary);
-  transform: translateY(-1px);
-}
-
-.pm-pole-member-avatar img {
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--accent-secondary);
-}
-
-.pm-pole-member-name {
-  font-weight: 600;
-  color: var(--color-encre);
-}
-
-.pm-pole-member-job {
-  color: var(--color-poivre);
-  font-size: 0.8rem;
-}
-
-/* Responsivité améliorée */
-@media (max-width: 768px) {
-  .pm-cabinet-top-grid {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 14px;
-  }
-  
-  .pm-poles-container {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
-  .pm-pole-members-list {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .pm-cabinet-top-grid {
-    grid-template-columns: 1fr;
-  }
-}
-/* Styles optimisés pour les pôles et collaborateurs du PM */
-
-/* PÔLES - Version optimisée pour multiple pôles sur une ligne */
-.pm-poles-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
-  align-items: start;
-}
-
-.pm-pole-box {
-  border: 1px solid var(--color-sesame);
-  border-radius: var(--radius-base);
-  padding: 16px;
-  background: var(--color-perle);
-  box-shadow: var(--shadow-soft);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  transition: 0.2s ease;
-  height: fit-content;
-  min-height: 200px;
-}
-
-.pm-pole-box:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(39, 8, 59, 0.12);
-}
-
-/* Membres en grille pour afficher plusieurs collaborateurs sur la même ligne */
-.pm-pole-members-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 12px;
-  padding-top: 16px;
-  border-top: 1px dashed var(--color-sesame);
-}
-
-.pm-pole-member {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(134, 136, 149, 0.15);
-  border-radius: 8px;
-  padding: 10px 12px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(2px);
-  min-height: 65px;
-}
-
-.pm-pole-member:hover {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: var(--accent-primary);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(100, 215, 205, 0.25);
-}
-
-.pm-pole-member-avatar img {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(100, 215, 205, 0.2);
-  flex-shrink: 0;
-}
-
-.pm-pole-member-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.pm-pole-member-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--color-encre);
-  margin-bottom: 2px;
-  line-height: 1.2;
-}
-
-.pm-pole-member-job {
-  font-size: 0.8rem;
-  color: var(--color-sesame);
-  line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-/* Cabinet principal - optimisé pour afficher plusieurs membres sur une ligne */
-.pm-cabinet-top-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 18px;
-  margin-bottom: 24px;
-}
-
-.pm-cabinet-card {
-  min-height: 90px;
-  align-items: center;
-  background: linear-gradient(135deg, var(--color-perle) 0%, #ffffff 100%);
-  border: 1px solid rgba(134, 136, 149, 0.2);
-  border-radius: var(--radius-base);
-  padding: 14px;
-  transition: all 0.2s ease;
-  box-shadow: var(--shadow-soft);
-}
-
-.pm-cabinet-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(39, 8, 59, 0.15);
-}
-
-/* Responsive pour petit écran */
-@media (max-width: 768px) {
-  .pm-poles-container {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
-  .pm-pole-members-list {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  
-  .pm-cabinet-top-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .pm-cabinet-top-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .pm-pole-member {
-    min-height: 60px;
-    padding: 8px 10px;
-  }
-}
-/* =====================================
-   STYLES OPTIMISÉS POUR AFFICHAGE HORIZONTAL DES COLLABORATEURS PM
-   ===================================== */
-
-/* CONTENEURS PARENTS - La clé pour l'affichage horizontal */
-.pm-cabinet-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.pm-cabinet-section {
-    margin-bottom: 24px;
-}
-
-/* Cabinet principal - FLEX pour afficher les cartes sur une même ligne */
-.pm-cabinet-top-grid {
-    display: flex !important;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
-.pm-cabinet-card {
-    flex: 1;
-    min-width: 280px;
-    max-width: calc(33.333% - 11px); /* 3 cartes par ligne sur grand écran */
-    display: flex;
-    gap: 12px;
-    padding: 14px;
-    border-radius: var(--radius-base);
-    border: 1px solid var(--color-sesame);
-    background: linear-gradient(135deg, var(--color-perle) 0%, #ffffff 100%);
-    box-shadow: var(--shadow-soft);
-    transition: all 0.2s ease;
-    min-height: 80px;
-    align-items: center;
-}
-
-.pm-cabinet-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(39, 8, 59, 0.15);
-}
-
-/* Pôles - FLEX pour afficher les pôles sur une même ligne */
-.pm-poles-container {
-    display: flex !important;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 18px;
-    align-items: flex-start;
-}
-
-.pm-pole-box {
-    flex: 1;
-    min-width: 320px;
-    max-width: calc(50% - 9px); /* 2 pôles par ligne sur grand écran */
-    border: 1px solid var(--color-sesame);
-    border-radius: var(--radius-base);
-    padding: 16px;
-    background: var(--color-perle);
-    box-shadow: var(--shadow-soft);
-    transition: 0.2s ease;
-    height: fit-content;
-}
-
-.pm-pole-box:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 35px rgba(39, 8, 59, 0.12);
-}
-
-/* Membres des pôles - GRILLE pour collaborateurs dans chaque pôle */
-.pm-pole-members-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 10px;
-    padding-top: 12px;
-    border-top: 1px dashed var(--color-sesame);
-}
-
-.pm-pole-member {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(134, 136, 149, 0.15);
-    border-radius: 8px;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: all 0.2s ease;
-    min-height: 60px;
-}
-
-.pm-pole-member:hover {
-    background: rgba(255, 255, 255, 0.95);
-    border-color: var(--accent-primary);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(100, 215, 205, 0.25);
-}
-
-.pm-pole-member-avatar img {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(100, 215, 205, 0.2);
-    flex-shrink: 0;
-}
-
-.pm-pole-member-main {
-    flex: 1;
-    min-width: 0;
-}
-
-.pm-pole-member-name {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--color-encre);
-    margin-bottom: 2px;
-    line-height: 1.2;
-}
-
-.pm-pole-member-job {
-    font-size: 0.75rem;
-    color: var(--color-sesame);
-    line-height: 1.3;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-}
-
-/* Headers et titres */
-.pm-cabinet-section-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 14px;
-    position: relative;
-    padding-left: 14px;
-    color: var(--color-encre);
-}
-
-.pm-cabinet-section-title::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 4px;
-    height: 16px;
-    border-radius: 4px;
-    background: var(--accent-primary);
-    opacity: 0.6;
-}
-
-.pm-pole-header {
-    padding: 12px;
-    border-radius: 6px;
-    background: var(--color-guimauve);
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.pm-pole-leader-avatar img {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid var(--color-sesame);
-}
-
-.pm-pole-leader-name {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--color-encre);
-}
-
-.pm-pole-leader-job {
-    font-size: 0.8rem;
-    color: var(--cabinet-text-muted);
-}
-
-/* Le nom du pôle*/
-.pm-cabinet-empty {
-    font-size: 0.9rem;
-    color: var(--cabinet-text-muted);
-    text-align: center;
-    padding: 20px;
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-    .pm-cabinet-card {
-        max-width: calc(50% - 8px); /* 2 cartes par ligne sur téléphone */
-    }
-}
-
-@media (max-width: 768px) {
-    .pm-cabinet-top-grid,
-    .pm-poles-container {
-        flex-direction: column;
-    }
-    
-    .pm-cabinet-card,
-    .pm-pole-box {
-        max-width: 100%;
-        min-width: 100%;
-    }
-    
-    .pm-pole-members-list {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 480px) {
-    .pm-cabinet-card {
-        min-height: 70px;
-        padding: 12px;
-    }
-    
-    .pm-pole-member {
-        min-height: 55px;
-        padding: 8px;
-    }
-    
-    .pm-pole-member-avatar img {
-        width: 28px;
-        height: 28px;
-    }
-}
-
-/* =====================================
-   HARMONISATION DES PÔLES - LARGEUR FIXE POUR ALIGNEMENT PROPRE
-   ===================================== */
-
-/* Override pour largeur fixe des pôles */
-.pm-pole-box {
-    width: 350px !important; /* Largeur fixe pour alignement propre */
-    max-width: 350px !important;
-    min-width: 350px !important;
-    height: auto; /* Hauteur automatique selon le contenu */
-    flex: 0 0 350px; /* Flex basis fixe */
-}
-
-/* Ajustement du conteneur pour bien centrer */
-.pm-poles-container {
-    display: flex !important;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 18px;
-    justify-content: flex-start; /* Alignement à gauche */
-    align-items: flex-start; /* Alignement en haut */
-}
-
-/* Cabinet cards - largeur fixe aussi pour cohérence */
-.pm-cabinet-card {
-    width: 280px !important;
-    max-width: 280px !important;
-    min-width: 280px !important;
-    flex: 0 0 280px; /* Flex basis fixe */
-}
-
-/* Conteneur cabinet ajusté */
-.pm-cabinet-top-grid {
-    display: flex !important;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 16px;
-    justify-content: flex-start;
-    align-items: flex-start;
-}
-
-/* Responsive - sur petits écrans, revenir à 100% */
-@media (max-width: 768px) {
-    .pm-pole-box {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 100% !important;
-        flex: 1 1 100%;
-    }
-    
-    .pm-cabinet-card {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 100% !important;
-        flex: 1 1 100%;
-    }
-    
-    .pm-poles-container,
-    .pm-cabinet-top-grid {
-        flex-direction: column;
-        justify-content: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .pm-pole-box,
-    .pm-cabinet-card {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 100% !important;
-    }
-}
-
-/* Amélioration visuelle - bordures et espacement uniforme */
-.pm-pole-box {
-    border: 1px solid rgba(134, 136, 149, 0.2);
-    border-radius: 12px;
-    background: linear-gradient(135deg, #ffffff 0%, var(--color-perle) 100%);
-    box-shadow: 0 4px 16px rgba(39, 8, 59, 0.08);
-    transition: all 0.2s ease;
-}
-
-.pm-pole-box:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(39, 8, 59, 0.12);
-    border-color: var(--accent-primary);
-}
-
-/* Header de pôle - hauteur fixe pour uniformité */
-.pm-pole-header {
-    min-height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 14px;
-    background: rgba(100, 215, 205, 0.05);
-    border-radius: 8px;
-    border-bottom: 2px solid var(--accent-primary);
-    margin-bottom: 16px;
-}
-
-.pm-pole-leader-name {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--color-encre);
-    line-height: 1.2;
-}
-
-.pm-pole-leader-job {
-    font-size: 0.85rem;
-    color: var(--color-poivre);
-    margin-top: 2px;
-}
-
-
-/* =====================================
-   SOLUTION 2 - HAUTEUR AUTOMATIQUE UNIFORME POUR LES PÔLES
-   ===================================== */
-
-/* Conteneur principal en CSS GRID pour hauteur uniforme */
-.pm-poles-container {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
-    align-items: stretch; /* CLÉ : toutes les boxes prennent la hauteur de la plus grande */
-}
-
-.pm-pole-box {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--color-sesame);
-    border-radius: var(--radius-base);
-    padding: 16px;
-    background: var(--color-perle);
-    box-shadow: var(--shadow-soft);
-    transition: 0.2s ease;
-    /* Suppression de height: fit-content pour laisser stretch faire son effet */
-}
-
-.pm-pole-box:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 35px rgba(39, 8, 59, 0.12);
-}
-
-/* Assurer que le contenu se répartit bien dans la hauteur disponible */
-.pm-pole-header {
-    flex-shrink: 0; /* Header garde sa taille */
-    padding: 12px;
-    border-radius: 6px;
-    background: var(--color-guimauve);
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.pm-pole-members-list {
-    flex: 1; /* Prend tout l'espace restant */
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 10px;
-    padding-top: 12px;
-    border-top: 1px dashed var(--color-sesame);
-    align-content: start; /* Contenu aligné en haut */
-}
-
-/* Si pas de membres, centrer le message vide */
-.pm-cabinet-empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    font-size: 0.9rem;
-    color: var(--cabinet-text-muted);
-    text-align: center;
-    font-style: italic;
-    min-height: 80px;
-}
-
-/* Responsive pour maintenir l'effet sur toutes les tailles */
-@media (max-width: 1200px) {
-    .pm-poles-container {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 18px;
-    }
-}
-
-@media (max-width: 768px) {
-    .pm-poles-container {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-}
-
-@media (max-width: 480px) {
-    .pm-poles-container {
-        grid-template-columns: 1fr;
-        gap: 14px;
-    }
-    
-    .pm-pole-box {
-        padding: 14px;
-    }
-}
-
-/* Simplified: using the single, sober `.pm-pole-title` defined earlier
-   (keeps titles minimal and consistent). Removed variant/duplicated
-   styles to avoid confusion. */

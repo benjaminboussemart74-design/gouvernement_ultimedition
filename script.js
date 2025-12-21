@@ -412,7 +412,6 @@ let currentParty = "";
 let currentSort = "role";
 let onlyWithDelegates = false;
 let onlyWithBio = false;
-let lastFetchError = null; // store last fetch error for debug UI
 let activeMinister = null;
 let printSheetContainer = null;
 
@@ -775,8 +774,15 @@ const normalizeBiographyEntries = (rows) => {
             ['décembre', 11], ['decembre', 11], ['déc.', 11], ['dec.', 11], ['dec', 11],
         ]);
         // Match: [day ]month year OR month year
-        const monthNames = Array.from(new Set(Array.from(monthMap.keys()))).sort((a,b)=>b.length-a.length).join('|');
-        const reDayMonthYear = new RegExp(`^(?:([0-3]?\d)\s+)?(${monthNames})\s+(\d{4})$`, 'i');
+        // Escape month name tokens for safe inclusion in a dynamic RegExp
+        const _escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const monthNames = Array.from(new Set(Array.from(monthMap.keys()).map((k) => _escapeRegex(k))))
+            .sort((a, b) => b.length - a.length)
+            .join('|');
+        // When building a RegExp from a string literal we must double-escape
+        // backslashes so sequences like \s and \d arrive intact to the
+        // RegExp engine (in a string literal `\s` -> a single backslash+s).
+        const reDayMonthYear = new RegExp(`^(?:([0-3]?\\d)\\s+)?(${monthNames})\\s+(\\d{4})$`, 'i');
         const m = lower.match(reDayMonthYear);
         if (m) {
             const monthKey = m[2];
@@ -3785,7 +3791,6 @@ const fetchMinistersFromView = async () => {
         .order("full_name", { ascending: true });
 
     if (error) {
-        lastFetchError = error;
         // Provide a clearer diagnostic when PostgREST reports missing table/view (PGRST205)
         // This commonly means the DB view `public.vw_ministernode` has not been created in the project
         // or is in a different schema. Useful message for debugging in the browser console.
@@ -3918,7 +3923,6 @@ const loadMinisters = async () => {
             coreMinisters = supabaseMinisters.filter((m) => CORE_ROLES.has(m.role));
             delegateMinisters = supabaseMinisters.filter((m) => DELEGATE_ROLES.has(m.role));
         } catch (firstErr) {
-            lastFetchError = firstErr;
             console.warn('[onepage] fetchMinistersFromSupabase failed, attempting vw_ministernode as fallback', firstErr);
             try {
                 supabaseMinisters = await fetchMinistersFromView();
@@ -3926,7 +3930,6 @@ const loadMinisters = async () => {
                 coreMinisters = supabaseMinisters.filter((m) => CORE_ROLES.has(m.role));
                 delegateMinisters = supabaseMinisters.filter((m) => DELEGATE_ROLES.has(m.role));
             } catch (viewErr) {
-                lastFetchError = viewErr;
                 throw viewErr;
             }
         }
@@ -3934,10 +3937,8 @@ const loadMinisters = async () => {
             attachDelegatesToCore();
             dataLoaded = true;
             updatePartyFilterOptions(ministers);
-            try { await updateGlobalCounters(); } catch (_) {}
         }
     } catch (error) {
-        lastFetchError = error;
         console.error("[onepage] Erreur lors du chargement des ministres depuis Supabase", error);
     }
 
@@ -3952,9 +3953,7 @@ const loadMinisters = async () => {
                 dataLoaded = true;
                 updatePartyFilterOptions(ministers);
             }
-            try { await updateGlobalCounters(); } catch (_) {}
         } catch (error) {
-            lastFetchError = error;
             console.error("[onepage] Erreur lors du chargement du fichier de secours", error);
         }
     }
@@ -3988,7 +3987,6 @@ const loadMinisters = async () => {
             "Aucune donnée disponible. Vérifiez la configuration Supabase ou ajoutez un fichier data/ministers.json.";
         updateResultsSummary(0, 0);
         updateActiveFiltersHint(0, 0);
-        try { await updateGlobalCounters(); } catch (_) {}
     }
 };
 
@@ -4065,38 +4063,7 @@ highlightFilter(currentRole);
 updateResultsSummary(0, 0);
 updateActiveFiltersHint(0, 0);
 
-// C'est ici que le compteur prend la placr j'ai 200 ministres et collab vérifier que le chiffre est toujours bon je sais mais il faudrait rendre ça plus beau également voir dans le dernier code
 let __appInitialized = false;
-let __globalCountersEl = null;
-
-function ensureCountersContainer() { return null; }
-
-async function fetchCollaboratorCounters() {
-    const client = ensureSupabaseClient();
-    if (!client) return { dircab: 0, chefcab: 0, conseiller: 0, ok: false };
-    try {
-        // Be permissive with available columns: some schemas may not have collab_code
-        const { data, error } = await client
-            .from('persons')
-            .select('collab_grade, cabinet_role')
-            .eq('role', 'collaborator');
-        if (error) throw error;
-        let dircab = 0, chefcab = 0, conseiller = 0;
-        (Array.isArray(data) ? data : []).forEach((row) => {
-            const grade = String(row?.collab_grade || '').toLowerCase();
-            const roleText = String(row?.cabinet_role || '').toLowerCase();
-            const hay = grade + ' ' + roleText;
-            const isDir = hay.includes('directeur de cabinet') || hay.includes('dircab');
-            const isChef = hay.includes('chef de cabinet') || hay.includes('chefcab');
-            const isCons = hay.includes('conseiller');
-            if (isDir) dircab++; else if (isChef) chefcab++; else if (isCons) conseiller++;
-        });
-        return { dircab, chefcab, conseiller, ok: true };
-    } catch (_) {
-        // best-effort: don't break UI on counter failure
-        return { dircab: 0, chefcab: 0, conseiller: 0, ok: false };
-    }
-}
 
 // Contact button: assemble email on click to deter bots
 document.addEventListener('DOMContentLoaded', () => {
@@ -4109,7 +4076,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-async function updateGlobalCounters() { /* counters disabled */ return; }
 const initApp = () => {
     if (__appInitialized) return;
     __appInitialized = true;
@@ -4125,7 +4091,6 @@ const initApp = () => {
 
     // Lancer le chargement des données
     loadMinisters().then(() => {
-        try { updateGlobalCounters(); } catch (e) { /* ignore */ }
     }).catch((err) => {
         console.error("[onepage] Echec du chargement initial", err);
         // Debug banner minimal pour diagnostiquer rapidement en front
