@@ -2237,29 +2237,62 @@ function Fonctionderendudesleaders(minister, collaborators) {
   // Intégrer les conseillers rattachés directement au ministre dans le cabinet
   const combined = [...topCabinet, ...directAdvisors];
   
-  if (!combined.length) {
-    cabinetGrid.innerHTML = '<p class="pm-cabinet-empty">Aucun membre de cabinet de premier niveau.</p>';
-  } else {
-    cabinetGrid.innerHTML = combined
-      .map(person => {
-        const photo = person.photo_url || "assets/placeholder-minister.svg";
-        const gradeLabel = getPMGradeLabel(person.collab_grade, person.role, person.cabinet_role);
+  cabinetGrid.textContent = "";
 
-        return `
-          <article class="pm-cabinet-card">
-            <div class="pm-cabinet-card-avatar">
-              <img src="${photo}" alt="Portrait de ${person.full_name}" onerror="this.onerror=null;this.src='assets/placeholder-minister.svg';">
-            </div>
-            <div class="pm-cabinet-card-main">
-              <div class="pm-cabinet-card-name">${person.full_name}</div>
-              <div class="pm-cabinet-card-role">${gradeLabel}</div>
-              ${person.job_title ? `<div class="pm-cabinet-card-role pm-cabinet-card-role--secondary">${person.job_title}</div>` : ''}
-              ${person.description ? `<div class="pm-cabinet-card-desc">${person.description}</div>` : ''}
-            </div>
-          </article>
-        `;
-      })
-      .join("");
+  if (!combined.length) {
+    const empty = document.createElement("p");
+    empty.className = "pm-cabinet-empty";
+    empty.textContent = "Aucun membre de cabinet de premier niveau.";
+    cabinetGrid.appendChild(empty);
+  } else {
+    combined.forEach(person => {
+      const photo = safeImgSrc(person.photo_url);
+      const gradeLabel = getPMGradeLabel(person.collab_grade, person.role, person.cabinet_role);
+
+      const card = document.createElement("article");
+      card.className = "pm-cabinet-card";
+
+      const avatarWrapper = document.createElement("div");
+      avatarWrapper.className = "pm-cabinet-card-avatar";
+      const img = document.createElement("img");
+      img.src = photo;
+      img.alt = `Portrait de ${person.full_name || "membre du cabinet"}`;
+      img.addEventListener("error", () => {
+        img.src = "assets/placeholder-minister.svg";
+      });
+      avatarWrapper.appendChild(img);
+      card.appendChild(avatarWrapper);
+
+      const main = document.createElement("div");
+      main.className = "pm-cabinet-card-main";
+
+      const nameDiv = document.createElement("div");
+      nameDiv.className = "pm-cabinet-card-name";
+      nameDiv.textContent = person.full_name || "";
+      main.appendChild(nameDiv);
+
+      const roleDiv = document.createElement("div");
+      roleDiv.className = "pm-cabinet-card-role";
+      roleDiv.textContent = gradeLabel || "";
+      main.appendChild(roleDiv);
+
+      if (person.job_title) {
+        const jobDiv = document.createElement("div");
+        jobDiv.className = "pm-cabinet-card-role pm-cabinet-card-role--secondary";
+        jobDiv.textContent = person.job_title;
+        main.appendChild(jobDiv);
+      }
+
+      if (person.description) {
+        const descDiv = document.createElement("div");
+        descDiv.className = "pm-cabinet-card-desc";
+        descDiv.textContent = person.description;
+        main.appendChild(descDiv);
+      }
+
+      card.appendChild(main);
+      cabinetGrid.appendChild(card);
+    });
   }
   
   cabinetSection.appendChild(cabinetGrid);
@@ -2278,7 +2311,10 @@ function Fonctionderendudesleaders(minister, collaborators) {
   polesContainer.className = "pm-poles-container";
   
   if (!poles.length) {
-    polesContainer.innerHTML = '<p class="pm-cabinet-empty">Aucun pôle identifié pour l\'instant.</p>';
+    const emptyPole = document.createElement("p");
+    emptyPole.className = "pm-cabinet-empty";
+    emptyPole.textContent = "Aucun pôle identifié pour l'instant.";
+    polesContainer.appendChild(emptyPole);
   } else {
     // Clear container and build safely
     polesContainer.textContent = "";

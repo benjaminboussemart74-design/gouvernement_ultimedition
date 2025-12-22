@@ -199,6 +199,20 @@ Les workflows GitHub Actions complexes ont été supprimés pour éviter toute a
 - Guide de deploiement GitHub Pages
 - Resolution des problemes courants
 
+## Audit de securite (avril 2026)
+
+### Risques observes
+- **Surface XSS via donnees de contenu** : plusieurs rendus HTML interpolent directement les champs fournis par les fichiers statiques (noms, roles, descriptions) dans des templates `innerHTML` sans echappement, ce qui permettrait a une donnees malveillante de declencher du script dans le navigateur (ex. cartes du cabinet du Premier ministre dans la modale).【F:script.js†L2237-L2257】
+- **Donnees personnelles en clair** : les fichiers CSV versions « serveur » contiennent des informations nominatives et des emails de collaborateurs, exposes tels quels dans le depot et donc sur GitHub Pages, avec un risque de fuite de donnees personnelles ou d’exploitation pour du phishing.【F:Serveur gouvernement - persons.csv†L1-L6】
+- **Dépendances externes non controlees** : le chargement direct de Google Fonts et d’images distantes implique une exposition aux politiques de tiers (tracking, availability) et aucun mecanisme CSP ou SRI n’encadre ces ressources pour limiter les risques d’injection ou de compromission en cas de takeover DNS/CDN.【F:index.html†L24-L27】【F:Serveur gouvernement - persons.csv†L1-L6】
+- **Configuration Supabase cote client** : le helper `fetch-ministernode.js` attend des variables `SUPABASE_URL`/`SUPABASE_ANON_KEY` cote navigateur pour interroger la vue `vw_ministernode`, ce qui imposerait d’exposer la cle anonyme au front et de reposer uniquement sur les regles RLS si cette voie etait reutilisee.【F:config/fetch-ministernode.js†L8-L45】
+
+### Recommandations prioritaires
+- Remplacer les constructions `innerHTML` par du DOM `textContent`/`setAttribute` avec une validation stricte des URLs d’images et echappement systematique des textes issus des donnees.
+- Extraire ou pseudonymiser les emails/identifiants sensibles des CSV publics, et documenter le statut RGPD de ces jeux de donnees avant tout deploiement.
+- Auto-heberger les polices et images critiques, ajouter une politique CSP et, si des CDN restent necessaires, utiliser l’integrite de sous-ressource (SRI) et des allowlists precises.
+- Si Supabase est reintroduit, limiter la creation du client au back-end (ou a un worker protege), n’exposer aucune cle dans le front et imposer des regles RLS minimales.
+
 ### Archives conservees
 - MIGRATION-README.md : Archive du guide de migration avortée
 - MIGRATION-COMPLETE.md : Archive du rapport de migration
