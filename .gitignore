@@ -2,8 +2,17 @@
 .DS_Store
 
 # Node / editor folders (safe defaults)
-node_modules/
-.vscode/
-config/supabase.local.json
-config/supabase.local.js
-.env
+scripts/cabinet-tree-rpc.js
+scripts/csv-to-json.js
+scripts/floating-loupe.js
+scripts/organigrammes.js
+scripts/README_TEST_CAREERS.md
+scripts/run_script_in_jsdom.js
+scripts/sort-biographies.js
+scripts/split-ministers.js
+scripts/test_card_accent.js
+scripts/test_modal_for_id.js
+scripts/test_modal_population.js
+scripts/validate_careers_order.js
+scripts/validate_lecornu.js
+scripts/validate-json.js

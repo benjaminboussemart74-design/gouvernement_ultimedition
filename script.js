@@ -98,6 +98,19 @@ function escapeHTML(value) {
     }[ch]));
 }
 
+// Safe image source validation - only allow trusted sources
+function safeImgSrc(value) {
+    const v = String(value || "").trim();
+
+    // Allow only:
+    // - relative paths to assets/
+    // - https:// URLs
+    if (v.startsWith("assets/")) return v;
+    if (v.startsWith("https://")) return v;
+
+    return "assets/placeholder-minister.svg";
+}
+
 // Mapping des valeurs `party` (valeurs possibles depuis Supabase) vers
 // les étiquettes utilisées par les sélecteurs CSS `[data-party="$LABEL"]
 // Si un jour on utilise le site sans moi ça permettra de d'éviter que les gens ce demande pourquoi ça affiche des données pas top
@@ -1060,11 +1073,12 @@ const buildLeftSection = ({ minister, roleKey, ministriesEntries, ministriesBadg
         ministriesContainer.className = "mc-ministries";
 
         ministriesBadges.forEach((entry) => {
+            // Skip primary ministries
+            if (entry.isPrimary) {
+                return;
+            }
             const badge = document.createElement("span");
             badge.className = "mc-ministry-badge";
-            if (entry.isPrimary) {
-                badge.classList.add("is-primary");
-            }
             if (entry.label && entry.roleLabel) {
                 badge.textContent = `${entry.label} • ${entry.roleLabel}`;
             } else if (entry.roleLabel) {
@@ -2266,53 +2280,108 @@ function Fonctionderendudesleaders(minister, collaborators) {
   if (!poles.length) {
     polesContainer.innerHTML = '<p class="pm-cabinet-empty">Aucun pôle identifié pour l\'instant.</p>';
   } else {
-    polesContainer.innerHTML = poles
-      .map(pole => {
-        const leader = pole.leader;
-        const photo = leader?.photo_url || "assets/placeholder-minister.svg";
-        const topic = leader?.job_title || "Pôle";
+    // Clear container and build safely
+    polesContainer.textContent = "";
 
-        const membersHtml = pole.members
-          .sort((a, b) => (a.cabinet_order || 999) - (b.cabinet_order || 999))
-          .map(member => {
-            const gradeLabel = getPMGradeLabel(member.collab_grade, member.role, member.cabinet_role);
-            return `
-              <div class="pm-pole-member">
-                <div class="pm-pole-member-avatar">
-                  <img src="${member.photo_url || 'assets/placeholder-minister.svg'}" alt="Portrait de ${member.full_name}" onerror="this.onerror=null;this.src='assets/placeholder-minister.svg';">
-                </div>
-                <div class="pm-pole-member-main">
-                  <div class="pm-pole-member-name">${member.full_name}</div>
-                  <div class="pm-pole-member-job">${gradeLabel || ''}${member.job_title ? ' — ' + member.job_title : ''}</div>
-                  ${member.description ? `<div class="pm-pole-member-desc">${member.description}</div>` : ''}
-                </div>
-              </div>
-            `;
-          })
-          .join("");
+    poles.forEach(pole => {
+      const article = document.createElement("article");
+      article.className = "pm-pole-box";
 
-        return `
-          <article class="pm-pole-box">
-            <div class="pm-pole-title">
-              <h3 class="pm-pole-title-text">${generatePoleTitle(leader)}</h3>
-            </div>
-            <header class="pm-pole-header">
-              <div class="pm-pole-leader-avatar">
-                <img src="${photo}" alt="Portrait de ${leader?.full_name || "Chef de pôle"}">
-              </div>
-              <div class="pm-pole-leader-info">
-                <div class="pm-pole-leader-name">${leader?.full_name || "Chef de pôle"}</div>
-                <div class="pm-pole-leader-job">${getPMGradeLabel(leader?.collab_grade, leader?.role, leader?.cabinet_role)}</div>
-                ${leader?.job_title ? `<div class="pm-pole-leader-specialty">${leader.job_title}</div>` : ''}
-              </div>
-            </header>
-            <div class="pm-pole-members-list">
-              ${membersHtml || '<span class="pm-cabinet-empty">Aucun collaborateur rattaché pour l\'instant.</span>'}
-            </div>
-          </article>
-        `;
-      })
-      .join("");
+      // Pole title
+      const titleDiv = document.createElement("div");
+      titleDiv.className = "pm-pole-title";
+      const title = document.createElement("h3");
+      title.className = "pm-pole-title-text";
+      title.textContent = generatePoleTitle(pole.leader);
+      titleDiv.appendChild(title);
+      article.appendChild(titleDiv);
+
+      // Pole leader header
+      const header = document.createElement("header");
+      header.className = "pm-pole-header";
+
+      const leaderAvatar = document.createElement("div");
+      leaderAvatar.className = "pm-pole-leader-avatar";
+      const leaderImg = document.createElement("img");
+      leaderImg.src = safeImgSrc(pole.leader?.photo_url);
+      leaderImg.alt = `Portrait de ${pole.leader?.full_name || "Chef de pôle"}`;
+      leaderAvatar.appendChild(leaderImg);
+      header.appendChild(leaderAvatar);
+
+      const leaderInfo = document.createElement("div");
+      leaderInfo.className = "pm-pole-leader-info";
+
+      const leaderName = document.createElement("div");
+      leaderName.className = "pm-pole-leader-name";
+      leaderName.textContent = pole.leader?.full_name || "Chef de pôle";
+      leaderInfo.appendChild(leaderName);
+
+      const leaderJob = document.createElement("div");
+      leaderJob.className = "pm-pole-leader-job";
+      leaderJob.textContent = getPMGradeLabel(pole.leader?.collab_grade, pole.leader?.role, pole.leader?.cabinet_role);
+      leaderInfo.appendChild(leaderJob);
+
+      if (pole.leader?.job_title) {
+        const specialty = document.createElement("div");
+        specialty.className = "pm-pole-leader-specialty";
+        specialty.textContent = pole.leader.job_title;
+        leaderInfo.appendChild(specialty);
+      }
+
+      header.appendChild(leaderInfo);
+      article.appendChild(header);
+
+      // Members list
+      const membersList = document.createElement("div");
+      membersList.className = "pm-pole-members-list";
+
+      pole.members
+        .sort((a, b) => (a.cabinet_order || 999) - (b.cabinet_order || 999))
+        .forEach(member => {
+          const memberDiv = document.createElement("div");
+          memberDiv.className = "pm-pole-member";
+
+          const memberAvatar = document.createElement("div");
+          memberAvatar.className = "pm-pole-member-avatar";
+          const memberImg = document.createElement("img");
+          memberImg.src = safeImgSrc(member.photo_url);
+          memberImg.alt = `Portrait de ${member.full_name || "Collaborateur"}`;
+          memberImg.onerror = function() {
+            this.onerror = null;
+            this.src = 'assets/placeholder-minister.svg';
+          };
+          memberAvatar.appendChild(memberImg);
+          memberDiv.appendChild(memberAvatar);
+
+          const memberMain = document.createElement("div");
+          memberMain.className = "pm-pole-member-main";
+
+          const memberName = document.createElement("div");
+          memberName.className = "pm-pole-member-name";
+          memberName.textContent = member.full_name || "Collaborateur";
+          memberMain.appendChild(memberName);
+
+          const gradeLabel = getPMGradeLabel(member.collab_grade, member.role, member.cabinet_role);
+          const jobTitle = member.job_title || "";
+          const memberJob = document.createElement("div");
+          memberJob.className = "pm-pole-member-job";
+          memberJob.textContent = `${gradeLabel || ''}${jobTitle ? ' — ' + jobTitle : ''}`;
+          memberMain.appendChild(memberJob);
+
+          if (member.description) {
+            const desc = document.createElement("div");
+            desc.className = "pm-pole-member-desc";
+            desc.textContent = member.description;
+            memberMain.appendChild(desc);
+          }
+
+          memberDiv.appendChild(memberMain);
+          membersList.appendChild(memberDiv);
+        });
+
+      article.appendChild(membersList);
+      polesContainer.appendChild(article);
+    });
   }
   
   polesSection.appendChild(polesContainer);
@@ -2425,30 +2494,62 @@ const renderPresidentCabinetSection = (minister, collaborators) => {
         const centralGrid = document.createElement("div");
         centralGrid.className = "pm-cabinet-top-grid";
 
-        centralGrid.innerHTML = centralTeam
+        // Build central team safely
+        centralTeam
             .sort((a, b) => (a.cabinet_order || 999) - (b.cabinet_order || 999))
-            .map(person => {
-                const photo = person.photo_url || "assets/placeholder-minister.svg";
+            .forEach(person => {
+                const article = document.createElement("article");
+                article.className = "pm-cabinet-card";
+
+                const avatar = document.createElement("div");
+                avatar.className = "pm-cabinet-card-avatar";
+                const img = document.createElement("img");
+                img.src = safeImgSrc(person.photo_url);
+                img.alt = `Portrait de ${person.full_name || 'Collaborateur'}`;
+                img.onerror = function() {
+                    this.onerror = null;
+                    this.src = 'assets/placeholder-minister.svg';
+                };
+                avatar.appendChild(img);
+                article.appendChild(avatar);
+
+                const main = document.createElement("div");
+                main.className = "pm-cabinet-card-main";
+
+                const name = document.createElement("div");
+                name.className = "pm-cabinet-card-name";
+                name.textContent = person.full_name || "Collaborateur";
+                main.appendChild(name);
+
                 const cabinetRole = person.cabinet_role || "";
                 const jobTitle = person.job_title || "";
                 const roleDisplay = cabinetRole || jobTitle;
                 const secondaryRole = (cabinetRole && jobTitle && cabinetRole !== jobTitle) ? jobTitle : "";
-                
-                return `
-                    <article class="pm-cabinet-card">
-                        <div class="pm-cabinet-card-avatar">
-                            <img src="${photo}" alt="Portrait de ${person.full_name || 'Collaborateur'}" onerror="this.onerror=null;this.src='assets/placeholder-minister.svg';">
-                        </div>
-                        <div class="pm-cabinet-card-main">
-                            <div class="pm-cabinet-card-name">${person.full_name || "Collaborateur"}</div>
-                            ${roleDisplay ? `<div class="pm-cabinet-card-role">${roleDisplay}</div>` : ''}
-                            ${secondaryRole ? `<div class="pm-cabinet-card-role pm-cabinet-card-role--secondary">${secondaryRole}</div>` : ''}
-                            ${person.description ? `<div class="pm-cabinet-card-desc">${person.description}</div>` : ''}
-                        </div>
-                    </article>
-                `;
-            })
-            .join("");
+
+                if (roleDisplay) {
+                    const role = document.createElement("div");
+                    role.className = "pm-cabinet-card-role";
+                    role.textContent = roleDisplay;
+                    main.appendChild(role);
+                }
+
+                if (secondaryRole) {
+                    const secondary = document.createElement("div");
+                    secondary.className = "pm-cabinet-card-role pm-cabinet-card-role--secondary";
+                    secondary.textContent = secondaryRole;
+                    main.appendChild(secondary);
+                }
+
+                if (person.description) {
+                    const desc = document.createElement("div");
+                    desc.className = "pm-cabinet-card-desc";
+                    desc.textContent = person.description;
+                    main.appendChild(desc);
+                }
+
+                article.appendChild(main);
+                centralGrid.appendChild(article);
+            });
 
         centralSection.appendChild(centralGrid);
         section.appendChild(centralSection);
@@ -2467,49 +2568,98 @@ const renderPresidentCabinetSection = (minister, collaborators) => {
         const polesContainer = document.createElement("div");
         polesContainer.className = "pm-poles-container";
 
-        polesContainer.innerHTML = [...polesMap.values()]
-            .map(pole => {
-                const membersHtml = pole.members
+        // Build poles safely
+        polesContainer.textContent = "";
+        [...polesMap.values()].forEach(pole => {
+            const article = document.createElement("article");
+            article.className = "pm-pole-box";
+
+            const titleDiv = document.createElement("div");
+            titleDiv.className = "pm-pole-title";
+            const title = document.createElement("h3");
+            title.className = "pm-pole-title-text";
+            title.textContent = pole.display;
+            titleDiv.appendChild(title);
+            article.appendChild(titleDiv);
+
+            const membersList = document.createElement("div");
+            membersList.className = "pm-pole-members-list";
+
+            if (pole.members && pole.members.length > 0) {
+                pole.members
                     .sort((a, b) => (a.cabinet_order || 999) - (b.cabinet_order || 999))
-                    .map(member => {
-                        const photo = member.photo_url || "assets/placeholder-minister.svg";
+                    .forEach(member => {
+                        const memberDiv = document.createElement("div");
+                        memberDiv.className = "pm-pole-member";
+
+                        const memberAvatar = document.createElement("div");
+                        memberAvatar.className = "pm-pole-member-avatar";
+                        const memberImg = document.createElement("img");
+                        memberImg.src = safeImgSrc(member.photo_url);
+                        memberImg.alt = `Portrait de ${member.full_name || 'Collaborateur'}`;
+                        memberImg.onerror = function() {
+                            this.onerror = null;
+                            this.src = 'assets/placeholder-minister.svg';
+                        };
+                        memberAvatar.appendChild(memberImg);
+                        memberDiv.appendChild(memberAvatar);
+
+                        const memberMain = document.createElement("div");
+                        memberMain.className = "pm-pole-member-main";
+
+                        const memberName = document.createElement("div");
+                        memberName.className = "pm-pole-member-name";
+                        memberName.textContent = member.full_name || "Collaborateur";
+                        memberMain.appendChild(memberName);
+
                         const cabinetRole = member.cabinet_role || "";
                         const jobTitle = member.job_title || "";
                         const roleDisplay = cabinetRole || jobTitle;
                         const secondaryRole = (cabinetRole && jobTitle && cabinetRole !== jobTitle) ? jobTitle : "";
-                        const emailHtml = member.email 
-                            ? `<a class="pm-pole-member-email" href="mailto:${member.email}" rel="noopener">${member.email}</a>` 
-                            : '';
-                        
-                        return `
-                            <div class="pm-pole-member">
-                                <div class="pm-pole-member-avatar">
-                                    <img src="${photo}" alt="Portrait de ${member.full_name || 'Collaborateur'}" onerror="this.onerror=null;this.src='assets/placeholder-minister.svg';">
-                                </div>
-                                <div class="pm-pole-member-main">
-                                    <div class="pm-pole-member-name">${member.full_name || "Collaborateur"}</div>
-                                    ${roleDisplay ? `<div class="pm-pole-member-job">${roleDisplay}</div>` : ''}
-                                    ${secondaryRole ? `<div class="pm-pole-member-job pm-pole-member-job--secondary">${secondaryRole}</div>` : ''}
-                                    ${member.description ? `<div class="pm-pole-member-desc">${member.description}</div>` : ''}
-                                    ${emailHtml}
-                                </div>
-                            </div>
-                        `;
-                    })
-                    .join("");
 
-                return `
-                    <article class="pm-pole-box">
-                        <div class="pm-pole-title">
-                            <h3 class="pm-pole-title-text">${pole.display}</h3>
-                        </div>
-                        <div class="pm-pole-members-list">
-                            ${membersHtml || '<span class="pm-cabinet-empty">Aucun collaborateur dans ce pôle.</span>'}
-                        </div>
-                    </article>
-                `;
-            })
-            .join("");
+                        if (roleDisplay) {
+                            const job = document.createElement("div");
+                            job.className = "pm-pole-member-job";
+                            job.textContent = roleDisplay;
+                            memberMain.appendChild(job);
+                        }
+
+                        if (secondaryRole) {
+                            const secondary = document.createElement("div");
+                            secondary.className = "pm-pole-member-job pm-pole-member-job--secondary";
+                            secondary.textContent = secondaryRole;
+                            memberMain.appendChild(secondary);
+                        }
+
+                        if (member.description) {
+                            const desc = document.createElement("div");
+                            desc.className = "pm-pole-member-desc";
+                            desc.textContent = member.description;
+                            memberMain.appendChild(desc);
+                        }
+
+                        if (member.email) {
+                            const email = document.createElement("a");
+                            email.className = "pm-pole-member-email";
+                            email.href = `mailto:${member.email}`;
+                            email.rel = "noopener";
+                            email.textContent = member.email;
+                            memberMain.appendChild(email);
+                        }
+
+                        memberDiv.appendChild(memberMain);
+                        membersList.appendChild(memberDiv);
+                    });
+            } else {
+                const empty = document.createElement("span");
+                empty.className = "pm-cabinet-empty";
+                empty.textContent = "Aucun collaborateur dans ce pôle.";
+                membersList.appendChild(empty);
+            }
+
+            article.appendChild(membersList);
+            polesContainer.appendChild(article);
+        });
 
         polesSection.appendChild(polesContainer);
         section.appendChild(polesSection);
