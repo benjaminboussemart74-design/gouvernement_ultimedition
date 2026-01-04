@@ -14,7 +14,7 @@
       "shortName": "Égalité Femmes-Hommes",
       "color": "#16A34A",
       "isPrimary": true,
-      "roleLabel": "Ministre déléguée de l'Égalité femmes-hommes & Lutte contre les discriminations"
+      "roleLabel": "Ministre dÃ©lÃ©guÃ©e de l'Ã‰galitÃ© femmes-hommes & Lutte contre les discriminations"
     },
     {
       "id": "7096353f-c8ac-4df1-8634-c45035c34825",
@@ -22,7 +22,7 @@
       "shortName": "Premier Ministre",
       "color": null,
       "isPrimary": false,
-      "roleLabel": "rattaché à Sébastien Lecornu"
+      "roleLabel": "rattachÃ© Ã  SÃ©bastien Lecornu"
     }
   ],
   "superiorId": "1c71e08c-eabe-490c-82b2-262ae5df270a",

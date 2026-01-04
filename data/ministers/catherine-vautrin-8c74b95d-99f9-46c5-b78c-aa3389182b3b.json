@@ -14,7 +14,7 @@
       "shortName": "Armées",
       "color": "#D4AF37",
       "isPrimary": true,
-      "roleLabel": "Ministre des Armées et des Anciens combattants"
+      "roleLabel": "Ministre des ArmÃ©es et des Anciens combattants"
     }
   ],
   "superiorId": "1c71e08c-eabe-490c-82b2-262ae5df270a",
@@ -276,20 +276,6 @@
       "collab_grade": "chefcab",
       "pole_name": null,
       "photo_url": "https://www.lesbiographies.com/Home/GetImage/239749",
-      "description": null
-    },
-    {
-      "id": "e617d3ee-1c09-425d-b264-64bc260cb32f",
-      "name": "Claire JEAN",
-      "full_name": "Claire JEAN",
-      "superior_id": "8c74b95d-99f9-46c5-b78c-aa3389182b3b",
-      "job_title": null,
-      "cabinet_role": "Conseillère sociale",
-      "cabinet_order": 5,
-      "cabinet_badge": null,
-      "collab_grade": "chefpole",
-      "pole_name": null,
-      "photo_url": "https://www.lesbiographies.com/Home/GetImage/227651",
       "description": null
     },
     {
