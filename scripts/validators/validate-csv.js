@@ -81,7 +81,12 @@ function parseCSV(filePath) {
       const values = parseCSVLine(line);
       const row = {};
       headers.forEach((header, i) => {
-        row[header] = values[i] || '';
+        // Normaliser les cellules vides de Google Sheets (""" → "")
+        let value = values[i] || '';
+        if (value.trim() === '"""') {
+          value = '';
+        }
+        row[header] = value;
       });
       row._lineNumber = idx + 2; // +2 car ligne 1 = headers
       row._isValid = values.length >= headers.length * 0.5; // Au moins 50% des colonnes remplies
@@ -197,11 +202,9 @@ class Validator {
     });
   }
   
-  // Helper: Vérifier si une valeur est vide (y compris """ de Google Sheets)
+  // Helper: Vérifier si une valeur est vide
   isEmpty(value) {
-    if (!value) return true;
-    const trimmed = value.trim();
-    return trimmed === '' || trimmed === '"""';
+    return !value || value.trim() === '';
   }
   
   // Validation 5: Formats emails
