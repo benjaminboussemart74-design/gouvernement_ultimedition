@@ -199,7 +199,9 @@ class Validator {
   
   // Helper: Vérifier si une valeur est vide (y compris """ de Google Sheets)
   isEmpty(value) {
-    return !value || value === '' || value === '"""' || value.trim() === '';
+    if (!value) return true;
+    const trimmed = value.trim();
+    return trimmed === '' || trimmed === '"""';
   }
   
   // Validation 5: Formats emails
