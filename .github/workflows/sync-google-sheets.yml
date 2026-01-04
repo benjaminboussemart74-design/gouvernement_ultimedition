@@ -133,6 +133,10 @@ jobs:
           EOF
           
           git commit -F commit_message.txt
+          
+          # Synchroniser avec remote avant push
+          git pull --rebase origin main
+          
           git push
       
       - name: ✅ Résumé synchronisation
