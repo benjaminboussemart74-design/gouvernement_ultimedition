@@ -81,9 +81,12 @@ function parseCSV(filePath) {
       const values = parseCSVLine(line);
       const row = {};
       headers.forEach((header, i) => {
-        // Normaliser les cellules vides de Google Sheets (""" → "")
+        // Normaliser les cellules vides de Google Sheets
+        // Google Sheets peut exporter """", """""", etc. pour les cellules vides
         let value = values[i] || '';
-        if (value.trim() === '"""') {
+        const trimmed = value.trim();
+        // Si la valeur ne contient QUE des guillemets, la traiter comme vide
+        if (trimmed && /^"+$/.test(trimmed)) {
           value = '';
         }
         row[header] = value;
