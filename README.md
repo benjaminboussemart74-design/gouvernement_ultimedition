@@ -217,13 +217,241 @@ Les workflows GitHub Actions complexes ont été supprimés pour éviter toute a
 - MIGRATION-README.md : Archive du guide de migration avortée
 - MIGRATION-COMPLETE.md : Archive du rapport de migration
 
+## 📊 Comment fonctionne le système de gestion des données
+
+### Architecture actuelle : Google Sheets → GitHub → Git
+
+Le projet utilise une **synchronisation unidirectionnelle** depuis Google Sheets vers Git via GitHub Actions.
+
+```
+Google Sheets (SOURCE DE VÉRITÉ)
+       ↓ Synchronisation automatique (toutes les 2h) ou manuelle
+   GitHub Actions
+       ↓ Validation + Conversion CSV → JSON
+   Repository Git
+       ↓ Génération automatique
+   Site Web (GitHub Pages)
+```
+
+⚠️ **Important** : Les modifications locales des fichiers CSV ou JSON seront **écrasées** lors de la prochaine synchronisation.
+
+---
+
+### 🔗 Accès à Google Sheets
+
+**URL du Google Sheet** : [https://docs.google.com/spreadsheets/d/1jlJPjC7nlc4awxSVq0ZVg2xJjQTq1X04b9fCmqWRjSM](https://docs.google.com/spreadsheets/d/1jlJPjC7nlc4awxSVq0ZVg2xJjQTq1X04b9fCmqWRjSM)
+
+**4 onglets principaux** :
+1. **Ministries** : Liste des ministères (36 ministères)
+2. **Persons** : Ministres et collaborateurs (450 personnes)
+3. **Person_Ministries** : Liens personnes ↔ ministères (401 affectations)
+4. **Person_Careers** : Biographies et carrières (507 entrées)
+
+---
+
+### ➕ Ajouter un ministre
+
+1. **Dans l'onglet "Persons"**, ajouter une ligne :
+   ```
+   id: [Générer UUID v4]
+   full_name: Prénom NOM
+   role: minister | minister-delegate | minister-state | secretary
+   party: Renaissance | MoDem | LR | etc.
+   job_title: (optionnel)
+   photo_url: https://... (optionnel)
+   description: Biographie courte (optionnel)
+   created_at: 2026-01-04T19:00:00+00:00
+   updated_at: 2026-01-04T19:00:00+00:00
+   ```
+
+2. **Dans l'onglet "Person_Ministries"**, créer le lien :
+   ```
+   person_id: [UUID du ministre]
+   ministry_id: [UUID du ministère]
+   is_primary: TRUE (pour le ministre principal)
+   role_label: "Ministre" | "Ministre délégué" | etc.
+   sort_order: 1
+   ```
+
+3. **Dans l'onglet "Person_Careers"** (optionnel), ajouter sa biographie :
+   ```
+   id: [Générer UUID v4]
+   person_id: [UUID du ministre]
+   bio_section: education | career | political | achievements
+   title: Titre de l'entrée
+   description: Texte détaillé
+   display_order: 1
+   ```
+
+4. **Déclencher la synchronisation** :
+   - Automatique : attendre max 2h
+   - Manuel : GitHub → Actions → "Sync Google Sheets → Git" → Run workflow
+
+---
+
+### 👥 Ajouter un collaborateur
+
+1. **Dans l'onglet "Persons"** :
+   ```
+   id: [UUID v4]
+   full_name: Prénom NOM
+   role: collaborator
+   superior_id: [UUID du ministre de rattachement]
+   cabinet_role: "Conseiller diplomatique" | "Directeur de cabinet" | etc.
+   cabinet_order: 1, 2, 3... (ordre d'affichage)
+   photo_url: (optionnel)
+   ```
+
+2. **Dans l'onglet "Person_Ministries"** :
+   ```
+   person_id: [UUID du collaborateur]
+   ministry_id: [UUID du ministère]
+   is_primary: FALSE (toujours FALSE pour les collaborateurs)
+   role_label: "Cabinet du ministre"
+   sort_order: [position]
+   ```
+
+💡 **Astuce** : Le validateur détecte automatiquement les collaborateurs si `role_label` contient "Cabinet".
+
+---
+
+### 🏛️ Ajouter un ministère
+
+1. **Dans l'onglet "Ministries"** :
+   ```
+   id: [UUID v4]
+   name: Ministère de la Transformation numérique
+   short_name: Numérique
+   color: #8B5CF6 (code hex)
+   icon: (optionnel)
+   sort_order: 20 (position d'affichage)
+   superior_id: [UUID ministère parent] ou vide si autonome
+   ```
+
+2. **Affecter un ministre** via "Person_Ministries" (voir section ministre ci-dessus)
+
+---
+
+### ❌ Supprimer un ministre ou collaborateur
+
+1. **Supprimer les lignes** dans Google Sheets :
+   - Onglet **Persons** (la personne)
+   - Onglet **Person_Ministries** (ses affectations)
+   - Onglet **Person_Careers** (sa biographie)
+
+2. La prochaine synchronisation supprimera automatiquement les fichiers JSON
+
+---
+
+### 🤖 Automatisation avec ChatGPT
+
+Pour simplifier l'ajout de données, utilisez ce prompt ChatGPT :
+
+<details>
+<summary>📋 Cliquez pour voir le prompt complet</summary>
+
+```markdown
+# ASSISTANT D'AJOUT DE DONNÉES - GOUVERNEMENT FRANÇAIS
+
+Tu es un assistant spécialisé dans la gestion de données gouvernementales françaises au format CSV pour Google Sheets.
+
+## STRUCTURE DES DONNÉES
+
+### PERSONS (colonnes principales)
+- id : UUID v4 (générer systématiquement)
+- full_name : Format "Prénom NOM"
+- role : president | leader | minister | minister-delegate | collaborator
+- superior_id : UUID du ministre supérieur (si collaborateur)
+- party : Parti politique
+- cabinet_role : Rôle dans le cabinet (si collaborateur)
+- cabinet_order : Ordre d'affichage
+- photo_url, description, wikipedia, email : optionnels
+- created_at, updated_at : ISO 8601
+
+### PERSON_MINISTRIES
+- person_id : UUID de la personne
+- ministry_id : UUID du ministère
+- is_primary : TRUE (ministre principal) | FALSE (autres)
+- role_label : "Ministre", "Cabinet du ministre", etc.
+
+### PERSON_CAREERS
+- id : UUID v4
+- person_id : UUID de la personne
+- bio_section : education | career | political | achievements
+- title, description : Texte
+- display_order : Position
+
+## RÈGLES
+1. Ministres : is_primary = TRUE pour au moins 1 ministère
+2. Collaborateurs : role = collaborator, is_primary = FALSE
+3. UUID : Générer de vrais UUID v4
+4. Dates : Format ISO 8601 (2026-01-04T18:30:00+00:00)
+
+## FORMAT DE SORTIE
+Génère uniquement les lignes CSV prêtes à copier-coller dans Google Sheets.
+
+Prêt ?
+```
+
+**Exemple d'utilisation** :
+```
+Ajoute Sophie MARTIN comme conseillère presse de Jean-Noël Barrot
+```
+
+ChatGPT génèrera les lignes CSV à copier directement dans Google Sheets.
+
+</details>
+
+---
+
+### ✅ Validation automatique
+
+Lors de chaque synchronisation, le système valide :
+- ✓ Structure des CSV (colonnes obligatoires)
+- ✓ Formats UUID valides
+- ✓ Intégrité référentielle (FK valides)
+- ✓ Contraintes métier (ministres avec is_primary, cycles hiérarchiques)
+- ✓ Formats emails et URLs (si présents)
+- ✓ Détection automatique des 337 membres de cabinet
+
+En cas d'erreur, le workflow échoue et crée une issue GitHub avec les détails.
+
+---
+
+### 🔄 Workflow de synchronisation
+
+**Automatique** : Toutes les 2 heures (cron : `0 */2 * * *`)
+
+**Manuel** :
+1. Aller sur GitHub → Actions
+2. Sélectionner "Sync Google Sheets → Git"
+3. Cliquer sur "Run workflow"
+
+**Étapes du workflow** :
+1. Téléchargement des 4 CSV depuis Google Sheets
+2. Validation des données (UUID, FK, cycles, etc.)
+3. Conversion CSV → JSON (36 ministres + index)
+4. Commit automatique par "Google Sheets Sync Bot"
+5. Déploiement automatique sur GitHub Pages
+
+**Historique** : Tous les commits de synchronisation sont visibles dans l'historique Git avec le préfixe `sync: Mise à jour depuis Google Sheets`.
+
+---
+
 ## Procedures de mise a jour
 
-### Mise à jour des données (Supabase)
-1. Accéder à l'interface Supabase
-2. Modifier les données directement dans les tables
-3. Tester les changements localement
-4. Déployer les modifications
+### ⚠️ Mise à jour des données (UNIQUEMENT via Google Sheets)
+
+**Ne jamais éditer directement** :
+- ❌ Fichiers CSV locaux
+- ❌ Fichiers JSON dans `data/ministers/`
+- ❌ Fichiers dans le dépôt Git
+
+**Toujours éditer dans Google Sheets** :
+1. Ouvrir le Google Sheet
+2. Modifier les données dans les onglets appropriés
+3. Sauvegarder (auto-save)
+4. Attendre la synchronisation automatique (2h max) ou la déclencher manuellement
 
 ## Deploiement
 
