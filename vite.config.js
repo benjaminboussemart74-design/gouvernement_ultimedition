@@ -1,15 +1,15 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  // Définit la base URL pour GitHub Pages
-  // Remplacez 'gouvernement_ultimedition' par le nom exact de votre repository
-  base: '/gouvernement_ultimedition/',
+  // Pour domaine personnalisé, utilisez '/' comme base
+  // Pour GitHub Pages standard, utilisez '/gouvernement_ultimedition/'
+  base: '/',
   
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    // Génère les sourcemaps pour le debug
-    sourcemap: true,
+    // Désactivé en production pour la sécurité
+    sourcemap: false,
   },
   
   // Configuration du serveur de développement

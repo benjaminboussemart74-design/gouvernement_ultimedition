@@ -1,6 +1,12 @@
 # macOS system files
 .DS_Store
 
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
 # Node / editor folders (safe defaults)
 scripts/cabinet-tree-rpc.js
 scripts/csv-to-json.js

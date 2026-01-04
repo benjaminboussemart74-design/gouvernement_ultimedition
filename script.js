@@ -908,7 +908,7 @@ const populateBiographyModule = (entries, accentColor = null) => {
     const normalized = normalizeBiographyEntries(entries);
 
     if (!normalized.length) {
-        console.log('[onepage] Module biographie: aucune entrée normalisée, section masquée');
+        // Section masquée si aucune entrée
         modalBiographyRoot.innerHTML = '';
         modalBiographySection.hidden = true;
         modalBiographySection.style.removeProperty('--biography-accent');
@@ -1438,7 +1438,6 @@ const applyFilters = () => {
 const fetchCollaboratorsForMinister = async (ministerId) => {
     // Les collaborateurs sont maintenant dans minister.collaborators (array de noms)
     // Pour l'affichage détaillé, on retourne un tableau vide
-    console.warn('[onepage] fetchCollaboratorsForMinister est obsolète - les collaborateurs sont dans data/ministers/');
     return [];
 };
 
@@ -2183,12 +2182,6 @@ function buildPMStructures(rows) {
     return ao - bo;
   });
 
-  console.log('[DEBUG][PM] buildPMStructures',
-    'rows:', rows.length,
-    'topCabinet:', topCabinet.length,
-    'poles:', poles.length,
-    'directAdvisors:', directAdvisors.length);
-
   return { topCabinet, poles, directAdvisors };
 }
 
@@ -2435,12 +2428,11 @@ const renderPMCabinetSection = (minister, collaborators) => {
     try {
         return Fonctionderendudesleaders(minister, collaborators);
     } catch (err) {
-        console.warn('[onepage] renderPMCabinetSection fallback to executive renderer:', err);
+        // Fallback to executive renderer
         try {
             const gradeLookup = collaboratorGradesLookup || createGradeLookup(null);
             return buildExecutiveCabinetSection(minister, Array.isArray(collaborators) ? collaborators : [], gradeLookup, { error: true });
         } catch (e) {
-            console.warn('[onepage] renderPMCabinetSection final fallback failed:', e);
             // Return a minimal section to avoid breaking callers
             const sec = document.createElement('section');
             sec.className = 'pm-cabinet-section';
@@ -2960,15 +2952,11 @@ const toggleExecutiveCabinet = async (minister, toggleButton) => {
 
 
 const showCabinetInlineForMinister = async (minister) => {
-    console.log('[DEBUG] showCabinetInlineForMinister appelé pour:', minister?.name, minister?.id);
-
     if (!modal || !minister) {
-        console.log('[DEBUG] Modal ou minister manquant');
         return;
     }
     const modalBody = modal.querySelector(".modal-body");
     if (!modalBody) {
-        console.log('[DEBUG] modalBody non trouvé');
         return;
     }
 
@@ -3026,25 +3014,17 @@ const showCabinetInlineForMinister = async (minister) => {
     }
 
     if (!minister.id) {
-        console.log('[DEBUG] Pas d\'ID ministre');
         return;
     }
 
     // ========== MIGRATION: Utiliser minister.collaborators du JSON au lieu de Supabase ==========
     // Les collaborateurs sont maintenant des objets complets avec toutes leurs informations
     const collabs = Array.isArray(minister.collaborators) ? minister.collaborators : [];
-    console.log('[DEBUG] Collaborateurs complets trouvés:', collabs.length, collabs.slice(0, 2));
-    if (collabs.length) {
-        console.log('[DEBUG] Premier collaborateur (dump):', collabs[0]);
-    }
-
-    console.log('[DEBUG] Objets collaborateurs créés:', collabs.length);
 
     const fetchError = false; // Pas d'erreur puisque les données sont déjà dans le JSON
 
     let finalSection;
     if (isPresidentCase) {
-        console.log('[DEBUG] Cas Président - appel renderPresidentCabinetSection avec', collabs.length, 'collaborateurs');
         // Utiliser la structure spéciale pour le Président (pôles thématiques)
         finalSection = renderPresidentCabinetSection(
             minister,
@@ -3058,7 +3038,6 @@ const showCabinetInlineForMinister = async (minister) => {
             finalSection.appendChild(errorMessage);
         }
     } else if (isPrimeMinister) {
-        console.log('[DEBUG] Cas Premier Ministre - appel renderPMCabinetSection avec', collabs.length, 'collaborateurs');
         // Utiliser la nouvelle structure pour le Premier ministre
         finalSection = renderPMCabinetSection(
             minister,
@@ -3072,10 +3051,8 @@ const showCabinetInlineForMinister = async (minister) => {
             finalSection.appendChild(errorMessage);
         }
     } else {
-        console.log('[DEBUG] Cas Ministre normal - appel renderCabinetSection avec', collabs.length, 'collaborateurs');
         // Utiliser la structure normale pour les autres ministres
         const gradeLookup = await getCollaboratorGradeLookup();
-        console.log('[DEBUG] Grade lookup obtenu:', gradeLookup ? 'OK' : 'NULL');
         finalSection = renderCabinetSection(
             minister,
             Array.isArray(collabs) ? collabs : [],
@@ -3104,7 +3081,6 @@ const showCabinetInlineForMinister = async (minister) => {
     }
 
     placeholder.replaceWith(finalSection);
-    console.log('[DEBUG] Section finale insérée dans le DOM pour', minister.name);
 
     // ensure the has-collaborators marker remains while the section is present
     if (modal && !modal.classList.contains('modal--has-collaborators')) {
@@ -3196,7 +3172,7 @@ const openModal = async (minister) => {
     if (modalBody) {
         // Show cabinet inline for all ministers (including Prime Minister and delegates)
         showCabinetInlineForMinister(minister).catch((error) => {
-            console.warn("[onepage] Impossible d'afficher le cabinet :", error);
+            // Silently handle error
         });
 
         // Populate inline ministres délégués section inside the fiche modal
@@ -3528,7 +3504,6 @@ const loadMinisters = async () => {
 
     try {
         const data = await fetchMinistersFromSplitFiles();
-        console.log(`[onepage] ✅ ${data.length} ministres chargés depuis les fichiers individuels`);
 
         // Normaliser les données (s'assurer que biography existe)
         ministers = data.map(item => ({
@@ -3555,7 +3530,7 @@ const loadMinisters = async () => {
             try {
                 buildHeaderSearchIndex();
             } catch (e) {
-                console.warn('[onepage] Erreur construction index recherche:', e);
+                // Silently handle error
             }
         } else {
             // Retry au cas où la fonction serait définie plus tard
@@ -3570,10 +3545,8 @@ const loadMinisters = async () => {
             }, 60);
         }
 
-        console.log(`[onepage] ✅ ${ministers.length} ministres chargés depuis les fichiers individuels`);
-
     } catch (error) {
-        console.error('[onepage] ❌ Erreur chargement données:', error);
+        // Error handled below
         
         ministers = [];
         coreMinisters = [];
@@ -3691,8 +3664,7 @@ const initApp = () => {
     // Lancer le chargement des données
     loadMinisters().then(() => {
     }).catch((err) => {
-        console.error("[onepage] Echec du chargement initial", err);
-        // Debug banner minimal pour diagnostiquer rapidement en front
+        // Error banner for user feedback
         try {
             const banner = document.createElement('div');
             banner.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:rgba(209,0,123,0.1);border-top:1px solid rgba(209,0,123,0.35);color:#4B2579;padding:8px 12px;font:600 13px/1.4 \"Space Grotesk\",system-ui;backdrop-filter:saturate(120%) blur(2px)';
@@ -3909,7 +3881,7 @@ window.openMinisterById = async (identifier, { openModalIfFound = true } = {}) =
                 return true;
             }
         } catch (e) {
-            console.warn('[onepage] openMinisterById: unable to open modal', e);
+            // Silently handle error
         }
 
         // Fallback: scroll to element
