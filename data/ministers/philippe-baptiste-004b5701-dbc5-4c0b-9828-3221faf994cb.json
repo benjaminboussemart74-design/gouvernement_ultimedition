@@ -346,6 +346,20 @@
       "pole_name": null,
       "photo_url": null,
       "description": null
+    },
+    {
+      "id": "f2b4d4c6-1f78-4d9a-9e0f-4b9e7c8c9f21",
+      "name": "Lou LE NABASQUE",
+      "full_name": "Lou LE NABASQUE",
+      "superior_id": "004b5701-dbc5-4c0b-9828-3221faf994cb",
+      "job_title": null,
+      "cabinet_role": "Conseillère parlementaire par intérim",
+      "cabinet_order": 10,
+      "cabinet_badge": null,
+      "collab_grade": null,
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
     }
   ]
 }
