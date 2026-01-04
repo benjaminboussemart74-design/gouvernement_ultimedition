@@ -197,12 +197,17 @@ class Validator {
     });
   }
   
+  // Helper: Vérifier si une valeur est vide (y compris """ de Google Sheets)
+  isEmpty(value) {
+    return !value || value === '' || value === '"""' || value.trim() === '';
+  }
+  
   // Validation 5: Formats emails
   validateEmails(fileName, records, columnName = 'email') {
     records.forEach(row => {
       const value = row[columnName];
-      // Ignorer les cellules vides de Google Sheets ("""") et les vraies chaînes vides
-      if (value && value !== '"""' && !isValidEmail(value)) {
+      // Ignorer les cellules vides (Google Sheets exporte les vides comme """)
+      if (!this.isEmpty(value) && !isValidEmail(value)) {
         this.error(fileName, row._lineNumber, columnName,
           `Email invalide: "${value}"`);
       }
@@ -213,8 +218,8 @@ class Validator {
   validateURLs(fileName, records, columnName) {
     records.forEach(row => {
       const value = row[columnName];
-      // Ignorer les cellules vides de Google Sheets ("""") et les vraies chaînes vides
-      if (value && value !== '"""' && !isValidURL(value)) {
+      // Ignorer les cellules vides (Google Sheets exporte les vides comme """)
+      if (!this.isEmpty(value) && !isValidURL(value)) {
         this.warn(fileName, row._lineNumber, columnName,
           `URL potentiellement invalide: "${value}"`);
       }
