@@ -200,9 +200,11 @@ class Validator {
   // Validation 5: Formats emails
   validateEmails(fileName, records, columnName = 'email') {
     records.forEach(row => {
-      if (row[columnName] && !isValidEmail(row[columnName])) {
+      const value = row[columnName];
+      // Ignorer les cellules vides de Google Sheets ("""") et les vraies chaînes vides
+      if (value && value !== '"""' && !isValidEmail(value)) {
         this.error(fileName, row._lineNumber, columnName,
-          `Email invalide: "${row[columnName]}"`);
+          `Email invalide: "${value}"`);
       }
     });
   }
@@ -210,9 +212,11 @@ class Validator {
   // Validation 6: URLs
   validateURLs(fileName, records, columnName) {
     records.forEach(row => {
-      if (row[columnName] && !isValidURL(row[columnName])) {
+      const value = row[columnName];
+      // Ignorer les cellules vides de Google Sheets ("""") et les vraies chaînes vides
+      if (value && value !== '"""' && !isValidURL(value)) {
         this.warn(fileName, row._lineNumber, columnName,
-          `URL potentiellement invalide: "${row[columnName]}"`);
+          `URL potentiellement invalide: "${value}"`);
       }
     });
   }
