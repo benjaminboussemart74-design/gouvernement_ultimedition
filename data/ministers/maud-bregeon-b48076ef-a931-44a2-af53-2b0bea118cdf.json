@@ -14,7 +14,7 @@
       "shortName": "Porte-parole",
       "color": "#F59E0B",
       "isPrimary": true,
-      "roleLabel": "Ministre dÃ©lÃ©guÃ©e â€“ Porte-parole du Gouvernement"
+      "roleLabel": "Ministre déléguée – Porte-parole du Gouvernement"
     },
     {
       "id": "7096353f-c8ac-4df1-8634-c45035c34825",
@@ -22,7 +22,7 @@
       "shortName": "Premier Ministre",
       "color": null,
       "isPrimary": false,
-      "roleLabel": "rattachÃ© Ã  SÃ©bastien Lecornu"
+      "roleLabel": "rattaché à Sébastien Lecornu"
     }
   ],
   "superiorId": "1c71e08c-eabe-490c-82b2-262ae5df270a",

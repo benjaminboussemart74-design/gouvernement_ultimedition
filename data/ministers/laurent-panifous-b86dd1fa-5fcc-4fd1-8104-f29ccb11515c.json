@@ -14,7 +14,7 @@
       "shortName": "Ministres délégués attachés au premier ministre",
       "color": "#0C4A6E",
       "isPrimary": true,
-      "roleLabel": "Ministre dÃ©lÃ©guÃ© des Relations avec le Parlement"
+      "roleLabel": "Ministre délégué des Relations avec le Parlement"
     },
     {
       "id": "7096353f-c8ac-4df1-8634-c45035c34825",
@@ -22,7 +22,7 @@
       "shortName": "Premier Ministre",
       "color": null,
       "isPrimary": false,
-      "roleLabel": "rattachÃ© Ã  SÃ©bastien Lecornu"
+      "roleLabel": "rattaché à Sébastien Lecornu"
     }
   ],
   "superiorId": "1c71e08c-eabe-490c-82b2-262ae5df270a",
