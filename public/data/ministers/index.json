@@ -1,0 +1,254 @@
+[
+  {
+    "id": "004b5701-dbc5-4c0b-9828-3221faf994cb",
+    "name": "Philippe BAPTISTE",
+    "role": "minister",
+    "portfolio": "Enseignement supérieur, Recherche et Espace",
+    "file": "data/ministers/philippe-baptiste-004b5701-dbc5-4c0b-9828-3221faf994cb.json"
+  },
+  {
+    "id": "b600b389-9dd2-4140-840d-9a5b3cbc4b9f",
+    "name": "Anne Le HENAFF",
+    "role": "minister-delegate",
+    "portfolio": "Intelligence artificielle & Numérique",
+    "file": "data/ministers/anne-le-henaff-b600b389-9dd2-4140-840d-9a5b3cbc4b9f.json"
+  },
+  {
+    "id": "1c692b3a-6972-478a-9d06-e95097de9a98",
+    "name": "Naïma MOUTCHOU",
+    "role": "minister",
+    "portfolio": "Outre-mer",
+    "file": "data/ministers/naima-moutchou-1c692b3a-6972-478a-9d06-e95097de9a98.json"
+  },
+  {
+    "id": "64174521-52f3-4cf7-bfc4-c1a6af869db0",
+    "name": "Philippe TABAROT",
+    "role": "minister",
+    "portfolio": "Transports",
+    "file": "data/ministers/philippe-tabarot-64174521-52f3-4cf7-bfc4-c1a6af869db0.json"
+  },
+  {
+    "id": "db09b05e-c264-4180-9795-6bc1adb2b553",
+    "name": "Vincent JEANBRUN",
+    "role": "minister",
+    "portfolio": "Ville et Logement",
+    "file": "data/ministers/vincent-jeanbrun-db09b05e-c264-4180-9795-6bc1adb2b553.json"
+  },
+  {
+    "id": "fbac4923-6f65-4081-b877-6c70d84387da",
+    "name": "Rachida DATI",
+    "role": "minister",
+    "portfolio": "Culture",
+    "file": "data/ministers/rachida-dati-fbac4923-6f65-4081-b877-6c70d84387da.json"
+  },
+  {
+    "id": "479aa638-0630-4abd-971e-350141400faf",
+    "name": "Jean-Pierre FARANDOU",
+    "role": "minister",
+    "portfolio": "Travail et Solidarités",
+    "file": "data/ministers/jean-pierre-farandou-479aa638-0630-4abd-971e-350141400faf.json"
+  },
+  {
+    "id": "5b076729-612d-417b-97d1-d49ae0e6539b",
+    "name": "Monique BARBUT",
+    "role": "minister",
+    "portfolio": "Transition écologique",
+    "file": "data/ministers/monique-barbut-5b076729-612d-417b-97d1-d49ae0e6539b.json"
+  },
+  {
+    "id": "a55bd2f3-5c34-409e-aebd-5f8a664d5e0f",
+    "name": "Serge PAPIN",
+    "role": "minister",
+    "portfolio": "PME, Commerce, Artisanat, Tourisme et Pouvoir d'achat",
+    "file": "data/ministers/serge-papin-a55bd2f3-5c34-409e-aebd-5f8a664d5e0f.json"
+  },
+  {
+    "id": "48ee045d-b02d-4fbe-b707-503c201d02c1",
+    "name": "Stéphanie RIST",
+    "role": "minister",
+    "portfolio": "Santé, Familles, Autonomie et Personnes handicapées",
+    "file": "data/ministers/stephanie-rist-48ee045d-b02d-4fbe-b707-503c201d02c1.json"
+  },
+  {
+    "id": "02770ce3-21e2-412c-b3fb-8ca4de812fb5",
+    "name": "Roland LESCURE",
+    "role": "minister",
+    "portfolio": "Économie, Finances et Souveraineté industrielle, énergétique et numérique",
+    "file": "data/ministers/roland-lescure-02770ce3-21e2-412c-b3fb-8ca4de812fb5.json"
+  },
+  {
+    "id": "16edb9bf-1ecd-47b3-b354-5663967bd3dc",
+    "name": "Marina FERRARI",
+    "role": "minister",
+    "portfolio": "Sports, Jeunesse et Vie associative",
+    "file": "data/ministers/marina-ferrari-16edb9bf-1ecd-47b3-b354-5663967bd3dc.json"
+  },
+  {
+    "id": "b48076ef-a931-44a2-af53-2b0bea118cdf",
+    "name": "Maud BREGEON",
+    "role": "minister-delegate",
+    "portfolio": "Porte-parole du Gouvernement",
+    "file": "data/ministers/maud-bregeon-b48076ef-a931-44a2-af53-2b0bea118cdf.json"
+  },
+  {
+    "id": "b86dd1fa-5fcc-4fd1-8104-f29ccb11515c",
+    "name": "Laurent PANIFOUS",
+    "role": "minister-delegate",
+    "portfolio": "Relations avec le Parlement",
+    "file": "data/ministers/laurent-panifous-b86dd1fa-5fcc-4fd1-8104-f29ccb11515c.json"
+  },
+  {
+    "id": "ea83403b-d679-4b53-b6a5-1363b48a0eaf",
+    "name": "Charlotte PARMENTIER-LECOCQ",
+    "role": "minister-delegate",
+    "portfolio": "Autonomie & Personnes handicapées",
+    "file": "data/ministers/charlotte-parmentier-lecocq-ea83403b-d679-4b53-b6a5-1363b48a0eaf.json"
+  },
+  {
+    "id": "8c74b95d-99f9-46c5-b78c-aa3389182b3b",
+    "name": "Catherine VAUTRIN",
+    "role": "minister",
+    "portfolio": "Armées et Anciens combattants",
+    "file": "data/ministers/catherine-vautrin-8c74b95d-99f9-46c5-b78c-aa3389182b3b.json"
+  },
+  {
+    "id": "3f2dd4ce-483e-4b0e-9c11-d58cf45caa1c",
+    "name": "Amélie de MONTCHALIN",
+    "role": "minister",
+    "portfolio": "Action et Comptes publics",
+    "file": "data/ministers/amelie-de-montchalin-3f2dd4ce-483e-4b0e-9c11-d58cf45caa1c.json"
+  },
+  {
+    "id": "52595388-bece-411d-9857-b7c9af7953a0",
+    "name": "Eléonore CAROIT",
+    "role": "minister-delegate",
+    "portfolio": "Francophonie, Partenariats internationaux & Français de l'étranger",
+    "file": "data/ministers/eleonore-caroit-52595388-bece-411d-9857-b7c9af7953a0.json"
+  },
+  {
+    "id": "a5046d9d-a011-47eb-b5ee-22df32d972da",
+    "name": "Catherine CHABAUD",
+    "role": "minister-delegate",
+    "portfolio": "Mer et Pêche",
+    "file": "data/ministers/catherine-chabaud-a5046d9d-a011-47eb-b5ee-22df32d972da.json"
+  },
+  {
+    "id": "c37a1fbd-780c-4c3a-a279-c8f0057c7cb9",
+    "name": "Nicolas FORISSIER",
+    "role": "minister-delegate",
+    "portfolio": "Commerce extérieur & Attractivité",
+    "file": "data/ministers/nicolas-forissier-c37a1fbd-780c-4c3a-a279-c8f0057c7cb9.json"
+  },
+  {
+    "id": "1a08d2d3-06b2-424f-acb5-567047e5b25c",
+    "name": "Gérald DARMANIN",
+    "role": "minister",
+    "portfolio": "Justice",
+    "file": "data/ministers/gerald-darmanin-1a08d2d3-06b2-424f-acb5-567047e5b25c.json"
+  },
+  {
+    "id": "48f9e0ff-ae25-4cf8-8d61-f2c10497a5a9",
+    "name": "Emmanuel MACRON",
+    "role": "president",
+    "portfolio": "Présidence de la République",
+    "file": "data/ministers/emmanuel-macron-48f9e0ff-ae25-4cf8-8d61-f2c10497a5a9.json"
+  },
+  {
+    "id": "c23846bc-7b27-4272-9840-63b536a6a46a",
+    "name": "Laurent NUNEZ",
+    "role": "minister",
+    "portfolio": "Intérieur",
+    "file": "data/ministers/laurent-nunez-c23846bc-7b27-4272-9840-63b536a6a46a.json"
+  },
+  {
+    "id": "bc25b753-7b86-4616-ab35-326fc2a5ccce",
+    "name": "Marie-Pierre VEDRENNE",
+    "role": "minister-delegate",
+    "portfolio": "Ministre déléguée auprès du ministre de l'Intérieur",
+    "file": "data/ministers/marie-pierre-vedrenne-bc25b753-7b86-4616-ab35-326fc2a5ccce.json"
+  },
+  {
+    "id": "fdf3ad5e-61ca-4d10-b9ad-f9182553746e",
+    "name": "Jean-Noël BARROT",
+    "role": "minister",
+    "portfolio": "Europe et Affaires étrangères",
+    "file": "data/ministers/jean-noel-barrot-fdf3ad5e-61ca-4d10-b9ad-f9182553746e.json"
+  },
+  {
+    "id": "1c71e08c-eabe-490c-82b2-262ae5df270a",
+    "name": "Sébastien LECORNU",
+    "role": "leader",
+    "portfolio": "Premier Ministre",
+    "file": "data/ministers/sebastien-lecornu-1c71e08c-eabe-490c-82b2-262ae5df270a.json"
+  },
+  {
+    "id": "20e33ae9-b3be-4926-9d55-71af54212d0c",
+    "name": "Annie GENEVARD",
+    "role": "minister",
+    "portfolio": "Agriculture et Souveraineté alimentaire",
+    "file": "data/ministers/annie-genevard-20e33ae9-b3be-4926-9d55-71af54212d0c.json"
+  },
+  {
+    "id": "1c106d29-99be-4bb4-89c6-c335ef787ff5",
+    "name": "Françoise GATEL",
+    "role": "minister",
+    "portfolio": "Aménagement du territoire et Décentralisation",
+    "file": "data/ministers/francoise-gatel-1c106d29-99be-4bb4-89c6-c335ef787ff5.json"
+  },
+  {
+    "id": "66f02786-e0cf-404c-a518-9702f77cac40",
+    "name": "Édouard GEFFRAY",
+    "role": "minister",
+    "portfolio": "Éducation nationale",
+    "file": "data/ministers/edouard-geffray-66f02786-e0cf-404c-a518-9702f77cac40.json"
+  },
+  {
+    "id": "faad424b-a306-4cfe-b3cf-7aaed7fba0e3",
+    "name": "Benjamin HADDAD",
+    "role": "minister-delegate",
+    "portfolio": "Europe",
+    "file": "data/ministers/benjamin-haddad-faad424b-a306-4cfe-b3cf-7aaed7fba0e3.json"
+  },
+  {
+    "id": "28672add-45c7-4e67-8b76-42412c80d072",
+    "name": "Mathieu LEFEVRE",
+    "role": "minister-delegate",
+    "portfolio": "Transition écologique",
+    "file": "data/ministers/mathieu-lefevre-28672add-45c7-4e67-8b76-42412c80d072.json"
+  },
+  {
+    "id": "51c6fa32-56e8-4934-a959-fdf127062993",
+    "name": "Alice RUFO",
+    "role": "minister-delegate",
+    "portfolio": "Ministre déléguée auprès de la ministre",
+    "file": "data/ministers/alice-rufo-51c6fa32-56e8-4934-a959-fdf127062993.json"
+  },
+  {
+    "id": "d4ad5ec2-cdfc-4a80-b452-2742d4daa038",
+    "name": "David AMIEL",
+    "role": "minister-delegate",
+    "portfolio": "Fonction publique & Réforme de l'État",
+    "file": "data/ministers/david-amiel-d4ad5ec2-cdfc-4a80-b452-2742d4daa038.json"
+  },
+  {
+    "id": "d6af1180-c743-47c5-a0d9-eda9da905db5",
+    "name": "Michel FOURNIER",
+    "role": "minister-delegate",
+    "portfolio": "Ruralité",
+    "file": "data/ministers/michel-fournier-d6af1180-c743-47c5-a0d9-eda9da905db5.json"
+  },
+  {
+    "id": "822adb5a-a343-4980-be94-8aa3ff368bd9",
+    "name": "Aurore BERGÉ",
+    "role": "minister-delegate",
+    "portfolio": "Égalité femmes-hommes & Lutte contre les discriminations",
+    "file": "data/ministers/aurore-berge-822adb5a-a343-4980-be94-8aa3ff368bd9.json"
+  },
+  {
+    "id": "7e435e35-c8e7-40e7-b3f2-2092d3aeba92",
+    "name": "Sébastien MARTIN",
+    "role": "minister-delegate",
+    "portfolio": "Industrie",
+    "file": "data/ministers/sebastien-martin-7e435e35-c8e7-40e7-b3f2-2092d3aeba92.json"
+  }
+]

@@ -1,0 +1,253 @@
+{
+  "id": "52595388-bece-411d-9857-b7c9af7953a0",
+  "name": "Eléonore CAROIT",
+  "role": "minister-delegate",
+  "email": "",
+  "party": "Renaissance",
+  "photo": "https://www.lesbiographies.com/Home/GetImage/231572",
+  "portfolio": "Francophonie, Partenariats internationaux & Français de l'étranger",
+  "description": "Avocate en arbitrage international, elle est élue députée LREM des Français de l'étranger (Amérique du Sud) en 2022.",
+  "ministries": [
+    {
+      "id": "64d69571-d122-4985-b877-1813e6e7f9d6",
+      "name": "Francophonie, Partenariats internationaux & Français de l'étranger",
+      "shortName": "Francophonie",
+      "color": "#DC2626",
+      "isPrimary": true,
+      "roleLabel": "Ministre déléguée chargé de la Francophonie, des Partenariats internationaux et des Français de l’étranger"
+    },
+    {
+      "id": "167a510a-75c7-4d79-9b72-128fe5ac0c19",
+      "name": "Europe et Affaires étrangères",
+      "shortName": "Affaires étrangères",
+      "color": "#B45309",
+      "isPrimary": false,
+      "roleLabel": null
+    }
+  ],
+  "superiorId": "fdf3ad5e-61ca-4d10-b9ad-f9182553746e",
+  "delegates": [],
+  "biography": [
+    {
+      "title": "Députée Renaissance de la 2ᵉ circonscription des Français établis hors de France (réélue en 2023 et 2024)",
+      "organization": "Assemblée nationale",
+      "bioSection": "Assemblée nationale",
+      "startDate": "2022-06-19",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 2
+    },
+    {
+      "title": "Vice-présidente de la commission des Affaires étrangères",
+      "organization": "Assemblée nationale",
+      "bioSection": "Assemblée nationale",
+      "startDate": "2022-06-19",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 3
+    },
+    {
+      "title": "Master of Law (LL.M.)",
+      "organization": "Columbia Law School",
+      "bioSection": "Formation académique",
+      "startDate": "2008-12-30",
+      "endDate": "2009-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 9
+    },
+    {
+      "title": "Master 2",
+      "organization": "Université Paris 1 Panthéon-Sorbonne",
+      "bioSection": "Formation académique",
+      "startDate": "2006-12-30",
+      "endDate": "2007-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 10
+    },
+    {
+      "title": "Diplômée de Sciences Po Paris",
+      "organization": "Institut d’études politiques de Paris",
+      "bioSection": "Formation académique",
+      "startDate": "2002-12-30",
+      "endDate": "2007-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 11
+    },
+    {
+      "title": "Pas de fonction gouvernementale jusqu’à présent",
+      "organization": null,
+      "bioSection": "Gouvernement",
+      "startDate": null,
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 1
+    },
+    {
+      "title": "Co-présidente",
+      "organization": "Comité français de l’arbitrage (CFA 40)",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2017-12-30",
+      "endDate": "2021-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 4
+    },
+    {
+      "title": "Avocate en arbitrage international",
+      "organization": "Cabinet Lalive",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2014-12-30",
+      "endDate": "2019-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 5
+    },
+    {
+      "title": "Avocate en résolution des litiges (arbitrage international et contentieux)",
+      "organization": "Cabinet Castaldi Mourre & Partners",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2011-12-30",
+      "endDate": "2014-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 6
+    },
+    {
+      "title": "Avocate en droit des affaires",
+      "organization": "Cabinet Weil Gotshal & Manges",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2009-12-30",
+      "endDate": "2011-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 7
+    },
+    {
+      "title": "Juriste en corporate",
+      "organization": "Cabinet Darrois Maillot Brochier",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2007-12-30",
+      "endDate": "2008-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 8
+    }
+  ],
+  "collaborators": [
+    {
+      "id": "c65ce55f-ee53-471c-9432-2fc34e749dd6",
+      "name": "Maria PHILIPPE",
+      "full_name": "Maria PHILIPPE",
+      "superior_id": "52595388-bece-411d-9857-b7c9af7953a0",
+      "job_title": null,
+      "cabinet_role": "Directrice de cabinet",
+      "cabinet_order": 1,
+      "cabinet_badge": null,
+      "collab_grade": "dircab",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "4ec528f4-71d3-49db-851e-41b63d3c5bea",
+      "name": "Julien BOUCHARD",
+      "full_name": "Julien BOUCHARD",
+      "superior_id": "52595388-bece-411d-9857-b7c9af7953a0",
+      "job_title": null,
+      "cabinet_role": "Directeur de cabinet adjoint, chargé des Français de l’étranger",
+      "cabinet_order": 2,
+      "cabinet_badge": null,
+      "collab_grade": "diradj",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "06d2930b-e830-492f-a6f8-513b2a0ed01e",
+      "name": "Thelma POIZAT",
+      "full_name": "Thelma POIZAT",
+      "superior_id": "52595388-bece-411d-9857-b7c9af7953a0",
+      "job_title": null,
+      "cabinet_role": "Cheffe de cabinet",
+      "cabinet_order": 3,
+      "cabinet_badge": null,
+      "collab_grade": "chefcab",
+      "pole_name": null,
+      "photo_url": "https://www.lesbiographies.com/Home/GetImage/245238",
+      "description": null
+    },
+    {
+      "id": "a761d320-b376-45bd-b936-863d2b831c69",
+      "name": "Adorice GACHET",
+      "full_name": "Adorice GACHET",
+      "superior_id": "52595388-bece-411d-9857-b7c9af7953a0",
+      "job_title": null,
+      "cabinet_role": "Conseillère Afrique, Moyen Orient, Europe, Asie, diplomatie féministe",
+      "cabinet_order": 5,
+      "cabinet_badge": null,
+      "collab_grade": "chefpole",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "d4b48242-ec61-48b3-af52-fd2c4b033cf3",
+      "name": "Charles TETU",
+      "full_name": "Charles TETU",
+      "superior_id": "52595388-bece-411d-9857-b7c9af7953a0",
+      "job_title": null,
+      "cabinet_role": "Conseiller suivi des opérateurs et financements innovants",
+      "cabinet_order": 5,
+      "cabinet_badge": null,
+      "collab_grade": "chefpole",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "4e4074d3-f234-47bf-a827-38ff4b8ba273",
+      "name": "Zoé ESCOBAR-CAMELEYRE",
+      "full_name": "Zoé ESCOBAR-CAMELEYRE",
+      "superior_id": "52595388-bece-411d-9857-b7c9af7953a0",
+      "job_title": null,
+      "cabinet_role": "Conseillère parlementaire en charge des Amériques et des affaires réservées",
+      "cabinet_order": 6,
+      "cabinet_badge": null,
+      "collab_grade": "conseiller",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "182faec4-8712-475a-927f-a376728233de",
+      "name": "Marie PHILIPPE",
+      "full_name": "Marie PHILIPPE",
+      "superior_id": "52595388-bece-411d-9857-b7c9af7953a0",
+      "job_title": "Directrice de cabinet",
+      "cabinet_role": "Directrice de cabinet",
+      "cabinet_order": 10,
+      "cabinet_badge": null,
+      "collab_grade": "dircab",
+      "pole_name": null,
+      "photo_url": "https://www.lesbiographies.com/Home/GetImage/197715",
+      "description": "Députée européenne Renew depuis 2019, cette proche de François Bayrou venait de se voir retirer ses responsabilités au sein de la délégation française à Bruxelles après avoir critiqué sa présidente Valérie Hayer."
+    }
+  ]
+}
