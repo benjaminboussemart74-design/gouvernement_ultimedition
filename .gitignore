@@ -7,6 +7,11 @@ node_modules/
 # Build output
 dist/
 
+# Environment variables (si vous en utilisez un jour)
+.env
+.env.local
+.env.production
+
 # Node / editor folders (safe defaults)
 scripts/cabinet-tree-rpc.js
 scripts/csv-to-json.js

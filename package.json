@@ -11,7 +11,9 @@
     "csv-to-json": "node scripts/csv-to-json.js",
     "validate": "npm run validate:csv && npm run csv-to-json",
     "test": "echo 'Tests à implémenter' && exit 0",
-    "sync": "node scripts/validators/validate-csv.js && node scripts/csv-to-json.js"
+    "sync": "node scripts/validators/validate-csv.js && node scripts/csv-to-json.js",
+    "security": "node scripts/security-audit.js",
+    "prebuild": "npm run security"
   },
   "repository": {
     "type": "git",
