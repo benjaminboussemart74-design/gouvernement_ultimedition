@@ -1,37 +1,37 @@
-id,name,short_name,color,category,sort_order,parent_ministry_id,created_at,updated_at
-c5fd3277-a362-4aae-a9c5-942ee926adcb,Présidence de la République,Présidence,#1E3A8A,autre,1,,2025-11-14T10:51:55.468348+00:00,2025-11-14T10:51:55.468348+00:00
-2f4ad15c-3ad7-4079-a710-c181b3097e1b,Ministre déléguée auprès du ministre de l'Intérieur,Intérieur ,#F59E0B,ministre-delegue,230,f46f4a1a-437a-451b-84e4-c08011e10bb0,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
-a06bb2b5-5c88-47b6-a7a6-32224cc1abae,Ministre déléguée auprès de la ministre ,Armées ,#16A34A,ministre-delegue,240,70f4caf8-76ec-46b1-9663-fefc76428992,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
-7096353f-c8ac-4df1-8634-c45035c34825,Premier Ministre,Premier Ministre,,ministre,0,,2025-10-16T09:29:37.341201+00:00,2025-11-03T16:57:43.468779+00:00
-f46f4a1a-437a-451b-84e4-c08011e10bb0,Intérieur,Intérieur,#1F2937,ministre,10,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-70f4caf8-76ec-46b1-9663-fefc76428992,Armées et Anciens combattants,Armées,#D4AF37,ministre,20,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-5822c061-99dd-4734-856e-d623cc39f2b3,Travail et Solidarités,Travail,#0EA5E9,ministre,30,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-e45d3a63-5659-489a-a0eb-656f5466d934,Transition écologique,Écologie,#6B8E23,ministre,40,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-d127788b-7349-4d2d-9cbd-62ca9fa68ae9,Justice ,Justice,#2563EB,ministre,50,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-0029df18-e68b-4f4e-b882-852fcdb07bc6,"Économie, Finances et Souveraineté industrielle, énergétique et numérique",Économie,#0B3D91,ministre,60,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-9e35b193-e343-4fa2-8af0-fe227bb504f5,"PME, Commerce, Artisanat, Tourisme et Pouvoir d'achat",Commerce et artisanat,#DB2777,ministre,70,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-14cfcde8-8822-409c-a9cc-18a416bde17e,Agriculture et Souveraineté alimentaire,Agriculture,#DC2626,ministre,80,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-5a022b27-c9cd-45dd-9f61-f8bb1b3b6b97,Éducation nationale,Éducation,#14B8A6,ministre,90,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-167a510a-75c7-4d79-9b72-128fe5ac0c19,Europe et Affaires étrangères,Affaires étrangères,#B45309,ministre,100,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-33421bba-70b6-4f59-8d66-1fe80fd489f4,Culture,Culture,#6B7280,ministre,110,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-1251eed6-a02c-42a6-9db2-bf94a8eda63a,"Santé, Familles, Autonomie et Personnes handicapées",Santé,#7C3AED,ministre,120,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-8cffab00-1440-4efe-81d2-f85194ff36de,Outre-mer,Outre-mer,#22C55E,ministre,130,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-e1e33481-0f0e-476c-a59c-917d3d7aa31b,Aménagement du territoire et Décentralisation,Territoires,#475569,ministre,140,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-f5b4eb5a-0951-4113-9611-70d55bbf412b,Action et Comptes publics,Comptes publics,#8B4513,ministre,150,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-43cc528f-8aa0-4325-b8ad-65e350f069da,"Enseignement supérieur, Recherche et Espace",Enseignement supérieur et Espace,#6D28D9,ministre,160,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-ff8fd0ed-b2f7-40dc-b307-69054bfb91fe,Relations avec le Parlement,Ministres délégués attachés au premier ministre,#0C4A6E,ministre-delegue,210,7096353f-c8ac-4df1-8634-c45035c34825,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
-a3f89e2a-ce65-4245-ac02-90c397207559,Porte-parole du Gouvernement,Porte-parole,#F59E0B,ministre-delegue,220,7096353f-c8ac-4df1-8634-c45035c34825,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
-29cc6f35-219a-4fd9-b5b7-4d06939e0682,Égalité femmes-hommes & Lutte contre les discriminations,Égalité Femmes-Hommes,#16A34A,ministre-delegue,225,7096353f-c8ac-4df1-8634-c45035c34825,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
-e2a6efe8-91c1-4d47-ba48-39fb348a4430,"Sports, Jeunesse et Vie associative",Sports,#FBBF24,ministre,170,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-35fa9817-90da-4e23-b6b2-68d7bb797678,Transports,Transports,#9333EA,ministre,180,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-da085e3b-f773-4392-a808-3076d187913a,Ville et Logement,Ville-Logement,#0284C7,ministre,190,,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:43.468779+00:00
-a25c52fe-66fd-4960-bc03-b5664c0b95bc,Fonction publique & Réforme de l'État,Fonction publique,#D4AF37,ministre-delegue,310,f5b4eb5a-0951-4113-9611-70d55bbf412b,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
-0aa7a1b2-5eed-4b6a-b3c1-1b80945921af,Transition écologique ,Écologie ,#D4AF37,ministre-delegue,255,e45d3a63-5659-489a-a0eb-656f5466d934,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
-a0cb23b5-f7fd-4c53-acfc-3bbf2cc9d85c,Mer et Pêche,Mer & Pêche,#6B8E23,ministre-delegue,250,e45d3a63-5659-489a-a0eb-656f5466d934,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
-06749d78-530c-4966-8492-cac8dc922379,Intelligence artificielle & Numérique,IA & Numérique,#6B8E23,ministre-delegue,265,0029df18-e68b-4f4e-b882-852fcdb07bc6,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
-2ada6cf9-1e56-44f9-94b0-09f6f5c04676,Industrie,Industrie,#DC2626,ministre-delegue,260,0029df18-e68b-4f4e-b882-852fcdb07bc6,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
-64d69571-d122-4985-b877-1813e6e7f9d6,"Francophonie, Partenariats internationaux & Français de l'étranger",Francophonie,#DC2626,ministre-delegue,280,167a510a-75c7-4d79-9b72-128fe5ac0c19,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
-6c79642b-0cbe-4fcb-a580-79fb8dff4455,Commerce extérieur & Attractivité,Commerce extérieur,#DC2626,ministre-delegue,275,167a510a-75c7-4d79-9b72-128fe5ac0c19,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
-868b9df4-9a4b-464d-9954-ceeb34367612,Europe,Europe,#B45309,ministre-delegue,270,167a510a-75c7-4d79-9b72-128fe5ac0c19,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
-5b7f0cb7-081d-45ad-baf9-c771d3cd14cd,Autonomie & Personnes handicapées,Autonomie & Handicap,#7C3AED,ministre-delegue,290,1251eed6-a02c-42a6-9db2-bf94a8eda63a,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
-57069b63-44b2-48eb-8a3a-ce1af67414cc,Ruralité,Ruralité,#22C55E,ministre-delegue,300,e1e33481-0f0e-476c-a59c-917d3d7aa31b,2025-10-14T12:26:22.306688+00:00,2025-11-03T16:57:42.960669+00:00
+"id","name","short_name","color","category","sort_order","parent_ministry_id","created_at","updated_at"
+"c5fd3277-a362-4aae-a9c5-942ee926adcb","Présidence de la République","Présidence","#1E3A8A","autre","1","","2025-11-14T10:51:55.468348+00:00","2025-11-14T10:51:55.468348+00:00"
+"2f4ad15c-3ad7-4079-a710-c181b3097e1b","Ministre déléguée auprès du ministre de l'Intérieur","Intérieur ","#F59E0B","ministre-delegue","230","f46f4a1a-437a-451b-84e4-c08011e10bb0","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
+"a06bb2b5-5c88-47b6-a7a6-32224cc1abae","Ministre déléguée auprès de la ministre ","Armées ","#16A34A","ministre-delegue","240","70f4caf8-76ec-46b1-9663-fefc76428992","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
+"7096353f-c8ac-4df1-8634-c45035c34825","Premier Ministre","Premier Ministre","","ministre","0","","2025-10-16T09:29:37.341201+00:00","2025-11-03T16:57:43.468779+00:00"
+"f46f4a1a-437a-451b-84e4-c08011e10bb0","Intérieur","Intérieur","#1F2937","ministre","10","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"70f4caf8-76ec-46b1-9663-fefc76428992","Armées et Anciens combattants","Armées","#D4AF37","ministre","20","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"5822c061-99dd-4734-856e-d623cc39f2b3","Travail et Solidarités","Travail","#0EA5E9","ministre","30","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"e45d3a63-5659-489a-a0eb-656f5466d934","Transition écologique","Écologie","#6B8E23","ministre","40","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"d127788b-7349-4d2d-9cbd-62ca9fa68ae9","Justice ","Justice","#2563EB","ministre","50","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"0029df18-e68b-4f4e-b882-852fcdb07bc6","Économie, Finances et Souveraineté industrielle, énergétique et numérique","Économie","#0B3D91","ministre","60","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"9e35b193-e343-4fa2-8af0-fe227bb504f5","PME, Commerce, Artisanat, Tourisme et Pouvoir d'achat","Commerce et artisanat","#DB2777","ministre","70","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"14cfcde8-8822-409c-a9cc-18a416bde17e","Agriculture et Souveraineté alimentaire","Agriculture","#DC2626","ministre","80","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"5a022b27-c9cd-45dd-9f61-f8bb1b3b6b97","Éducation nationale","Éducation","#14B8A6","ministre","90","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"167a510a-75c7-4d79-9b72-128fe5ac0c19","Europe et Affaires étrangères","Affaires étrangères","#B45309","ministre","100","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"33421bba-70b6-4f59-8d66-1fe80fd489f4","Culture","Culture","#6B7280","ministre","110","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"1251eed6-a02c-42a6-9db2-bf94a8eda63a","Santé, Familles, Autonomie et Personnes handicapées","Santé","#7C3AED","ministre","120","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"8cffab00-1440-4efe-81d2-f85194ff36de","Outre-mer","Outre-mer","#22C55E","ministre","130","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"e1e33481-0f0e-476c-a59c-917d3d7aa31b","Aménagement du territoire et Décentralisation","Territoires","#475569","ministre","140","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"f5b4eb5a-0951-4113-9611-70d55bbf412b","Action et Comptes publics","Comptes publics","#8B4513","ministre","150","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"43cc528f-8aa0-4325-b8ad-65e350f069da","Enseignement supérieur, Recherche et Espace","Enseignement supérieur et Espace","#6D28D9","ministre","160","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"ff8fd0ed-b2f7-40dc-b307-69054bfb91fe","Relations avec le Parlement","Ministres délégués attachés au premier ministre","#0C4A6E","ministre-delegue","210","7096353f-c8ac-4df1-8634-c45035c34825","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
+"a3f89e2a-ce65-4245-ac02-90c397207559","Porte-parole du Gouvernement","Porte-parole","#F59E0B","ministre-delegue","220","7096353f-c8ac-4df1-8634-c45035c34825","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
+"29cc6f35-219a-4fd9-b5b7-4d06939e0682","Égalité femmes-hommes & Lutte contre les discriminations","Égalité Femmes-Hommes","#16A34A","ministre-delegue","225","7096353f-c8ac-4df1-8634-c45035c34825","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
+"e2a6efe8-91c1-4d47-ba48-39fb348a4430","Sports, Jeunesse et Vie associative","Sports","#FBBF24","ministre","170","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"35fa9817-90da-4e23-b6b2-68d7bb797678","Transports","Transports","#9333EA","ministre","180","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"da085e3b-f773-4392-a808-3076d187913a","Ville et Logement","Ville-Logement","#0284C7","ministre","190","","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:43.468779+00:00"
+"a25c52fe-66fd-4960-bc03-b5664c0b95bc","Fonction publique & Réforme de l'État","Fonction publique","#D4AF37","ministre-delegue","310","f5b4eb5a-0951-4113-9611-70d55bbf412b","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
+"0aa7a1b2-5eed-4b6a-b3c1-1b80945921af","Transition écologique ","Écologie ","#D4AF37","ministre-delegue","255","e45d3a63-5659-489a-a0eb-656f5466d934","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
+"a0cb23b5-f7fd-4c53-acfc-3bbf2cc9d85c","Mer et Pêche","Mer & Pêche","#6B8E23","ministre-delegue","250","e45d3a63-5659-489a-a0eb-656f5466d934","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
+"06749d78-530c-4966-8492-cac8dc922379","Intelligence artificielle & Numérique","IA & Numérique","#6B8E23","ministre-delegue","265","0029df18-e68b-4f4e-b882-852fcdb07bc6","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
+"2ada6cf9-1e56-44f9-94b0-09f6f5c04676","Industrie","Industrie","#DC2626","ministre-delegue","260","0029df18-e68b-4f4e-b882-852fcdb07bc6","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
+"64d69571-d122-4985-b877-1813e6e7f9d6","Francophonie, Partenariats internationaux & Français de l'étranger","Francophonie","#DC2626","ministre-delegue","280","167a510a-75c7-4d79-9b72-128fe5ac0c19","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
+"6c79642b-0cbe-4fcb-a580-79fb8dff4455","Commerce extérieur & Attractivité","Commerce extérieur","#DC2626","ministre-delegue","275","167a510a-75c7-4d79-9b72-128fe5ac0c19","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
+"868b9df4-9a4b-464d-9954-ceeb34367612","Europe","Europe","#B45309","ministre-delegue","270","167a510a-75c7-4d79-9b72-128fe5ac0c19","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
+"5b7f0cb7-081d-45ad-baf9-c771d3cd14cd","Autonomie & Personnes handicapées","Autonomie & Handicap","#7C3AED","ministre-delegue","290","1251eed6-a02c-42a6-9db2-bf94a8eda63a","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
+"57069b63-44b2-48eb-8a3a-ce1af67414cc","Ruralité","Ruralité","#22C55E","ministre-delegue","300","e1e33481-0f0e-476c-a59c-917d3d7aa31b","2025-10-14T12:26:22.306688+00:00","2025-11-03T16:57:42.960669+00:00"
