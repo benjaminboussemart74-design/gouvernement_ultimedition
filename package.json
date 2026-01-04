@@ -1,0 +1,32 @@
+{
+  "name": "gouvernement-lecornu-frontend",
+  "version": "2.0.0",
+  "description": "Site vitrine du gouvernement Lecornu II avec gestion des ministres et cabinets",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "validate:csv": "node scripts/validators/validate-csv.js",
+    "csv-to-json": "node scripts/csv-to-json.js",
+    "validate": "npm run validate:csv && npm run csv-to-json",
+    "test": "echo 'Tests à implémenter' && exit 0",
+    "sync": "node scripts/validators/validate-csv.js && node scripts/csv-to-json.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/votre-org/gouvernement-frontend.git"
+  },
+  "keywords": [
+    "gouvernement",
+    "france",
+    "ministres",
+    "cabinets"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,172 @@
+name: Sync Google Sheets → Git
+
+on:
+  # Déclenchement toutes les 2 heures
+  schedule:
+    - cron: '0 */2 * * *'
+  
+  # Déclenchement manuel depuis Actions tab
+  workflow_dispatch:
+    inputs:
+      force_sync:
+        description: 'Forcer la synchronisation même sans changements'
+        required: false
+        default: 'false'
+
+jobs:
+  sync:
+    name: Synchroniser Google Sheets vers Git
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Historique complet pour git diff
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci
+      
+      # Téléchargement des CSV depuis Google Sheets
+      # Remplacer GOOGLE_SHEET_ID par l'ID de votre Google Sheet
+      # Format URL: https://docs.google.com/spreadsheets/d/GOOGLE_SHEET_ID/edit
+      
+      - name: 📊 Télécharger onglet Ministries
+        env:
+          SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: |
+          curl -L "https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Ministries" \
+            -o "Serveur gouvernement - ministries.csv"
+      
+      - name: 📊 Télécharger onglet Persons
+        env:
+          SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: |
+          curl -L "https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Persons" \
+            -o "Serveur gouvernement - persons.csv"
+      
+      - name: 📊 Télécharger onglet Person_Ministries
+        env:
+          SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: |
+          curl -L "https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Person_Ministries" \
+            -o "Serveur gouvernement - person_ministries.csv"
+      
+      - name: 📊 Télécharger onglet Person_Careers
+        env:
+          SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: |
+          curl -L "https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Person_Careers" \
+            -o "Serveur gouvernement - person_careers.csv"
+      
+      # Validation CSV
+      - name: ✅ Valider structure CSV
+        id: validation
+        run: |
+          echo "Validation des CSV téléchargés..."
+          node scripts/validators/validate-csv.js
+          echo "validation_passed=true" >> $GITHUB_OUTPUT
+        continue-on-error: false
+      
+      # Conversion CSV → JSON
+      - name: 🔄 Convertir CSV → JSON
+        if: steps.validation.outputs.validation_passed == 'true'
+        run: |
+          echo "Conversion CSV vers JSON..."
+          node scripts/csv-to-json.js
+      
+      # Validation JSON (schémas si disponibles)
+      - name: ✅ Valider JSON générés
+        if: steps.validation.outputs.validation_passed == 'true'
+        run: |
+          # Si vous avez un script de validation JSON
+          if [ -f "scripts/validators/validate-json.js" ]; then
+            node scripts/validators/validate-json.js
+          else
+            echo "⚠️  Validation JSON non configurée (optionnel)"
+          fi
+        continue-on-error: true
+      
+      # Détection changements
+      - name: 🔍 Détecter changements
+        id: changes
+        run: |
+          git diff --exit-code data/ Serveur*.csv || echo "has_changes=true" >> $GITHUB_OUTPUT
+      
+      # Commit et push
+      - name: 💾 Commit changements
+        if: steps.changes.outputs.has_changes == 'true' || github.event.inputs.force_sync == 'true'
+        run: |
+          git config user.name "Google Sheets Sync Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Horodatage
+          TIMESTAMP=$(date -Iseconds)
+          
+          # Ajouter fichiers modifiés
+          git add Serveur*.csv data/
+          
+          # Message commit structuré
+          cat > commit_message.txt << EOF
+          sync: Mise à jour depuis Google Sheets
+          
+          Synchronisation automatique effectuée le ${TIMESTAMP}
+          
+          Fichiers synchronisés:
+          - ministries.csv
+          - persons.csv
+          - person_ministries.csv
+          - person_careers.csv
+          
+          Source: Google Sheets (ID: ${SHEET_ID:0:8}...)
+          Workflow: ${GITHUB_WORKFLOW} #${GITHUB_RUN_NUMBER}
+          EOF
+          
+          git commit -F commit_message.txt
+          git push
+      
+      - name: ✅ Résumé synchronisation
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          echo "✅ Synchronisation réussie !"
+          echo "📊 Statistiques:"
+          echo "  - Ministries: $(wc -l < 'Serveur gouvernement - ministries.csv') lignes"
+          echo "  - Persons: $(wc -l < 'Serveur gouvernement - persons.csv') lignes"
+          echo "  - Person-Ministries: $(wc -l < 'Serveur gouvernement - person_ministries.csv') lignes"
+          echo "  - Careers: $(wc -l < 'Serveur gouvernement - person_careers.csv') lignes"
+      
+      - name: ℹ️  Aucun changement
+        if: steps.changes.outputs.has_changes != 'true' && github.event.inputs.force_sync != 'true'
+        run: |
+          echo "ℹ️  Aucune modification détectée depuis la dernière synchronisation"
+      
+      # Notification en cas d'erreur
+      - name: 🚨 Notification erreur
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `❌ Échec synchronisation Google Sheets (${new Date().toISOString().split('T')[0]})`,
+              body: `La synchronisation automatique a échoué.
+              
+              **Workflow:** ${context.workflow}
+              **Run:** ${context.runNumber}
+              **Logs:** ${context.payload.repository.html_url}/actions/runs/${context.runId}
+              
+              Vérifier:
+              - [ ] Permissions Google Sheets (partage public ou API key valide)
+              - [ ] Format CSV (colonnes requises)
+              - [ ] Validation données (UUIDs, références)
+              - [ ] Secrets GitHub configurés (GOOGLE_SHEET_ID)
+              `,
+              labels: ['bug', 'sync', 'automated']
+            });
