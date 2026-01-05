@@ -38,7 +38,7 @@ CSV Validation (Schema + Business Rules)
     ↓
 JSON Generation (Normalized Data Model)
     ↓
-Static Site Deployment (GitHub Pages)
+Static Site Deployment (Vercel)
 ```
 
 ### Key Design Principles
@@ -62,7 +62,8 @@ Gouvernement_Lecornu-II/
 ├── .github/
 │   └── workflows/
 │       ├── sync-google-sheets.yml    # Automated data synchronization
-│       └── validate-pr.yml           # Pull request validation checks
+│       ├── validate-pr.yml           # Pull request validation checks
+│       └── deploy-github-pages.yml.disabled  # Legacy deployment (replaced by Vercel)
 ├── data/
 │   └── ministers/
 │       ├── index.json                # Minister manifest (generated)
@@ -330,7 +331,7 @@ Output artifacts:
 
 ### Deployment
 
-**Automated Deployment** (GitHub Actions):
+**Automated Deployment** (Vercel + GitHub Actions):
 
 ```yaml
 # .github/workflows/sync-google-sheets.yml
@@ -343,24 +344,28 @@ Output artifacts:
     git push
 ```
 
-Every successful sync triggers a GitHub Pages rebuild automatically.
+Every successful sync triggers an automatic Vercel deployment (15-30 seconds).
 
 **Manual Deployment**:
 
 ```bash
-# Build artifacts
+# Build artifacts locally
 npm run build
 
-# Deploy to GitHub Pages
+# Commit changes (triggers Vercel auto-deploy)
 git add data/ministers/
 git commit -m "chore: rebuild data artifacts"
 git push origin main
+
+# Or deploy directly via Vercel CLI
+vercel --prod
 ```
 
 **Deployment Environments**:
 
-- Production: `https://benjaminboussemart74-design.github.io/Gouvernement_Lecornu-II/`
-- Staging: Pull request preview via Netlify/Vercel (optional)
+- Production: `https://gouvernement-ultimedition.vercel.app`
+- Preview: Automatic preview deployments for pull requests (Vercel)
+- Staging: Branch-based deployments available on demand
 
 ## 9. Operational Guidance
 
