@@ -72,7 +72,7 @@
       "endDate": null,
       "eventDate": null,
       "eventText": null,
-      "ongoing": true,
+      "ongoing": false,
       "sortIndex": 999
     },
     {
@@ -83,7 +83,7 @@
       "endDate": null,
       "eventDate": null,
       "eventText": null,
-      "ongoing": false,
+      "ongoing": true,
       "sortIndex": 999
     },
     {
