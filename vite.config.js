@@ -1,9 +1,9 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  // Pour domaine personnalisé, utilisez '/' comme base
-  // Pour GitHub Pages, utilisez le nom du repository
-  base: '/gouvernement_ultimedition/',
+  // Pour Vercel ou domaine personnalisé, utilisez '/' comme base
+  // Pour GitHub Pages, utilisez '/gouvernement_ultimedition/'
+  base: '/',
   
   build: {
     outDir: 'dist',
