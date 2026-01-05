@@ -1,6 +1,6 @@
 {
   "name": "gouvernement-lecornu-frontend",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Site vitrine du gouvernement Lecornu II avec gestion des ministres et cabinets",
   "type": "module",
   "scripts": {
