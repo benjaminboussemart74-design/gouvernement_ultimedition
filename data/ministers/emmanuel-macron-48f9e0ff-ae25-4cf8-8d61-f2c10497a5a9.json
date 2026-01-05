@@ -19,7 +19,195 @@
   ],
   "superiorId": null,
   "delegates": [],
-  "biography": [],
+  "biography": [
+    {
+      "title": "Diplômé de l'École nationale d'administration (ENA)",
+      "organization": "École nationale d'administration",
+      "bioSection": "Formation académique",
+      "startDate": "2004-01-01",
+      "endDate": "2004-12-31",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Diplômé de l'Institut d'études politiques",
+      "organization": "Sciences Po",
+      "bioSection": "Formation académique",
+      "startDate": "2002-01-01",
+      "endDate": "2002-12-31",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Maîtrise de philosophie",
+      "organization": "Université Paris-Nanterre",
+      "bioSection": "Formation académique",
+      "startDate": "2001-01-01",
+      "endDate": "2001-12-31",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Baccalauréat scientifique",
+      "organization": null,
+      "bioSection": "Formation académique",
+      "startDate": "1998-01-01",
+      "endDate": "1998-12-31",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Président de la République française",
+      "organization": "Présidence de la République",
+      "bioSection": "Gouvernement",
+      "startDate": "2017-05-01",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": true,
+      "sortIndex": 999
+    },
+    {
+      "title": "Réélu président de la République (2e mandat)",
+      "organization": "Présidence de la République",
+      "bioSection": "Gouvernement",
+      "startDate": "2022-05-07",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Ministre de l'Économie, de l'Industrie et du Numérique",
+      "organization": "Gouvernement Valls II",
+      "bioSection": "Gouvernement",
+      "startDate": "2014-08-26",
+      "endDate": "2016-08-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Secrétaire général adjoint de la Présidence",
+      "organization": "Présidence François Hollande",
+      "bioSection": "Gouvernement",
+      "startDate": "2012-05-15",
+      "endDate": "2014-07-10",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Rapporteur adjoint puis membre",
+      "organization": "Commission pour la libération de la croissance française",
+      "bioSection": "Gouvernement",
+      "startDate": "2007-01-01",
+      "endDate": "2010-12-31",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Participant",
+      "organization": "Réunion du groupe Bilderberg",
+      "bioSection": "Gouvernement",
+      "startDate": "2014-01-01",
+      "endDate": "2014-12-31",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Fondateur du mouvement « En marche ! »",
+      "organization": "En marche !",
+      "bioSection": "Parti politique",
+      "startDate": "2016-04-01",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Transformation en parti politique",
+      "organization": "La République en marche",
+      "bioSection": "Parti politique",
+      "startDate": "2017-01-01",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Président-fondateur",
+      "organization": "Renaissance",
+      "bioSection": "Parti politique",
+      "startDate": "2018-01-01",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Banquier d'affaires puis associé-gérant",
+      "organization": "Rothschild & Cie",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2008-01-01",
+      "endDate": "2012-12-31",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Inspecteur des finances",
+      "organization": "Inspection générale des finances",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2004-01-01",
+      "endDate": "2008-12-31",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Enseignant en économie (sessions estivales)",
+      "organization": "IPESUP",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2004-01-01",
+      "endDate": "2007-12-31",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    },
+    {
+      "title": "Chargé de cours de culture générale",
+      "organization": "Institut d'études politiques de Paris",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2000-01-01",
+      "endDate": "2003-12-31",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 999
+    }
+  ],
   "collaborators": [
     {
       "id": "67f2ae84-786e-4437-84f7-1aa8e4b564ef",
