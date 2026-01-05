@@ -27,3 +27,5 @@ scripts/test_modal_population.js
 scripts/validate_careers_order.js
 scripts/validate_lecornu.js
 scripts/validate-json.js
+.vercel
+.env*.local
