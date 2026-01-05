@@ -6,14 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:prod": "npm run security && vite build",
     "preview": "vite preview",
     "validate:csv": "node scripts/validators/validate-csv.js",
     "csv-to-json": "node scripts/csv-to-json.js",
     "validate": "npm run validate:csv && npm run csv-to-json",
     "test": "echo 'Tests à implémenter' && exit 0",
     "sync": "node scripts/validators/validate-csv.js && node scripts/csv-to-json.js",
-    "security": "node scripts/security-audit.js",
-    "prebuild": "npm run security"
+    "security": "node scripts/security-audit.js"
   },
   "repository": {
     "type": "git",
