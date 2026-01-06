@@ -4357,6 +4357,36 @@ body.print-all .toolbar {
     border-color: rgba(75, 37, 121, 0.35);
 }
 
+.contact-intro {
+    font-size: clamp(0.95rem, 2vw, 1.05rem);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    color: var(--color-text);
+}
+
+.contact-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.contact-list li {
+    font-size: clamp(0.9rem, 1.8vw, 0.95rem);
+    line-height: 1.7;
+    margin-bottom: 1.2rem;
+    padding-left: 1.5rem;
+    position: relative;
+    color: var(--color-text);
+}
+
+.contact-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--color-prune);
+    font-weight: bold;
+}
+
 .site-footer {
     padding: 3rem clamp(1.5rem, 4vw, 3rem);
     /* apply bleu panthère to footer as well */
@@ -4417,6 +4447,56 @@ body.print-all .toolbar {
     display: block;
     width: clamp(120px, 16vw, 220px);
     height: auto;
+}
+
+.footer-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.footer-text {
+    font-size: clamp(0.95rem, 2vw, 1.1rem);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    color: var(--color-perle);
+}
+
+.footer-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.footer-list li {
+    font-size: clamp(0.9rem, 1.8vw, 1rem);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+    position: relative;
+    color: var(--color-perle);
+}
+
+.footer-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--color-perle);
+    font-weight: bold;
+}
+
+.footer-contact {
+    margin-top: 1.5rem;
+    font-size: clamp(0.9rem, 1.8vw, 1rem);
+}
+
+.footer-contact a {
+    color: var(--color-perle);
+    text-decoration: underline;
+    transition: opacity 0.3s ease;
+}
+
+.footer-contact a:hover {
+    opacity: 0.8;
 }
 
 .footer-copy {
