@@ -4388,9 +4388,9 @@ body.print-all .toolbar {
 }
 
 .site-footer {
-    padding: 3rem clamp(1.5rem, 4vw, 3rem);
-    /* apply bleu panthère to footer as well */
-    background: var(--color-panthere);
+    padding: 3rem clamp(1.5rem,4vw,3rem);
+    /* brand footer navy */
+    background: #002E5B;
     color: var(--color-perle);
 }
 

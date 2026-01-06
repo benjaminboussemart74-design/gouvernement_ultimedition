@@ -7,6 +7,10 @@ node_modules/
 # Build output
 dist/
 
+# Generated files (should not be committed)
+data/ministers/
+data/ministers.json
+
 # Environment variables (si vous en utilisez un jour)
 .env
 .env.local
@@ -27,3 +31,5 @@ scripts/test_modal_population.js
 scripts/validate_careers_order.js
 scripts/validate_lecornu.js
 scripts/validate-json.js
+.vercel
+.env*.local
