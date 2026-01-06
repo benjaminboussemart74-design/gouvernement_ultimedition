@@ -3439,7 +3439,7 @@ const highlightFilter = (role) => {
 // Les données proviennent des fichiers statiques data/ministers/
 
 const fetchMinistersFromSplitFiles = async () => {
-    const manifestUrl = '/data/ministers/index.json';
+    const manifestUrl = `${import.meta.env.BASE_URL}data/ministers/index.json`;
     const manifestResponse = await fetch(manifestUrl, { cache: 'no-store' });
     if (!manifestResponse.ok) {
         throw new Error(`Erreur HTTP ${manifestResponse.status} lors du chargement de ${manifestUrl}`);
@@ -3456,7 +3456,10 @@ const fetchMinistersFromSplitFiles = async () => {
     }
 
     const results = await Promise.all(entries.map(async (entry) => {
-        const url = entry.file;
+        // Ajouter le BASE_URL si le chemin commence par /
+        const url = entry.file.startsWith('/') 
+            ? `${import.meta.env.BASE_URL}${entry.file.substring(1)}`
+            : entry.file;
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) {
             throw new Error(`Erreur HTTP ${res.status} lors du chargement de ${url}`);
