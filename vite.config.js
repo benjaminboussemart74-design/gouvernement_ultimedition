@@ -3,7 +3,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   // Pour Vercel ou domaine personnalisé, utilisez '/' comme base
   // Pour GitHub Pages, utilisez '/gouvernement_ultimedition/'
-  base: '/',
+  base: '/gouvernement_ultimedition/',
   
   build: {
     outDir: 'dist',
