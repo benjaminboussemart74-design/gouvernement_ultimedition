@@ -3439,7 +3439,7 @@ const highlightFilter = (role) => {
 // Les données proviennent des fichiers statiques data/ministers/
 
 const fetchMinistersFromSplitFiles = async () => {
-    const manifestUrl = 'public/data/ministers/index.json';
+    const manifestUrl = '/data/ministers/index.json';
     const manifestResponse = await fetch(manifestUrl, { cache: 'no-store' });
     if (!manifestResponse.ok) {
         throw new Error(`Erreur HTTP ${manifestResponse.status} lors du chargement de ${manifestUrl}`);
@@ -3447,12 +3447,12 @@ const fetchMinistersFromSplitFiles = async () => {
 
     const manifest = await manifestResponse.json();
     if (!Array.isArray(manifest) || manifest.length === 0) {
-        throw new Error('Le manifest public/data/ministers/index.json est vide ou invalide');
+        throw new Error('Le manifest /data/ministers/index.json est vide ou invalide');
     }
 
     const entries = manifest.filter(item => item && item.file);
     if (entries.length === 0) {
-        throw new Error('Aucun fichier listé dans public/data/ministers/index.json');
+        throw new Error('Aucun fichier listé dans /data/ministers/index.json');
     }
 
     const results = await Promise.all(entries.map(async (entry) => {
@@ -3554,7 +3554,7 @@ const loadMinisters = async () => {
         grid.innerHTML = '';
         emptyState.hidden = false;
         emptyState.textContent = 
-            'Impossible de charger les données. Vérifiez les fichiers public/data/ministers/index.json et le dossier public/data/ministers/.';
+            'Impossible de charger les données. Vérifiez les fichiers /data/ministers/index.json et le dossier /data/ministers/.';
         updateResultsSummary(0, 0);
         updateActiveFiltersHint(0, 0);
     } finally {
@@ -3668,7 +3668,7 @@ const initApp = () => {
         try {
             const banner = document.createElement('div');
             banner.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:rgba(209,0,123,0.1);border-top:1px solid rgba(209,0,123,0.35);color:#4B2579;padding:8px 12px;font:600 13px/1.4 \"Space Grotesk\",system-ui;backdrop-filter:saturate(120%) blur(2px)';
-            banner.textContent = 'Diagnostic: échec du chargement des données. Vérifiez public/data/ministers/index.json et les fichiers individuels.';
+            banner.textContent = 'Diagnostic: échec du chargement des données. Vérifiez /data/ministers/index.json et les fichiers individuels.';
             document.body.appendChild(banner);
             setTimeout(() => banner.remove(), 6000);
         } catch { /* no-op */ }
