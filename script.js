@@ -1,3 +1,12 @@
+/**
+ * ============================================================================
+ * GOUVERNEMENT LECORNU II - Script Principal
+ * ============================================================================
+ *
+ * Importation du système de modale v3
+ */
+import { initModal, openMinisterModal, closeModal } from './modal-v3.js';
+
 const ROLE_LABELS = {
     leader: "Premier ministre",
     president: "Président de la République",
@@ -3088,7 +3097,42 @@ const showCabinetInlineForMinister = async (minister) => {
     }
 };
 
+/**
+ * ============================================================================
+ * MODAL FUNCTIONS - Wrappers vers modal-v3.js
+ * ============================================================================
+ *
+ * Note : Les fonctions openModal et closeModal sont maintenant des wrappers
+ * vers le nouveau système modal-v3.js. La logique spécifique au cabinet
+ * reste gérée ici en attendant une migration complète.
+ */
+
+// Wrapper vers la nouvelle fonction openMinisterModal de modal-v3.js
 const openModal = async (minister) => {
+    if (!minister) return;
+
+    try {
+        // Utiliser la nouvelle modale v3
+        await openMinisterModal(minister);
+
+        // Logique spécifique : affichage du cabinet inline (si nécessaire)
+        // TODO: Migrer cette logique vers modal-v3.js dans une future version
+        const modalBody = document.querySelector(".modal-body");
+        if (modalBody && minister && minister.id) {
+            // Show cabinet inline for all ministers (including Prime Minister and delegates)
+            showCabinetInlineForMinister(minister).catch((error) => {
+                // Silently handle error
+                console.warn('[Cabinet] Erreur affichage cabinet:', error);
+            });
+        }
+    } catch (error) {
+        console.error('[Modal] Erreur ouverture modale:', error);
+    }
+};
+
+// === ANCIENNE FONCTION CONSERVÉE POUR RÉFÉRENCE (commentée) ===
+/*
+const openModalLegacy = async (minister) => {
     if (!modal) return;
     setModalBusy(true);
     // C'est ici que le miracle se produit, la fiche s'ouvre le tigre tourne et je suis heureux
@@ -3290,8 +3334,14 @@ const openModal = async (minister) => {
     modal.removeAttribute("hidden");
     document.body.style.overflow = "hidden";
 };
+*/
 
-const closeModal = () => {
+// === Note : La fonction closeModal est maintenant gérée par modal-v3.js ===
+// Elle est importée en haut du fichier et peut être utilisée directement.
+
+// === ANCIENNE FONCTION closeModal CONSERVÉE POUR RÉFÉRENCE (commentée) ===
+/*
+const closeModalLegacy = () => {
     if (!modal) return;
     modal.hidden = true;
     modal.setAttribute("hidden", "");
@@ -3326,6 +3376,7 @@ const closeModal = () => {
     }
     activeMinister = null;
 };
+*/
 
 // Switch modal content to cabinet-only view
 const switchToCabinetView = async (minister) => {
@@ -3655,6 +3706,11 @@ const initApp = () => {
     if (__appInitialized) return;
     __appInitialized = true;
 
+    // Initialiser le système de modale v3
+    initModal();
+
+    // Note: Les event listeners pour modalBackdrop et modalClose sont maintenant
+    // gérés par modal-v3.js, mais on les garde ici pour la compatibilité
     modalBackdrop?.addEventListener("click", closeModal);
     modalClose?.addEventListener("click", closeModal);
     exportPageButton?.addEventListener("click", printAllMinisters);
