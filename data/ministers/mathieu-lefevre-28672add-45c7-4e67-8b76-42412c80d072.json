@@ -1,0 +1,288 @@
+{
+  "id": "28672add-45c7-4e67-8b76-42412c80d072",
+  "name": "Mathieu LEFEVRE",
+  "role": "minister-delegate",
+  "email": "",
+  "party": "Renaissance",
+  "photo": "https://www.info.gouv.fr/upload/media/personality/0001/15/d4311246157ff7e1c91e68c107dc4d4f029a9ddb.jpg",
+  "portfolio": "Transition écologique",
+  "description": "Conseiller politique historique de Gérald Darmanin, il est également bon connaisseur des questions budgétaires. Député depuis 2022, il coordonnait le groupe EPR au sein de la commission des finances.",
+  "ministries": [
+    {
+      "id": "0aa7a1b2-5eed-4b6a-b3c1-1b80945921af",
+      "name": "Transition écologique",
+      "shortName": "Écologie",
+      "color": "#D4AF37",
+      "isPrimary": true,
+      "roleLabel": "Ministre délégué chargée de la Transition écologique"
+    },
+    {
+      "id": "e45d3a63-5659-489a-a0eb-656f5466d934",
+      "name": "Transition écologique",
+      "shortName": "Écologie",
+      "color": "#6B8E23",
+      "isPrimary": false,
+      "roleLabel": null
+    }
+  ],
+  "superiorId": "5b076729-612d-417b-97d1-d49ae0e6539b",
+  "delegates": [],
+  "biography": [
+    {
+      "title": "MS Marketing et communication",
+      "organization": "ESCP Business School",
+      "bioSection": "Formation académique",
+      "startDate": "2008-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 15
+    },
+    {
+      "title": "Master 2 Communication politique et sociale",
+      "organization": "Université Paris 1 Panthéon-Sorbonne",
+      "bioSection": "Formation académique",
+      "startDate": "2008-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 16
+    },
+    {
+      "title": "Master 1 Science politique et gouvernement",
+      "organization": "Université Paris 1 Panthéon-Sorbonne",
+      "bioSection": "Formation académique",
+      "startDate": "2007-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 17
+    },
+    {
+      "title": "Licence de philosophie",
+      "organization": "Université Pierre Mendès-France (Grenoble II)",
+      "bioSection": "Formation académique",
+      "startDate": "2006-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 18
+    },
+    {
+      "title": "Ministre délégué chargé des Relations avec le Parlement (Gouvernement Lecornu I)",
+      "organization": "Gouvernement français",
+      "bioSection": "Gouvernement",
+      "startDate": "2024-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 1
+    },
+    {
+      "title": "Député de la 5ᵉ circonscription du Val-de-Marne (Ensemble pour la République)",
+      "organization": "Assemblée nationale",
+      "bioSection": "Parlement",
+      "startDate": "2022-05-30",
+      "endDate": "2024-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 7
+    },
+    {
+      "title": "Chef de file des députés Ensemble pour la République à la commission des finances",
+      "organization": "Assemblée nationale",
+      "bioSection": "Parlement",
+      "startDate": "2022-05-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 8
+    },
+    {
+      "title": "Vice-président du groupe Ensemble pour la République",
+      "organization": "Assemblée nationale",
+      "bioSection": "Parlement",
+      "startDate": "2022-05-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 9
+    },
+    {
+      "title": "Président du groupe d’amitié France-Israël",
+      "organization": "Assemblée nationale",
+      "bioSection": "Parlement",
+      "startDate": "2022-05-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 10
+    },
+    {
+      "title": "Conseiller auprès du Président de la Commission des finances, Gilles Carrez (LR)",
+      "organization": "Assemblée nationale",
+      "bioSection": "Parlement",
+      "startDate": "2011-12-30",
+      "endDate": "2016-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 11
+    },
+    {
+      "title": "Conseiller auprès du Rapporteur général du budget, Gilles Carrez (LR)",
+      "organization": "Assemblée nationale",
+      "bioSection": "Parlement",
+      "startDate": "2009-12-30",
+      "endDate": "2011-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 12
+    },
+    {
+      "title": "Chargé de mission finances – Groupe Nouveau Centre",
+      "organization": "Assemblée nationale",
+      "bioSection": "Parlement",
+      "startDate": "2008-12-30",
+      "endDate": "2009-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 13
+    },
+    {
+      "title": "Membre de Renaissance (anciennement La République en marche)",
+      "organization": "Renaissance",
+      "bioSection": "Parti politique",
+      "startDate": "2015-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": true,
+      "sortIndex": 14
+    },
+    {
+      "title": "Conseiller spécial",
+      "organization": "Ministère de l’Intérieur – Cabinet de Gérald Darmanin",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2021-12-30",
+      "endDate": "2022-12-29",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 2
+    },
+    {
+      "title": "Chef de cabinet",
+      "organization": "Ministère de l’Intérieur – Cabinet de Gérald Darmanin",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2019-12-30",
+      "endDate": "2021-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 3
+    },
+    {
+      "title": "Chef de cabinet et conseiller chargé de la synthèse budgétaire",
+      "organization": "Ministère de l’Économie et des Finances – Cabinet de Gérald Darmanin",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2018-12-30",
+      "endDate": "2019-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 4
+    },
+    {
+      "title": "Conseiller en charge de la synthèse budgétaire",
+      "organization": "Ministère de l’Économie et des Finances – Cabinet de Gérald Darmanin",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2018-12-30",
+      "endDate": null,
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 5
+    },
+    {
+      "title": "Conseiller parlementaire",
+      "organization": "Ministère de l’Économie et des Finances – Cabinet de Gérald Darmanin",
+      "bioSection": "Vie professionnelle",
+      "startDate": "2016-12-30",
+      "endDate": "2018-12-30",
+      "eventDate": null,
+      "eventText": null,
+      "ongoing": false,
+      "sortIndex": 6
+    }
+  ],
+  "collaborators": [
+    {
+      "id": "d7cd9748-a0bf-4cfc-aedd-0c3cc8474136",
+      "name": "François VILLEREZ",
+      "full_name": "François VILLEREZ",
+      "superior_id": "28672add-45c7-4e67-8b76-42412c80d072",
+      "job_title": null,
+      "cabinet_role": "Directeur de cabinet",
+      "cabinet_order": 1,
+      "cabinet_badge": null,
+      "collab_grade": "dircab",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "ca803e35-31b4-4639-a601-836ee28dd424",
+      "name": "Édouard CLAUSS",
+      "full_name": "Édouard CLAUSS",
+      "superior_id": "28672add-45c7-4e67-8b76-42412c80d072",
+      "job_title": null,
+      "cabinet_role": "Chef de cabinet",
+      "cabinet_order": 3,
+      "cabinet_badge": null,
+      "collab_grade": "chefcab",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "3b9cfa87-e570-42f0-8c99-ae101440d0eb",
+      "name": "Tess INDYCKI",
+      "full_name": "Tess INDYCKI",
+      "superior_id": "28672add-45c7-4e67-8b76-42412c80d072",
+      "job_title": null,
+      "cabinet_role": "Conseillère presse et communication",
+      "cabinet_order": 5,
+      "cabinet_badge": null,
+      "collab_grade": "chefpole",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    },
+    {
+      "id": "639c8ef4-1d27-46fa-bbf0-973d76e1e1a2",
+      "name": "Guillaume BAILLY",
+      "full_name": "Guillaume BAILLY",
+      "superior_id": "28672add-45c7-4e67-8b76-42412c80d072",
+      "job_title": null,
+      "cabinet_role": "Conseiller prévention des risques, autorisations, participation du public et simplification",
+      "cabinet_order": 6,
+      "cabinet_badge": null,
+      "collab_grade": "conseiller",
+      "pole_name": null,
+      "photo_url": null,
+      "description": null
+    }
+  ]
+}
